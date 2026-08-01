@@ -131,10 +131,11 @@ a {
   z-index: 100;
   top: 18px;
   left: 50%;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: start;
-  width: calc(100% - 36px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(var(--page-width), calc(100% - 36px));
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -143,66 +144,32 @@ a {
   pointer-events: auto;
 }
 
-.brand-pill {
-  display: block;
-  width: max-content;
-  height: 48px;
-}
-
-.brand-pill__glass .glass-surface__content {
-  justify-content: flex-start;
-  align-items: center;
-  gap: 8px;
-  /* Logo inset is 5px. Text is 14px / line-height 1, so its vertical
-     clearance is (48 - 14) / 2 = 17px — match that on the right for optical balance. */
-  padding: 5px 17px 5px 5px;
-  font-size: 14px;
-  font-weight: 510;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.brand-pill__glass .glass-surface__content > span {
-  line-height: 1;
-}
-
-.brand-mark {
-  display: block;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.top-navigation-item {
-  color: var(--muted);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.top-navigation-item[aria-selected="true"] {
+.site-brand {
   color: #f7f8f8;
+  font-size: 0.95rem;
+  font-weight: 510;
+  letter-spacing: -0.03em;
 }
 
-.navigation-menu {
-  position: relative;
-  justify-self: end;
-  width: 48px;
-  height: 48px;
+.site-nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 18px;
 }
 
-.navigation-menu__shell {
-  color: white;
-  box-shadow:
-    0 1px 1px rgb(0 0 0 / 0.22),
-    0 12px 38px rgb(0 0 0 / 0.2);
+.site-nav-link {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  transition: color 140ms ease;
 }
 
-.navigation-menu__shell > div {
-  width: 100%;
-  height: 100%;
+.site-nav-link:hover,
+.site-nav-link.is-active {
+  color: #f7f8f8;
 }
 
 .navigation-menu__trigger {
@@ -293,8 +260,9 @@ main {
   position: relative;
   z-index: 0;
   width: 100%;
-  height: min(460px, 62vh);
+  height: min(500px, 66vh);
   margin-bottom: 8px;
+  overflow: visible;
   touch-action: none;
 }
 
@@ -302,6 +270,7 @@ main {
   position: relative;
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
 /*
@@ -310,7 +279,7 @@ main {
 */
 .hero-orbit__plate {
   position: absolute;
-  inset: 10% 6% 8% 10%;
+  inset: 8% 4% 6% 8%;
   z-index: 0;
   overflow: hidden;
   border-radius: 28px;
@@ -325,7 +294,9 @@ main {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(155deg, rgb(255 255 255 / 0.08), transparent 42%);
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.07), transparent 40%),
+    linear-gradient(180deg, rgb(1 1 2 / 0.08), rgb(1 1 2 / 0.22));
   pointer-events: none;
 }
 
@@ -334,29 +305,37 @@ main {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 40%;
+  object-position: 50% 45%;
+  filter: brightness(0.92) contrast(1.08) saturate(0.92);
 }
 
 .hero-orbit__layer {
   position: absolute;
   z-index: 1;
+  overflow: visible;
 }
 
 .hero-orbit__layer--panel {
-  left: 4%;
-  top: 28%;
+  left: 6%;
+  top: 22%;
 }
 
 .hero-orbit__layer--segment {
-  right: 6%;
-  top: 14%;
+  right: 5%;
+  top: 12%;
+}
+
+.hero-orbit__layer--menu {
+  left: 8%;
+  bottom: 10%;
+  z-index: 3;
 }
 
 .hero-orbit__layer--icons {
   display: flex;
   gap: 10px;
-  right: 8%;
-  bottom: 10%;
+  right: 7%;
+  bottom: 12%;
 }
 
 .hero-orbit__panel {
@@ -371,6 +350,13 @@ main {
     0 1px 0 rgb(255 255 255 / 0.1) inset,
     0 14px 28px rgb(0 0 0 / 0.35),
     0 36px 64px rgb(0 0 0 / 0.42);
+}
+
+.hero-orbit__menu-shell {
+  color: white;
+  box-shadow:
+    0 1px 1px rgb(0 0 0 / 0.35),
+    0 14px 36px rgb(0 0 0 / 0.4);
 }
 
 .hero-orbit__layer--icons .bento-icon-button {
@@ -1346,16 +1332,14 @@ footer {
 }
 
 @media (max-width: 900px) {
-  .desktop-navigation-glass {
-    display: none;
-  }
-
   .site-navigation {
-    grid-template-columns: 1fr 1fr;
+    top: 14px;
+    width: calc(100% - 24px);
+    gap: 16px;
   }
 
-  .navigation-menu {
-    grid-column: 2;
+  .site-nav-links {
+    gap: 4px 14px;
   }
 
   .hero {
@@ -1369,11 +1353,6 @@ footer {
     order: -1;
     height: min(340px, 48vh);
     margin: 0 0 8px;
-  }
-
-  .hero-orbit__tilt {
-    --hero-rx: calc(12deg + (var(--hero-py) * -4deg));
-    --hero-ry: calc(-18deg + (var(--hero-px) * 6deg));
   }
 
   .bento {
@@ -1430,18 +1409,13 @@ footer {
   .site-navigation {
     top: 12px;
     width: calc(100% - 24px);
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  .brand-pill {
-    width: 48px;
-  }
-
-  .brand-pill__glass .glass-surface__content {
-    padding: 5px;
-  }
-
-  .brand-pill__glass .glass-surface__content > span:last-child {
-    display: none;
+  .site-nav-links {
+    justify-content: flex-start;
   }
 
   main {
@@ -1460,17 +1434,22 @@ footer {
 
   .hero-orbit__layer--panel {
     left: 4%;
-    top: 26%;
+    top: 20%;
   }
 
   .hero-orbit__layer--segment {
     right: 4%;
-    top: 12%;
+    top: 10%;
+  }
+
+  .hero-orbit__layer--menu {
+    left: 6%;
+    bottom: 8%;
   }
 
   .hero-orbit__layer--icons {
-    right: 6%;
-    bottom: 8%;
+    right: 5%;
+    bottom: 10%;
   }
 
   h1 {

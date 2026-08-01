@@ -292,8 +292,8 @@ function HeroFloatStage() {
         >
           <img
             className="hero-orbit__scene"
-            src="/images/pexels-bento-scene.jpg"
-            alt=""
+            src="/images/shan-shui-summer-mountains.jpg"
+            alt="Summer Mountains, attributed to Qu Ding — Song dynasty shan shui"
           />
         </HeroOrbitTilt>
 
@@ -344,6 +344,17 @@ function HeroFloatStage() {
         </HeroOrbitTilt>
 
         <HeroOrbitTilt
+          className="hero-orbit__layer hero-orbit__layer--menu"
+          lift={18}
+          rotateX={rotateX}
+          rotateY={rotateY}
+          springX={springX}
+          springY={springY}
+        >
+          <HeroMorphMenu />
+        </HeroOrbitTilt>
+
+        <HeroOrbitTilt
           className="hero-orbit__layer hero-orbit__layer--icons"
           lift={26}
           rotateX={rotateX}
@@ -377,7 +388,7 @@ function HeroFloatStage() {
   );
 }
 
-function NavigationMenu() {
+function HeroMorphMenu() {
   const [open, setOpen] = useState(false);
   const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
@@ -389,21 +400,21 @@ function NavigationMenu() {
         setOpen(next);
       }}
       direction="bottom"
-      anchor="end"
+      anchor="start"
       visualDuration={0.28}
       bounce={0}
     >
       <MorphMenu.Container
         buttonSize={48}
-        menuWidth={268}
+        menuWidth={248}
         menuRadius={28}
         buttonRadius={24}
         offset={12}
-        className="navigation-menu__shell"
+        className="hero-orbit__menu-shell"
         backdrop={<GlassShellBackdrop borderRadius={28} material="navigation" />}
       >
         <MorphMenu.Trigger
-          aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+          aria-label={open ? "Close menu" : "Open menu"}
           className="navigation-menu__trigger"
         >
           <HugeiconsIcon
@@ -422,7 +433,7 @@ function NavigationMenu() {
           onPointerLeave={clearHoveredItem}
         >
           <div className="navigation-menu__heading">
-            <span>Navigate</span>
+            <span>Menu</span>
           </div>
           <div className="navigation-menu__items">
             <MorphMenuHoverFill hoveredItem={hoveredItem} />
@@ -1121,42 +1132,29 @@ export function Playground() {
       <div className="static-backdrop" aria-hidden />
 
       <header className="site-navigation">
-        <a className="brand-pill" href="#top" aria-label="LiquidGlass home">
-          <LiquidGlass
-            width="max-content"
-            height={48}
-            borderRadius={24}
-            material="navigation"
-            className="brand-pill__glass"
-          >
-            <img
-              className="brand-mark"
-              src="/logo.png"
-              alt=""
-              width={38}
-              height={38}
-            />
-            <span>LiquidGlass</span>
-          </LiquidGlass>
+        <a className="site-brand" href="#top">
+          LiquidGlass
         </a>
 
-        <GlassSegmentedControl
-          items={topNavigationItems}
-          value={topNavigationValue}
-          onValueChange={navigateToSection}
-          itemWidth={108}
-          itemHeight={40}
-          padding={4}
-          radialExpansion={8}
-          material="navigation"
-          pressedMaterial="selectionPressed"
-          className="desktop-navigation-glass"
-          itemClassName="top-navigation-item"
-        />
-
-        <div className="navigation-menu">
-          <NavigationMenu />
-        </div>
+        <nav className="site-nav-links" aria-label="Primary">
+          {topNavigationItems.map((item) => (
+            <a
+              key={item.value}
+              href={item.href}
+              className={
+                topNavigationValue === item.value
+                  ? "site-nav-link is-active"
+                  : "site-nav-link"
+              }
+              onClick={(event) => {
+                event.preventDefault();
+                navigateToSection(item.value);
+              }}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
       </header>
 
       <main id="top">
