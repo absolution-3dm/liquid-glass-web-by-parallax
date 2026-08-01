@@ -1,0 +1,126 @@
+[data-ios-pointer-attracted] {
+  translate: var(--ios-pointer-attract-x, 0) var(--ios-pointer-attract-y, 0);
+  scale: var(--ios-pointer-squish-x, 1) var(--ios-pointer-squish-y, 1);
+}
+
+@media (pointer: fine) {
+  html.ios-pointer-ready,
+  html.ios-pointer-ready * {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7.5' fill='white' fill-opacity='.82' stroke='black' stroke-opacity='.18'/%3E%3C/svg%3E") 12 12, default !important;
+  }
+}
+
+.glass-pill-surface .glass-surface__content {
+  padding: 0;
+}
+
+.glass-segmented-surface,
+.glass-segmented-surface .glass-surface__state,
+.glass-segmented-surface .glass-surface__overlay {
+  overflow: visible;
+}
+
+.glass-segmented-surface {
+  box-shadow:
+    0 1px 1px rgb(0 0 0 / 0.22),
+    0 3px 4px -1px rgb(0 0 0 / 0.18),
+    0 7px 10px -2px rgb(0 0 0 / 0.14),
+    0 13px 20px -4px rgb(0 0 0 / 0.1),
+    0 22px 36px -8px rgb(0 0 0 / 0.07);
+}
+
+.glass-segmented-surface .glass-surface__material {
+  overflow: hidden;
+}
+
+.glass-state-chip {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  height: 40px;
+  border-radius: 9999px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.glass-state-chip__fill,
+.glass-chip-active {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 236, 228, 0.22) 50%,
+    rgba(255, 214, 200, 0.16) 100%
+  );
+}
+
+.glass-segmented-drag-glass {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.glass-segmented-drag-surface {
+  transition: none;
+}
+
+.glass-segmented-drag-surface.glass-surface--backdrop-blur .glass-surface__backdrop {
+  backdrop-filter: blur(var(--glass-blur, 0px))
+    saturate(var(--glass-segmented-drag-saturation, 1));
+}
+
+.glass-segmented-drag-surface.glass-surface--backdrop-svg .glass-surface__backdrop {
+  backdrop-filter: var(--backdrop-filter-id)
+    saturate(var(--glass-segmented-drag-saturation, 1));
+}
+
+.glass-segmented-drag-surface .glass-surface__lens {
+  opacity: var(--glass-segmented-drag-progress, 0);
+}
+
+.glass-shell {
+  background: transparent !important;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.glass-shell-lens {
+  z-index: 1;
+  overflow: hidden;
+  background: transparent;
+}
+
+.glass-shell-lens-paint {
+  background: color-mix(
+    in srgb,
+    var(--glass-fill, #000000) calc(var(--glass-tint, var(--glass-tint-default, 0.2)) * 100%),
+    transparent
+  );
+}
+
+.ios-pointer-native-hover-fill {
+  translate: var(--ios-pointer-attract-x, 0) var(--ios-pointer-attract-y, 0);
+}
+
+[data-ios-pointer-target],
+[data-ios-pointer-target] *,
+.site-hover-fill,
+.site-hover-fill * {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.site-hover-fill:hover,
+.site-hover-fill:focus-visible,
+.site-hover-fill:active {
+  background-color: var(--fr-hover-fill, rgba(255, 255, 255, 0.06));
+}
+
+.glass-segmented-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.45);
+  outline-offset: -2px;
+}

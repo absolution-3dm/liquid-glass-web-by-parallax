@@ -36,3 +36,16 @@ import { LiquidGlass } from "@/components/liquid-glass/liquid-glass"
 Chromium uses the axis-isolated SVG backdrop refraction path. Safari and
 Firefox use the CSS blur/tint/highlight fallback documented in
 [`docs/glass-refraction.md`](docs/glass-refraction.md).
+
+## Composition items
+
+The registry also builds source-owned composition items:
+
+- `liquid-glass-icon-pill` (no Motion)
+- `liquid-glass-magnetic-pointer` (no Motion; custom spring attraction)
+- `liquid-glass-navigation` (Motion spring snapping)
+- `liquid-glass-capsule` (Motion drag/squish)
+- `liquid-glass-menu` (Motion morphing with the dynamic refraction shell)
+
+See [`docs/liquid-glass-compositions.md`](docs/liquid-glass-compositions.md) for
+the extraction boundary and dependency rationale.

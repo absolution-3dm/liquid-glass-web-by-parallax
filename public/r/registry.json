@@ -55,6 +55,340 @@
           "target": "components/liquid-glass/materials/materials.json"
         }
       ]
+    },
+    {
+      "name": "liquid-glass-icon-pill",
+      "type": "registry:ui",
+      "title": "LiquidGlass Icon Pill",
+      "description": "Motion-free circular LiquidGlass composition for icon actions.",
+      "files": [
+        {
+          "path": "registry/liquid-glass/liquid-glass.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/liquid-glass.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/liquid-glass.css",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/liquid-glass.css"
+        },
+        {
+          "path": "registry/liquid-glass/browser-support.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/browser-support.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/lens-map.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/lens-map.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/math.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/math.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/engine.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/engine.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/engine.json",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/engine.json"
+        },
+        {
+          "path": "registry/liquid-glass/materials/materials.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/materials/materials.ts"
+        },
+        {
+          "path": "registry/liquid-glass/materials/materials.json",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/materials/materials.json"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/glass-icon-pill.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/glass-icon-pill.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/liquid-glass-compositions.css",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/liquid-glass-compositions.css"
+        }
+      ]
+    },
+    {
+      "name": "liquid-glass-magnetic-pointer",
+      "type": "registry:ui",
+      "title": "LiquidGlass Magnetic Pointer",
+      "description": "Motion-free fine-pointer attraction, press-drag deformation, and spring return.",
+      "files": [
+        {
+          "path": "registry/liquid-glass/compositions/ios-pointer.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/ios-pointer.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/liquid-glass-compositions.css",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/liquid-glass-compositions.css"
+        }
+      ]
+    },
+    {
+      "name": "liquid-glass-navigation",
+      "type": "registry:ui",
+      "title": "LiquidGlass Navigation",
+      "description": "Draggable segmented navigation with elastic bounds and spring snapping.",
+      "dependencies": [
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "registry/liquid-glass/liquid-glass.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/liquid-glass.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/liquid-glass.css",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/liquid-glass.css"
+        },
+        {
+          "path": "registry/liquid-glass/browser-support.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/browser-support.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/lens-map.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/lens-map.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/math.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/math.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/engine.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/engine.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/engine.json",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/engine.json"
+        },
+        {
+          "path": "registry/liquid-glass/materials/materials.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/materials/materials.ts"
+        },
+        {
+          "path": "registry/liquid-glass/materials/materials.json",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/materials/materials.json"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/glass-segmented-control.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/glass-segmented-control.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/liquid-glass-compositions.css",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/liquid-glass-compositions.css"
+        }
+      ]
+    },
+    {
+      "name": "liquid-glass-capsule",
+      "type": "registry:ui",
+      "title": "LiquidGlass Capsule",
+      "description": "Draggable LiquidGlass capsule with press squish and spring return utilities.",
+      "dependencies": [
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "registry/liquid-glass/liquid-glass.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/liquid-glass.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/liquid-glass.css",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/liquid-glass.css"
+        },
+        {
+          "path": "registry/liquid-glass/browser-support.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/browser-support.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/lens-map.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/lens-map.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/math.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/math.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/engine.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/engine.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/engine.json",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/engine.json"
+        },
+        {
+          "path": "registry/liquid-glass/materials/materials.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/materials/materials.ts"
+        },
+        {
+          "path": "registry/liquid-glass/materials/materials.json",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/materials/materials.json"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/liquid-glass-capsule.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/liquid-glass-capsule.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/use-glass-squish.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/use-glass-squish.ts"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/use-glass-leash.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/use-glass-leash.ts"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/liquid-glass-compositions.css",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/liquid-glass-compositions.css"
+        }
+      ]
+    },
+    {
+      "name": "liquid-glass-menu",
+      "type": "registry:ui",
+      "title": "LiquidGlass Morph Menu",
+      "description": "Compound LiquidGlass menu with spring morphing, dynamic shell refraction, hover fill, and dismissal behavior.",
+      "dependencies": [
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "registry/liquid-glass/liquid-glass.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/liquid-glass.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/liquid-glass.css",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/liquid-glass.css"
+        },
+        {
+          "path": "registry/liquid-glass/browser-support.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/browser-support.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/lens-map.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/lens-map.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/math.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/math.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/engine.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/engine.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/engine.json",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/engine.json"
+        },
+        {
+          "path": "registry/liquid-glass/materials/materials.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/materials/materials.ts"
+        },
+        {
+          "path": "registry/liquid-glass/materials/materials.json",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/materials/materials.json"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/glass-shell-backdrop.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/glass-shell-backdrop.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/morph-menu-hover.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/morph-menu-hover.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/morph-menu-shared.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/morph-menu-shared.ts"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/morph-menu/context.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/morph-menu/context.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/morph-menu/offsets.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/morph-menu/offsets.ts"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/morph-menu/container.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/morph-menu/container.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/morph-menu/parts.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/morph-menu/parts.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/morph-menu/root.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/morph-menu/root.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/morph-menu/index.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/morph-menu/index.ts"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/ios-pointer.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/ios-pointer.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/compositions/liquid-glass-compositions.css",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/compositions/liquid-glass-compositions.css"
+        }
+      ]
     }
   ]
 }
