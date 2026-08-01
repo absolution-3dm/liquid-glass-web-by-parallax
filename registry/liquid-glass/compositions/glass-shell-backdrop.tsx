@@ -33,6 +33,7 @@ import {
   type GlassMaterialInput,
   type GlassMaterialMode,
 } from "../materials/materials";
+import { observeNearViewport } from "../viewport-visibility";
 import { useMorphMenuOptional } from "./morph-menu";
 import "../liquid-glass.css";
 import "./liquid-glass-compositions.css";
@@ -278,6 +279,7 @@ export function GlassShellBackdrop({
   morphingRef.current = morphing;
   const morphHostRef = useRef(morphHost);
   morphHostRef.current = morphHost;
+  const inViewRef = useRef(true);
 
   const [useSvg, setUseSvg] = useState(false);
   const [active, setActive] = useState(false);
@@ -644,18 +646,27 @@ export function GlassShellBackdrop({
       parent.style.setProperty(key, String(value));
     }
     parent.classList.add("glass-shell");
-    parent.classList.toggle("glass-shell--backdrop-svg", useSvgRef.current);
 
-    if (useSvgRef.current && lens.mapUrl) {
-      parent.style.backdropFilter = `url(#${filterId}) saturate(${glassEngine.backdropSaturateSvg})`;
+    if (!inViewRef.current) {
+      // Keep tint/specular paint; detach live backdrop sampling while off-screen
+      // so Chromium does not re-run the SVG graph against animating page content.
+      parent.classList.remove("glass-shell--backdrop-svg");
+      parent.style.backdropFilter = "none";
       parent.style.setProperty("-webkit-backdrop-filter", "none");
     } else {
-      // Safari/Firefox: material blur is tuned for SVG displace (~1px). Boost
-      // so the CSS-only path still reads as frosted glass, not a flat veil.
-      const blurPx = cssBackdropBlurPx(lens.backdropBlurPx);
-      const blurCss = `blur(${blurPx}px) saturate(${glassEngine.backdropSaturateCssBlur})`;
-      parent.style.backdropFilter = blurCss;
-      parent.style.setProperty("-webkit-backdrop-filter", blurCss);
+      parent.classList.toggle("glass-shell--backdrop-svg", useSvgRef.current);
+
+      if (useSvgRef.current && lens.mapUrl) {
+        parent.style.backdropFilter = `url(#${filterId}) saturate(${glassEngine.backdropSaturateSvg})`;
+        parent.style.setProperty("-webkit-backdrop-filter", "none");
+      } else {
+        // Safari/Firefox: material blur is tuned for SVG displace (~1px). Boost
+        // so the CSS-only path still reads as frosted glass, not a flat veil.
+        const blurPx = cssBackdropBlurPx(lens.backdropBlurPx);
+        const blurCss = `blur(${blurPx}px) saturate(${glassEngine.backdropSaturateCssBlur})`;
+        parent.style.backdropFilter = blurCss;
+        parent.style.setProperty("-webkit-backdrop-filter", blurCss);
+      }
     }
 
     if (lensDivRef.current) {
@@ -951,6 +962,19 @@ export function GlassShellBackdrop({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setUseSvg(supportsBackdropSvgFilter());
   }, []);
+
+  useLayoutEffect(() => {
+    const parent = getShell();
+    if (!parent) return;
+
+    return observeNearViewport(parent, (near) => {
+      if (inViewRef.current === near) return;
+      inViewRef.current = near;
+      const lens = lensRef.current;
+      if (lens) paintShell(lens);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [morphHost, morph?.shellRef]);
 
   useEffect(() => {
     const pointer = pointerPositionRef.current;

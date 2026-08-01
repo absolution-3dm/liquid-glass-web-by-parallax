@@ -3,6 +3,7 @@
 import {
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -39,6 +40,7 @@ import {
   type GlassMaterialInput,
   type GlassMaterialMode,
 } from "./materials/materials";
+import { observeNearViewport } from "./viewport-visibility";
 import "./liquid-glass.css";
 
 export type {
@@ -167,10 +169,15 @@ export const LiquidGlass = ({
   const baseId = useId().replace(/:/g, "-");
   const [lens, setLens] = useState<LensState | null>(null);
   const [backdropSvg, setBackdropSvg] = useState(false);
+  // Optimistic true avoids a first-paint frost flash for above-the-fold glass;
+  // layout effect + IntersectionObserver immediately corrects off-screen ones.
+  const [inView, setInView] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const epochRef = useRef(0);
   const lastSizeRef = useRef({ w: 0, h: 0 });
+  const inViewRef = useRef(true);
+  const needsRebuildRef = useRef(false);
   const pointerHighlightRef = useRef<PointerHighlightState>({
     x: null,
     y: null,
@@ -190,7 +197,11 @@ export const LiquidGlass = ({
 
   const filterId = `glass-filter-${baseId}-${lens?.epoch ?? 0}`;
   const backdropFilterId = `glass-backdrop-${baseId}-${lens?.epoch ?? 0}`;
-  const useBackdropSvg = backdrop && backdropSvg;
+  // Live backdrop sampling is the expensive Chromium path. Keep maps cached
+  // off-screen, but detach `backdrop-filter` so animating page content cannot
+  // force every hidden SVG graph to re-evaluate each frame.
+  const liveBackdrop = backdrop && inView;
+  const useBackdropSvg = liveBackdrop && backdropSvg;
   const specularK = specularCompositeCoefficients(lens?.specular ?? 0, resolvedEngine);
   const backdropSpecularK1 = specularK.k1;
   const flatWhiteSpecularK2 = useBackdropSvg
@@ -329,7 +340,26 @@ export const LiquidGlass = ({
     setBackdropSvg(supportsBackdropSvgFilter());
   }, []);
 
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    return observeNearViewport(el, (near) => {
+      inViewRef.current = near;
+      setInView(near);
+      if (near && needsRebuildRef.current) {
+        needsRebuildRef.current = false;
+        rebuild();
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
+    if (!inViewRef.current) {
+      needsRebuildRef.current = true;
+      return;
+    }
     rebuild();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -364,6 +394,10 @@ export const LiquidGlass = ({
       const h = Math.round(rh);
       if (w < 2 || h < 2) return;
       if (w === lastSizeRef.current.w && h === lastSizeRef.current.h) return;
+      if (!inViewRef.current) {
+        needsRebuildRef.current = true;
+        return;
+      }
       setTimeout(rebuild, 0);
     });
     ro.observe(el);
@@ -487,7 +521,11 @@ export const LiquidGlass = ({
       ref={containerRef}
       className={[
         "glass-surface",
-        backdrop ? (useBackdropSvg ? "glass-surface--backdrop-svg" : "glass-surface--backdrop-blur") : "",
+        liveBackdrop
+          ? useBackdropSvg
+            ? "glass-surface--backdrop-svg"
+            : "glass-surface--backdrop-blur"
+          : "",
         className,
       ]
         .filter(Boolean)
@@ -998,7 +1036,7 @@ export const LiquidGlass = ({
 
       <div className="glass-surface__material">
         <div className="glass-surface__pointer-highlight" aria-hidden />
-        {backdrop ? <div className="glass-surface__backdrop" aria-hidden /> : null}
+        {liveBackdrop ? <div className="glass-surface__backdrop" aria-hidden /> : null}
 
         {/* Selection chrome between frost and specular — so rim light stays on the shell, not the chip. */}
         {stateLayer ? <div className="glass-surface__state">{stateLayer}</div> : null}
