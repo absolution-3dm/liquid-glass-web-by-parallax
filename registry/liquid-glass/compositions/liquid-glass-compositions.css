@@ -120,6 +120,21 @@
   background-color: var(--fr-hover-fill, rgba(255, 255, 255, 0.06));
 }
 
+.glass-segmented-item {
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+/* IOSPointer translates the item toward the cursor, which can make the
+   browser's geometric :hover state flicker at an edge. Keep the same hover
+   fill active for the pointer controller's full attracted lifecycle. */
+.glass-segmented-item:hover,
+.glass-segmented-item:focus-visible,
+.glass-segmented-item[data-ios-pointer-attracted] {
+  background-color: var(--glass-segmented-hover-fill, rgba(255, 255, 255, 0.12));
+}
+
 .glass-segmented-item:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.45);
   outline-offset: -2px;

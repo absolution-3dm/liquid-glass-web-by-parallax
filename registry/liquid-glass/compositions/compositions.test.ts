@@ -61,4 +61,16 @@ describe("LiquidGlass composition registry", () => {
     expect(source).toContain("lens.yMapUrl");
     expect((source.match(/<feDisplacementMap/g) ?? []).length).toBeGreaterThanOrEqual(8);
   });
+
+  it("keeps segmented item hover visible throughout pointer attraction", () => {
+    const source = readFileSync(
+      "registry/liquid-glass/compositions/liquid-glass-compositions.css",
+      "utf8",
+    );
+    expect(source).toContain(".glass-segmented-item:hover");
+    expect(source).toContain(
+      ".glass-segmented-item[data-ios-pointer-attracted]",
+    );
+    expect(source).toContain("--glass-segmented-hover-fill");
+  });
 });
