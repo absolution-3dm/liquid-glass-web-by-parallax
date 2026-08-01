@@ -55,6 +55,22 @@ export const glassPointerHighlight = {
   endStop: 0.86,
 } as const;
 
+export type GlassPointerHighlightParams = {
+  [K in keyof typeof glassPointerHighlight]: (typeof glassPointerHighlight)[K];
+};
+
+export function glassPointerHighlightSnapshot(): GlassPointerHighlightParams {
+  return { ...glassPointerHighlight };
+}
+
+export function resolveGlassPointerHighlight(
+  overrides?: Partial<GlassPointerHighlightParams> | false,
+): GlassPointerHighlightParams | null {
+  if (overrides === false) return null;
+  if (!overrides) return glassPointerHighlightSnapshot();
+  return { ...glassPointerHighlight, ...overrides };
+}
+
 const pointerMaskSize = glassPointerHighlight.radius * 2;
 export const glassPointerHighlightMaskUrl = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${pointerMaskSize} ${pointerMaskSize}"><defs><radialGradient id="g"><stop offset="0%" stop-color="white"/><stop offset="${glassPointerHighlight.coreStop * 100}%" stop-color="white"/><stop offset="${glassPointerHighlight.shoulderStop * 100}%" stop-color="white" stop-opacity="${glassPointerHighlight.shoulderOpacity}"/><stop offset="${glassPointerHighlight.outerStop * 100}%" stop-color="white" stop-opacity="${glassPointerHighlight.outerOpacity}"/><stop offset="${glassPointerHighlight.endStop * 100}%" stop-color="white" stop-opacity="0"/></radialGradient></defs><rect width="${pointerMaskSize}" height="${pointerMaskSize}" fill="url(#g)"/></svg>`,
@@ -281,21 +297,32 @@ export function glassSurfaceCssVars(
   tint: number,
   fill: string = "#000000",
   engine: GlassEngineParams = glassEngine,
+  pointerHighlight: GlassPointerHighlightParams | null = glassPointerHighlightSnapshot(),
 ) {
-  return {
+  const cssVars: Record<string, string> = {
     "--glass-tint": String(tint),
     "--glass-fill": fill,
     "--glass-backdrop-saturate-svg": String(engine.backdropSaturateSvg),
     "--glass-backdrop-saturate-blur": String(engine.backdropSaturateCssBlur),
-    "--glass-pointer-radius": `${glassPointerHighlight.radius}px`,
-    "--glass-pointer-saturation": String(glassPointerHighlight.saturation),
-    "--glass-pointer-brightness": String(glassPointerHighlight.brightness),
-    "--glass-pointer-bloom-opacity": String(glassPointerHighlight.bloomOpacity),
-    "--glass-pointer-core-stop": `${glassPointerHighlight.coreStop * 100}%`,
-    "--glass-pointer-shoulder-stop": `${glassPointerHighlight.shoulderStop * 100}%`,
-    "--glass-pointer-shoulder-opacity": String(glassPointerHighlight.shoulderOpacity),
-    "--glass-pointer-outer-stop": `${glassPointerHighlight.outerStop * 100}%`,
-    "--glass-pointer-outer-opacity": String(glassPointerHighlight.outerOpacity),
-    "--glass-pointer-end-stop": `${glassPointerHighlight.endStop * 100}%`,
-  } as const;
+  };
+
+  if (pointerHighlight) {
+    cssVars["--glass-pointer-radius"] = `${pointerHighlight.radius}px`;
+    cssVars["--glass-pointer-saturation"] = String(pointerHighlight.saturation);
+    cssVars["--glass-pointer-brightness"] = String(pointerHighlight.brightness);
+    cssVars["--glass-pointer-bloom-opacity"] = String(pointerHighlight.bloomOpacity);
+    cssVars["--glass-pointer-core-stop"] = `${pointerHighlight.coreStop * 100}%`;
+    cssVars["--glass-pointer-shoulder-stop"] = `${pointerHighlight.shoulderStop * 100}%`;
+    cssVars["--glass-pointer-shoulder-opacity"] = String(pointerHighlight.shoulderOpacity);
+    cssVars["--glass-pointer-outer-stop"] = `${pointerHighlight.outerStop * 100}%`;
+    cssVars["--glass-pointer-outer-opacity"] = String(pointerHighlight.outerOpacity);
+    cssVars["--glass-pointer-end-stop"] = `${pointerHighlight.endStop * 100}%`;
+  }
+
+  return cssVars as {
+    "--glass-tint": string;
+    "--glass-fill": string;
+    "--glass-backdrop-saturate-svg": string;
+    "--glass-backdrop-saturate-blur": string;
+  };
 }

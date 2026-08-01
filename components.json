@@ -5,16 +5,20 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/playground.css",
+    "css": "src/shadcn.css",
     "baseColor": "neutral",
     "cssVariables": false,
     "prefix": ""
   },
+  "iconLibrary": "radix",
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
+  },
+  "registries": {
+    "@diceui": "https://diceui.com/r/{style}/{name}.json"
   }
 }

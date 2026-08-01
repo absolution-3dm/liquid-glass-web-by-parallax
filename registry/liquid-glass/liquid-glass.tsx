@@ -31,9 +31,11 @@ import {
   glassSurfaceCssVars,
   refractionBackdropScale,
   resolveGlassEngine,
+  resolveGlassPointerHighlight,
   specularCompositeCoefficients,
   specularMaskColorMatrixValues,
   type GlassEngineParams,
+  type GlassPointerHighlightParams,
 } from "./refraction/engine";
 import {
   resolveGlassMaterial,
@@ -99,6 +101,11 @@ export type LiquidGlassProps = {
   ) => void;
   /** Dev-only: override shared engine constants for live preview. */
   engine?: Partial<GlassEngineParams>;
+  /**
+   * Per-instance pointer bloom. Pass `false` to disable; partial values merge
+   * with the shared defaults. Other surfaces on the page are unaffected.
+   */
+  pointerHighlight?: Partial<GlassPointerHighlightParams> | false;
 };
 
 type LensState = {
@@ -146,6 +153,7 @@ export const LiquidGlass = ({
   style = {},
   onDisplacementMapChange,
   engine,
+  pointerHighlight,
 }: LiquidGlassProps) => {
   const resolvedMaterial = useMemo(
     () => resolveGlassMaterial(material, materialMode),
@@ -166,6 +174,10 @@ export const LiquidGlass = ({
     fill,
   } = resolvedMaterial;
   const resolvedEngine = useMemo(() => resolveGlassEngine(engine), [engine]);
+  const resolvedPointerHighlight = useMemo(
+    () => resolveGlassPointerHighlight(pointerHighlight),
+    [pointerHighlight],
+  );
   const baseId = useId().replace(/:/g, "-");
   const [lens, setLens] = useState<LensState | null>(null);
   const [backdropSvg, setBackdropSvg] = useState(false);
@@ -410,7 +422,7 @@ export const LiquidGlass = ({
     width: typeof width === "number" ? `${width}px` : width,
     height: typeof height === "number" ? `${height}px` : height,
     borderRadius: `${borderRadius}px`,
-    ...glassSurfaceCssVars(tint, fill, resolvedEngine),
+    ...glassSurfaceCssVars(tint, fill, resolvedEngine, resolvedPointerHighlight),
     ["--glass-blur" as string]: `${
       useBackdropSvg
         ? Math.max(0, blur)
@@ -447,7 +459,7 @@ export const LiquidGlass = ({
       mask.setAttribute("height", "0");
       return;
     }
-    const { radius } = glassPointerHighlight;
+    const { radius } = resolvedPointerHighlight ?? glassPointerHighlight;
     mask.setAttribute("x", String(x - radius));
     mask.setAttribute("y", String(y - radius));
     mask.setAttribute("width", String(radius * 2));
@@ -455,6 +467,7 @@ export const LiquidGlass = ({
   };
 
   const updatePointerHighlight = (event: ReactPointerEvent<HTMLDivElement>, strength: number) => {
+    if (!resolvedPointerHighlight) return;
     const surface = containerRef.current;
     if (!surface) return;
 
@@ -531,28 +544,44 @@ export const LiquidGlass = ({
         .filter(Boolean)
         .join(" ")}
       style={containerStyle}
-      onPointerEnter={(event) => {
-        if (event.pointerType === "mouse") {
-          updatePointerHighlight(event, glassPointerHighlight.hoverStrength);
-        }
-      }}
-      onPointerMove={(event) => {
-        if (event.pointerType === "mouse") {
-          updatePointerHighlight(event, glassPointerHighlight.hoverStrength);
-        }
-      }}
-      onPointerLeave={clearPointerHighlight}
-      onPointerDown={(event) => {
-        updatePointerHighlight(event, glassPointerHighlight.pressedStrength);
-        containerRef.current?.setAttribute("data-glass-pressed", "true");
-      }}
-      onPointerUp={(event) => {
-        if (event.pointerType === "mouse") {
-          updatePointerHighlight(event, glassPointerHighlight.hoverStrength);
-        }
-        containerRef.current?.removeAttribute("data-glass-pressed");
-      }}
-      onPointerCancel={clearPointerHighlight}
+      onPointerEnter={
+        resolvedPointerHighlight
+          ? (event) => {
+              if (event.pointerType === "mouse") {
+                updatePointerHighlight(event, resolvedPointerHighlight.hoverStrength);
+              }
+            }
+          : undefined
+      }
+      onPointerMove={
+        resolvedPointerHighlight
+          ? (event) => {
+              if (event.pointerType === "mouse") {
+                updatePointerHighlight(event, resolvedPointerHighlight.hoverStrength);
+              }
+            }
+          : undefined
+      }
+      onPointerLeave={resolvedPointerHighlight ? clearPointerHighlight : undefined}
+      onPointerDown={
+        resolvedPointerHighlight
+          ? (event) => {
+              updatePointerHighlight(event, resolvedPointerHighlight.pressedStrength);
+              containerRef.current?.setAttribute("data-glass-pressed", "true");
+            }
+          : undefined
+      }
+      onPointerUp={
+        resolvedPointerHighlight
+          ? (event) => {
+              if (event.pointerType === "mouse") {
+                updatePointerHighlight(event, resolvedPointerHighlight.hoverStrength);
+              }
+              containerRef.current?.removeAttribute("data-glass-pressed");
+            }
+          : undefined
+      }
+      onPointerCancel={resolvedPointerHighlight ? clearPointerHighlight : undefined}
     >
       {lens ? (
         <svg className="glass-surface__defs" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -1035,7 +1064,9 @@ export const LiquidGlass = ({
       ) : null}
 
       <div className="glass-surface__material">
-        <div className="glass-surface__pointer-highlight" aria-hidden />
+        {resolvedPointerHighlight ? (
+          <div className="glass-surface__pointer-highlight" aria-hidden />
+        ) : null}
         {liveBackdrop ? <div className="glass-surface__backdrop" aria-hidden /> : null}
 
         {/* Selection chrome between frost and specular — so rim light stays on the shell, not the chip. */}
