@@ -25,6 +25,11 @@
           "target": "components/liquid-glass/browser-support.ts"
         },
         {
+          "path": "registry/liquid-glass/viewport-visibility.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/viewport-visibility.ts"
+        },
+        {
           "path": "registry/liquid-glass/refraction/lens-map.ts",
           "type": "registry:ui",
           "target": "components/liquid-glass/refraction/lens-map.ts"
@@ -76,6 +81,11 @@
           "path": "registry/liquid-glass/browser-support.ts",
           "type": "registry:ui",
           "target": "components/liquid-glass/browser-support.ts"
+        },
+        {
+          "path": "registry/liquid-glass/viewport-visibility.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/viewport-visibility.ts"
         },
         {
           "path": "registry/liquid-glass/refraction/lens-map.ts",
@@ -162,6 +172,11 @@
           "target": "components/liquid-glass/browser-support.ts"
         },
         {
+          "path": "registry/liquid-glass/viewport-visibility.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/viewport-visibility.ts"
+        },
+        {
           "path": "registry/liquid-glass/refraction/lens-map.ts",
           "type": "registry:ui",
           "target": "components/liquid-glass/refraction/lens-map.ts"
@@ -226,6 +241,11 @@
           "path": "registry/liquid-glass/browser-support.ts",
           "type": "registry:ui",
           "target": "components/liquid-glass/browser-support.ts"
+        },
+        {
+          "path": "registry/liquid-glass/viewport-visibility.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/viewport-visibility.ts"
         },
         {
           "path": "registry/liquid-glass/refraction/lens-map.ts",
@@ -302,6 +322,11 @@
           "path": "registry/liquid-glass/browser-support.ts",
           "type": "registry:ui",
           "target": "components/liquid-glass/browser-support.ts"
+        },
+        {
+          "path": "registry/liquid-glass/viewport-visibility.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/viewport-visibility.ts"
         },
         {
           "path": "registry/liquid-glass/refraction/lens-map.ts",

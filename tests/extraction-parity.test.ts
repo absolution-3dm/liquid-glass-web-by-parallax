@@ -30,6 +30,7 @@ describe("LiquidGlass extraction contract", () => {
     expect(source).toContain('in="dispTopBottomY"');
     expect(source).toContain('result="dispSidesX"');
     expect(source).toContain('in="dispSidesX"');
+    expect(source).toContain("observeNearViewport");
   });
 
   it("keeps the standard CSS blur fallback and has no app coupling", () => {
@@ -37,6 +38,7 @@ describe("LiquidGlass extraction contract", () => {
       "registry/liquid-glass/liquid-glass.tsx",
       "registry/liquid-glass/liquid-glass.css",
       "registry/liquid-glass/browser-support.ts",
+      "registry/liquid-glass/viewport-visibility.ts",
       "registry/liquid-glass/refraction/lens-map.ts",
       "registry/liquid-glass/refraction/math.ts",
       "registry/liquid-glass/refraction/engine.ts",
@@ -59,7 +61,7 @@ describe("LiquidGlass extraction contract", () => {
     const item = registry.items[0];
 
     expect(item.dependencies).toBeUndefined();
-    expect(item.files).toHaveLength(9);
+    expect(item.files).toHaveLength(10);
     expect(item.files.every(({ target }) => target.startsWith("components/liquid-glass/"))).toBe(
       true,
     );
