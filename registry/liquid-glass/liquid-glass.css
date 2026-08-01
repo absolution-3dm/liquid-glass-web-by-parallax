@@ -1,0 +1,170 @@
+.glass-surface {
+  --glass-pointer-x: 50%;
+  --glass-pointer-y: 50%;
+  --glass-highlight-strength: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  isolation: isolate;
+  transition: opacity 0.26s ease-out;
+  transform: translateZ(0);
+}
+
+/*
+  Pointer bloom is painted before `.glass-surface__backdrop`, so the live
+  backdrop filter refracts it together with the page rather than compositing
+  it as a flat overlay above the glass.
+*/
+.glass-surface__pointer-highlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--glass-highlight-strength);
+  /* A restrained color and luminance lift before the parent lens refracts it. */
+  backdrop-filter: saturate(var(--glass-pointer-saturation)) brightness(var(--glass-pointer-brightness));
+  mask-image: radial-gradient(
+    circle var(--glass-pointer-radius) at var(--glass-pointer-x) var(--glass-pointer-y),
+    black 0%,
+    black var(--glass-pointer-core-stop),
+    rgb(0 0 0 / var(--glass-pointer-shoulder-opacity)) var(--glass-pointer-shoulder-stop),
+    rgb(0 0 0 / var(--glass-pointer-outer-opacity)) var(--glass-pointer-outer-stop),
+    transparent var(--glass-pointer-end-stop)
+  );
+  -webkit-mask-image: radial-gradient(
+    circle var(--glass-pointer-radius) at var(--glass-pointer-x) var(--glass-pointer-y),
+    black 0%,
+    black var(--glass-pointer-core-stop),
+    rgb(0 0 0 / var(--glass-pointer-shoulder-opacity)) var(--glass-pointer-shoulder-stop),
+    rgb(0 0 0 / var(--glass-pointer-outer-opacity)) var(--glass-pointer-outer-stop),
+    transparent var(--glass-pointer-end-stop)
+  );
+  background: rgb(255 255 255 / var(--glass-pointer-bloom-opacity));
+  transition: opacity 180ms ease-out;
+}
+
+/* Chromium's SVG backdrop pipeline already applies the pointer-local
+   saturation/brightness boost before refraction. Avoid a second live backdrop
+   capture on this sibling while retaining its masked white bloom and opacity
+   response. CSS-blur fallback browsers keep the filter above because they do
+   not run the SVG pointer primitives. */
+.glass-surface--backdrop-svg .glass-surface__pointer-highlight {
+  backdrop-filter: none;
+}
+
+.glass-surface[data-glass-pressed="true"] .glass-surface__pointer-highlight {
+  transition-duration: 80ms;
+}
+
+.glass-surface__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/*
+  Refracted glass body (backdrop blur + lens tint).
+*/
+.glass-surface__material {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  isolation: isolate;
+  pointer-events: none;
+}
+
+/* Selection / hover chips — sit under the specular lens, over the frost. */
+.glass-surface__state {
+  position: absolute;
+  inset: 0;
+  /* Selection chrome must sit above the dark lens tint. */
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Pressed interactive glass sits outside the material stacking context so it
+   can cover sharp labels. The order is shell → state fill → content → overlay. */
+.glass-surface__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Live page behind the glass — one layer per instance. */
+.glass-surface__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Keep only the standard property in this stylesheet. Next's Lightning CSS
+   emits the WebKit-prefixed copy for Safari. If an explicit
+   `-webkit-backdrop-filter` follows it here, the optimizer keeps only that
+   prefixed declaration, so Firefox receives no usable backdrop filter. */
+
+.glass-surface--backdrop-blur .glass-surface__backdrop {
+  backdrop-filter: blur(var(--glass-blur, 0px)) saturate(var(--glass-backdrop-saturate-blur, 1.6));
+}
+
+.glass-surface--backdrop-svg .glass-surface__backdrop {
+  backdrop-filter: var(--backdrop-filter-id) saturate(var(--glass-backdrop-saturate-svg, 1.4));
+}
+
+/* Tint + specular — above selection chips so rim light stays on the shell. */
+.glass-surface__lens {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.glass-surface__tint {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: color-mix(
+    in srgb,
+    var(--glass-fill, #000000) calc(var(--glass-tint, 0.2) * 100%),
+    transparent
+  );
+}
+
+.glass-surface__ios-specular {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Sharp interactive content above the lens. */
+.glass-surface__content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: inherit;
+}
+
+.glass-surface:focus-visible {
+  outline: 2px solid light-dark(#007aff, #0a84ff);
+  outline-offset: 2px;
+}

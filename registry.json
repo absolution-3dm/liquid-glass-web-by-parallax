@@ -1,0 +1,60 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "liquid-glass",
+  "homepage": "https://example.com/liquid-glass",
+  "items": [
+    {
+      "name": "liquid-glass",
+      "type": "registry:ui",
+      "title": "LiquidGlass",
+      "description": "Source-owned Liquid Glass primitive with Chromium refraction and CSS blur fallbacks.",
+      "files": [
+        {
+          "path": "registry/liquid-glass/liquid-glass.tsx",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/liquid-glass.tsx"
+        },
+        {
+          "path": "registry/liquid-glass/liquid-glass.css",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/liquid-glass.css"
+        },
+        {
+          "path": "registry/liquid-glass/browser-support.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/browser-support.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/lens-map.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/lens-map.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/math.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/math.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/engine.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/engine.ts"
+        },
+        {
+          "path": "registry/liquid-glass/refraction/engine.json",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/refraction/engine.json"
+        },
+        {
+          "path": "registry/liquid-glass/materials/materials.ts",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/materials/materials.ts"
+        },
+        {
+          "path": "registry/liquid-glass/materials/materials.json",
+          "type": "registry:ui",
+          "target": "components/liquid-glass/materials/materials.json"
+        }
+      ]
+    }
+  ]
+}

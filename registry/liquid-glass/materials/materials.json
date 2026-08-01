@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "physical": {
+    "ultraThin": {
+      "scale": 0.3,
+      "depth": 5,
+      "curvature": 1,
+      "splay": 1,
+      "chroma": 0,
+      "blur": 0.5,
+      "glow": 0.03,
+      "edgeHighlight": 1,
+      "specularAngle": 37,
+      "specular": 2.75,
+      "tint": 0.06,
+      "fill": "#000000"
+    },
+    "thin": {
+      "scale": 0.635,
+      "depth": 10,
+      "curvature": 1,
+      "splay": 1,
+      "chroma": 0,
+      "blur": 1,
+      "glow": 0.03,
+      "edgeHighlight": 1,
+      "specularAngle": 37,
+      "specular": 2.75,
+      "tint": 0.1,
+      "fill": "#000000"
+    },
+    "regular": {
+      "scale": 0.775,
+      "depth": 16,
+      "curvature": 1,
+      "splay": 1,
+      "chroma": 0,
+      "blur": 2,
+      "glow": 0.03,
+      "edgeHighlight": 1,
+      "specularAngle": 37,
+      "specular": 2.75,
+      "tint": 0.14,
+      "fill": "#000000"
+    },
+    "thick": {
+      "scale": 1,
+      "depth": 22,
+      "curvature": 1,
+      "splay": 1,
+      "chroma": 0,
+      "blur": 2,
+      "glow": 0.03,
+      "edgeHighlight": 1,
+      "specularAngle": 37,
+      "specular": 2.75,
+      "tint": 0.24,
+      "fill": "#000000"
+    },
+    "ultraThick": {
+      "scale": 1.17,
+      "depth": 30,
+      "curvature": 1,
+      "splay": 1,
+      "chroma": 0,
+      "blur": 2.5,
+      "glow": 0.03,
+      "edgeHighlight": 1,
+      "specularAngle": 37,
+      "specular": 2.75,
+      "tint": 0.38,
+      "fill": "#000000"
+    }
+  },
+  "recipes": {
+    "navigation": {
+      "base": "regular",
+      "overrides": {
+        "scale": 1.465,
+        "depth": 20,
+        "blur": 1.5,
+        "specular": 3,
+        "tint": 0.5,
+        "fill": "#080808"
+      }
+    },
+    "control": {
+      "base": "regular",
+      "overrides": {
+        "scale": 1.1,
+        "depth": 20,
+        "blur": 1,
+        "tint": 0.5,
+        "fill": "#080808"
+      }
+    },
+    "panel": {
+      "base": "regular",
+      "overrides": {
+        "scale": 1.17,
+        "depth": 30,
+        "chroma": 0,
+        "glow": 0.03,
+        "edgeHighlight": 1,
+        "specularAngle": 37,
+        "specular": 2.75,
+        "tint": 0.56,
+        "fill": "#080808"
+      }
+    },
+    "selectionPressed": {
+      "base": "thin",
+      "overrides": {
+        "scale": 0.3,
+        "depth": 2,
+        "splay": 0.9,
+        "chroma": 0,
+        "blur": 0,
+        "glow": 0.03,
+        "edgeHighlight": 0.95,
+        "specularAngle": 37,
+        "specular": 2.75,
+        "tint": 0.06,
+        "fill": "#f4f7ff"
+      }
+    }
+  },
+  "lightTransform": {
+    "fillMix": 0.88,
+    "tintScale": 0.55,
+    "tintOffset": 0.04,
+    "blurScale": 1.15,
+    "chromaScale": 0.85,
+    "glowScale": 0.75,
+    "edgeHighlightScale": 0.85,
+    "specularScale": 0.8
+  }
+}

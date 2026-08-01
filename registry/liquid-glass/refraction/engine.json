@@ -1,0 +1,17 @@
+{
+  "mapQuality": 256,
+  "glowSpread": 0.16,
+  "glowExponent": 2.5,
+  "edgeWidth": 3,
+  "edgeExponent": 1.5,
+  "chromaRedBoost": 0.2,
+  "chromaGreenBoost": 0.1,
+  "backdropBlurPadMultiplier": 2,
+  "backdropBlurPadExtra": 8,
+  "backdropSaturateSvg": 1.85,
+  "backdropSaturateCssBlur": 1.7,
+  "cssBlurFallbackMultiplier": 4,
+  "specularMaskAlphaOffset": -0.5019607843137255,
+  "glareOppositeFactor": 0.84,
+  "specularColorPreserve": 0.92
+}
