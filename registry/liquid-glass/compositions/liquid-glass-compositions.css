@@ -14,6 +14,15 @@
   padding: 0;
 }
 
+.liquid-glass-capsule__content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
 .glass-segmented-surface,
 .glass-segmented-surface .glass-surface__state,
 .glass-segmented-surface .glass-surface__overlay {
@@ -48,12 +57,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(
-    165deg,
-    rgba(255, 255, 255, 0.34) 0%,
-    rgba(255, 236, 228, 0.22) 50%,
-    rgba(255, 214, 200, 0.16) 100%
-  );
+  background: rgb(255 255 255 / 0.14);
 }
 
 .glass-segmented-drag-glass {
@@ -114,25 +118,14 @@
   user-select: none;
 }
 
-.site-hover-fill:hover,
-.site-hover-fill:focus-visible,
-.site-hover-fill:active {
+.site-hover-fill:hover:not(.glass-segmented-item),
+.site-hover-fill:focus-visible:not(.glass-segmented-item),
+.site-hover-fill:active:not(.glass-segmented-item) {
   background-color: var(--fr-hover-fill, rgba(255, 255, 255, 0.06));
 }
 
 .glass-segmented-item {
-  transition:
-    color 160ms ease,
-    background-color 160ms ease;
-}
-
-/* IOSPointer translates the item toward the cursor, which can make the
-   browser's geometric :hover state flicker at an edge. Keep the same hover
-   fill active for the pointer controller's full attracted lifecycle. */
-.glass-segmented-item:hover,
-.glass-segmented-item:focus-visible,
-.glass-segmented-item[data-ios-pointer-attracted] {
-  background-color: var(--glass-segmented-hover-fill, rgba(255, 255, 255, 0.12));
+  transition: color 160ms ease;
 }
 
 .glass-segmented-item:focus-visible {

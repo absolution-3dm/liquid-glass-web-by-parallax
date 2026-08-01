@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import type { HTMLMotionProps } from "motion/react";
 import type { CSSProperties, ReactNode } from "react";
 import LiquidGlass from "../liquid-glass";
 import type { GlassEngineParams } from "../refraction/engine";
@@ -15,6 +16,8 @@ export type LiquidGlassCapsuleProps = {
   borderRadius?: number;
   /** 初始绝对定位（相对 constraints 容器）。 */
   initial?: { x: number; y: number };
+  /** Limit drag to a parent ref or pixel bounds. Default: unconstrained. */
+  dragConstraints?: HTMLMotionProps<"div">["dragConstraints"];
   /** 透传给内部 GlassSurface 的材质预设或局部覆盖。 */
   material?: GlassMaterialInput;
   materialMode?: GlassMaterialMode;
@@ -37,6 +40,7 @@ export function LiquidGlassCapsule({
   height = 150,
   borderRadius = 75,
   initial,
+  dragConstraints,
   material = "navigation",
   materialMode = "dark",
   engine,
@@ -53,6 +57,7 @@ export function LiquidGlassCapsule({
         pressed.set(true);
       }}
       drag
+      dragConstraints={dragConstraints}
       dragMomentum={false}
       onDrag={(_, info) => squishVelocityX.set(info.velocity.x)}
       onDragEnd={() => squishVelocityX.set(0)}
@@ -85,9 +90,7 @@ export function LiquidGlassCapsule({
 
       {/* 内容覆盖层：不缩放、不被剪切，始终清晰。 */}
       {children ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          {children}
-        </div>
+        <div className="liquid-glass-capsule__content">{children}</div>
       ) : null}
     </motion.div>
   );
