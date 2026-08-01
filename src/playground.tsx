@@ -1,7 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MeshGradient } from "@paper-design/shaders-react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Cancel01Icon,
+  Copy01Icon,
+  FileCodeIcon,
+  Home01Icon,
+  Menu01Icon,
+  Search01Icon,
+  Settings01Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { LiquidGlass } from "../registry/liquid-glass/liquid-glass";
 import {
   resolveGlassMaterial,
@@ -9,6 +19,8 @@ import {
 } from "../registry/liquid-glass/materials/materials";
 import { GlassSegmentedControl } from "../registry/liquid-glass/compositions/glass-segmented-control";
 import { GlassShellBackdrop } from "../registry/liquid-glass/compositions/glass-shell-backdrop";
+import { GlassIconPill } from "../registry/liquid-glass/compositions/glass-icon-pill";
+import { LiquidGlassCapsule } from "../registry/liquid-glass/compositions/liquid-glass-capsule";
 import { IOSPointer } from "../registry/liquid-glass/compositions/ios-pointer";
 import {
   MorphMenuHoverFill,
@@ -25,9 +37,8 @@ const segmentItems = [
 const menuItems = ["Overview", "Components", "Installation", "Documentation"];
 
 const topNavigationItems = [
-  { value: "menu", label: "Menu", href: "#menu" },
-  { value: "segment-control", label: "Segment", href: "#segment-control" },
-  { value: "panel", label: "Panel", href: "#panel" },
+  { value: "menu", label: "Home", href: "#menu" },
+  { value: "components", label: "Components", href: "#components" },
   { value: "customize", label: "Customize", href: "#customize" },
   { value: "installation", label: "Install", href: "#installation" },
 ];
@@ -35,59 +46,123 @@ const topNavigationItems = [
 const customizerPresets = ["regular", "navigation", "control", "panel"] as const;
 type CustomizerPreset = (typeof customizerPresets)[number];
 
-const installCommand =
-  "pnpm dlx shadcn@latest add <registry-url>/r/liquid-glass.json";
+const usageExample = `import { LiquidGlass } from "@/components/liquid-glass/liquid-glass"
 
-const importExample = `import { LiquidGlass } from
-  "@/components/liquid-glass/liquid-glass"`;
-
-const usageExample = `<LiquidGlass
-  width={320}
-  height={96}
-  borderRadius={32}
-  material="panel"
->
+<LiquidGlass width={320} height={96} borderRadius={32} material="panel">
   Your content
 </LiquidGlass>`;
 
-function DynamicGradientBackground() {
-  const [reducedMotion, setReducedMotion] = useState(false);
+const registryPackages = [
+  {
+    name: "liquid-glass",
+    title: "LiquidGlass",
+    description: "Primitive · Chromium refraction",
+    file: "liquid-glass.json",
+  },
+  {
+    name: "liquid-glass-capsule",
+    title: "Capsule",
+    description: "Composition · Motion drag",
+    file: "liquid-glass-capsule.json",
+  },
+  {
+    name: "liquid-glass-menu",
+    title: "Morph Menu",
+    description: "Composition · Motion morph",
+    file: "liquid-glass-menu.json",
+  },
+  {
+    name: "liquid-glass-navigation",
+    title: "Navigation",
+    description: "Composition · Motion snap",
+    file: "liquid-glass-navigation.json",
+  },
+  {
+    name: "liquid-glass-icon-pill",
+    title: "Icon Pill",
+    description: "Composition · Motion-free",
+    file: "liquid-glass-icon-pill.json",
+  },
+  {
+    name: "liquid-glass-magnetic-pointer",
+    title: "Magnetic Pointer",
+    description: "Composition · Custom spring",
+    file: "liquid-glass-magnetic-pointer.json",
+  },
+] as const;
 
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReducedMotion(media.matches);
-    sync();
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
+const bentoIconPills = [
+  { icon: Home01Icon, label: "Home" },
+  { icon: Search01Icon, label: "Search" },
+  { icon: Settings01Icon, label: "Settings" },
+] as const;
+
+function useClipboard(text: string) {
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    return () => {
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+      }
+    };
   }, []);
 
-  return (
-    <div className="dynamic-gradient" aria-hidden>
-      <MeshGradient
-        width="100%"
-        height="100%"
-        colors={["#071018", "#173646", "#4d7680", "#6f4651", "#0b1720"]}
-        distortion={0.72}
-        swirl={0.34}
-        grainMixer={0.1}
-        grainOverlay={0.06}
-        speed={reducedMotion ? 0 : 0.08}
-        fit="cover"
-        scale={1.18}
-        maxPixelCount={3_200_000}
-      />
-      <div className="dynamic-gradient__scrim" />
-    </div>
-  );
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+      }
+      timerRef.current = window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return { copied, copy };
 }
 
-function MenuIcon({ open }: { open: boolean }) {
-  return (
-    <span className={`menu-icon ${open ? "menu-icon--open" : ""}`} aria-hidden>
-      <i />
-      <i />
-    </span>
-  );
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function highlightCode(code: string, language: "bash" | "tsx") {
+  const slots: string[] = [];
+  const park = (html: string) => {
+    const marker = `\u0000${"x".repeat(slots.length + 1)}\u0000`;
+    slots.push(html);
+    return marker;
+  };
+  const wrap = (tokenClass: string, value: string) =>
+    park(`<span class="${tokenClass}">${escapeHtml(value)}</span>`);
+
+  let text = code;
+
+  if (language === "bash") {
+    text = text.replace(/(https?:\/\/\S+)/g, (match) => wrap("token-string", match));
+    text = text.replace(
+      /\b(pnpm|npm|npx|yarn|bun|dlx|shadcn@latest|add)\b/g,
+      (match) => wrap("token-keyword", match),
+    );
+  } else {
+    text = text.replace(/("[^"\n]*"|'[^'\n]*')/g, (match) => wrap("token-string", match));
+    text = text.replace(
+      /\b(import|from|export|const|return)\b/g,
+      (match) => wrap("token-keyword", match),
+    );
+    text = text.replace(/(<\/?[A-Za-z][\w.]*)/g, (match) => wrap("token-tag", match));
+    text = text.replace(/\b(\d+(?:\.\d+)?)\b/g, (match) => wrap("token-number", match));
+  }
+
+  return escapeHtml(text).replace(/\u0000(x+)\u0000/g, (_, marker: string) => {
+    return slots[marker.length - 1] ?? "";
+  });
 }
 
 function NavigationMenu() {
@@ -107,7 +182,7 @@ function NavigationMenu() {
       bounce={0}
     >
       <MorphMenu.Container
-        buttonSize={{ width: 116, height: 48 }}
+        buttonSize={48}
         menuWidth={268}
         menuRadius={28}
         buttonRadius={24}
@@ -119,8 +194,15 @@ function NavigationMenu() {
           aria-label={open ? "Close navigation menu" : "Open navigation menu"}
           className="navigation-menu__trigger"
         >
-          <MenuIcon open={open} />
-          <span>{open ? "Close" : "Menu"}</span>
+          <HugeiconsIcon
+            icon={Menu01Icon}
+            altIcon={Cancel01Icon}
+            showAlt={open}
+            size={20}
+            color="currentColor"
+            strokeWidth={1.75}
+            aria-hidden
+          />
         </MorphMenu.Trigger>
 
         <MorphMenu.Content
@@ -128,19 +210,17 @@ function NavigationMenu() {
           onPointerLeave={clearHoveredItem}
         >
           <div className="navigation-menu__heading">
-            <span>Navigation</span>
-            <small>04 sections</small>
+            <span>Navigate</span>
           </div>
           <div className="navigation-menu__items">
             <MorphMenuHoverFill hoveredItem={hoveredItem} />
-            {menuItems.map((item, index) => (
+            {menuItems.map((item) => (
               <MorphMenu.Item
                 key={item}
                 className="navigation-menu__item"
                 onPointerEnter={syncHoveredItem}
               >
                 <span>{item}</span>
-                <span className="navigation-menu__index">0{index + 1}</span>
               </MorphMenu.Item>
             ))}
           </div>
@@ -150,165 +230,306 @@ function NavigationMenu() {
   );
 }
 
-function SegmentShowcase() {
-  const [restValue, setRestValue] = useState("overview");
-  const [clickedValue, setClickedValue] = useState("motion");
-  const [pressedValue, setPressedValue] = useState("optics");
+function BentoMorphMenu() {
+  const [open, setOpen] = useState(false);
+  const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
   return (
-    <section className="component-section" id="segment-control">
-      <div className="section-heading">
-        <div>
-          <span className="eyebrow">02 · Interactive control</span>
-          <h2>Segment Control</h2>
-        </div>
-        <p>
-          Click to change selection. Hold and drag the active item to inspect lift,
-          bounded resistance, and spring snapping.
-        </p>
-      </div>
-
-      <div className="segment-state-grid" aria-label="Segment control states">
-        <article className="segment-state-card">
-          <div className="segment-state-card__heading">
-            <div>
-              <span>Rest</span>
-              <em>Default</em>
-            </div>
-            <strong>{restValue}</strong>
-          </div>
-          <GlassSegmentedControl
-            items={segmentItems}
-            value={restValue}
-            onValueChange={setRestValue}
-            itemWidth={88}
-            itemHeight={40}
-            padding={4}
-            radialExpansion={8}
-            material="navigation"
-            pressedMaterial="selectionPressed"
-            itemClassName="segment-item"
-          />
-          <p>The real default state with no presentation overrides.</p>
-        </article>
-
-        <article className="segment-state-card">
-          <div className="segment-state-card__heading">
-            <div>
-              <span>Clicked</span>
-              <em>Selected</em>
-            </div>
-            <strong>{clickedValue}</strong>
-          </div>
-          <GlassSegmentedControl
-            items={segmentItems}
-            value={clickedValue}
-            onValueChange={setClickedValue}
-            itemWidth={88}
-            itemHeight={40}
-            padding={4}
-            radialExpansion={8}
-            material="navigation"
-            pressedMaterial="selectionPressed"
-            itemClassName="segment-item"
-          />
-          <p>Click any segment to run the production selection timeline.</p>
-        </article>
-
-        <article className="segment-state-card segment-state-card--pressed">
-          <div className="segment-state-card__heading">
-            <div>
-              <span>Pressed</span>
-              <em>Hold & drag</em>
-            </div>
-            <strong>{pressedValue}</strong>
-          </div>
-          <GlassSegmentedControl
-            items={segmentItems}
-            value={pressedValue}
-            onValueChange={setPressedValue}
-            itemWidth={88}
-            itemHeight={40}
-            padding={4}
-            radialExpansion={8}
-            material="navigation"
-            pressedMaterial="selectionPressed"
-            pressedPreview
-            itemClassName="segment-item"
-          />
-          <p>The production pressed state, held through the component MotionValue.</p>
-        </article>
-      </div>
-    </section>
-  );
-}
-
-function PanelShowcase() {
-  return (
-    <section className="component-section" id="panel">
-      <div className="section-heading">
-        <div>
-          <span className="eyebrow">03 · Responsive surface</span>
-          <h2>Panel</h2>
-        </div>
-        <p>
-          A stable, non-interactive content surface. No dragging, deformation, or
-          magnetic attraction—only the Panel material itself.
-        </p>
-      </div>
-
-      <div className="panel-stage">
-        <LiquidGlass
-          width="100%"
-          height="100%"
-          borderRadius={36}
-          material="panel"
-          className="panel-glass"
+    <MorphMenu.Root
+      open={open}
+      onOpenChange={(next) => {
+        clearHoveredItem();
+        setOpen(next);
+      }}
+      direction="bottom"
+      anchor="start"
+      visualDuration={0.28}
+      bounce={0}
+    >
+      <MorphMenu.Container
+        buttonSize={48}
+        menuWidth={248}
+        menuRadius={28}
+        buttonRadius={24}
+        offset={12}
+        className="bento-menu__shell"
+        backdrop={<GlassShellBackdrop borderRadius={28} material="navigation" />}
+      >
+        <MorphMenu.Trigger
+          aria-label={open ? "Close menu" : "Open menu"}
+          className="navigation-menu__trigger"
         >
-          <div className="panel-content">
-            <div className="panel-content__topline">
-              <div>
-                <span className="panel-kicker">Material · Panel</span>
-                <h3>Refraction surface</h3>
-              </div>
-              <span className="status-badge">
-                <i />
-                Passive
-              </span>
-            </div>
+          <HugeiconsIcon
+            icon={Menu01Icon}
+            altIcon={Cancel01Icon}
+            showAlt={open}
+            size={20}
+            color="currentColor"
+            strokeWidth={1.75}
+            aria-hidden
+          />
+        </MorphMenu.Trigger>
 
-            <div className="panel-summary">
-              <strong>X / Y</strong>
-              <p>Independent textures, sequential displacement passes.</p>
-            </div>
-
-            <div className="panel-specs">
-              <div>
-                <span>Chromium</span>
-                <strong>SVG refraction</strong>
-              </div>
-              <div>
-                <span>Safari · Firefox</span>
-                <strong>CSS blur fallback</strong>
-              </div>
-            </div>
+        <MorphMenu.Content
+          className="navigation-menu__content"
+          onPointerLeave={clearHoveredItem}
+        >
+          <div className="navigation-menu__heading">
+            <span>Menu</span>
           </div>
-        </LiquidGlass>
+          <div className="navigation-menu__items">
+            <MorphMenuHoverFill hoveredItem={hoveredItem} />
+            {menuItems.map((item) => (
+              <MorphMenu.Item
+                key={item}
+                className="navigation-menu__item"
+                onPointerEnter={syncHoveredItem}
+              >
+                <span>{item}</span>
+              </MorphMenu.Item>
+            ))}
+          </div>
+        </MorphMenu.Content>
+      </MorphMenu.Container>
+    </MorphMenu.Root>
+  );
+}
+
+function ComponentsBento() {
+  const [segmentValue, setSegmentValue] = useState("motion");
+  const capsuleConstraintsRef = useRef<HTMLDivElement>(null);
+  const capsulePlacedRef = useRef(false);
+  const capsuleWidth = 168;
+  const capsuleHeight = 120;
+  const [capsuleOrigin, setCapsuleOrigin] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+
+  useLayoutEffect(() => {
+    const el = capsuleConstraintsRef.current;
+    if (!el) return;
+
+    const place = () => {
+      if (capsulePlacedRef.current || el.clientWidth <= 0 || el.clientHeight <= 0) {
+        return;
+      }
+      capsulePlacedRef.current = true;
+      setCapsuleOrigin({
+        x: Math.max(0, (el.clientWidth - capsuleWidth) / 2),
+        y: Math.max(0, (el.clientHeight - capsuleHeight) / 2),
+      });
+    };
+
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <section className="component-section" id="components">
+      <div className="section-heading">
+        <h2>Components</h2>
+        <p>
+          Live registry surfaces on a static scene — refraction without an
+          animating backdrop.
+        </p>
+      </div>
+
+      <div className="bento">
+        <div className="bento__scene-clip" aria-hidden="true">
+          <img
+            className="bento__scene"
+            src="/images/pexels-bento-scene.jpg"
+            alt=""
+          />
+        </div>
+
+        <article className="bento__cell bento__cell--capsule">
+          <span className="bento__label">Capsule</span>
+          <div className="bento__stage" ref={capsuleConstraintsRef}>
+            {capsuleOrigin ? (
+              <LiquidGlassCapsule
+                width={capsuleWidth}
+                height={capsuleHeight}
+                borderRadius={60}
+                initial={capsuleOrigin}
+                dragConstraints={capsuleConstraintsRef}
+                material="navigation"
+              >
+                <span className="bento-capsule__hint">Drag</span>
+              </LiquidGlassCapsule>
+            ) : null}
+          </div>
+        </article>
+
+        <article className="bento__cell bento__cell--panel">
+          <span className="bento__label">Panel</span>
+          <div className="bento__stage bento__stage--panel">
+            <LiquidGlass
+              width="100%"
+              height={200}
+              borderRadius={28}
+              material="panel"
+              className="bento-panel__glass"
+            >
+              <div className="panel-content">
+                <div>
+                  <span className="panel-kicker">Material</span>
+                  <h3>Panel</h3>
+                </div>
+                <p className="panel-lede">
+                  Quiet content surface — Chromium refraction, frost elsewhere.
+                </p>
+              </div>
+            </LiquidGlass>
+          </div>
+        </article>
+
+        <article className="bento__cell bento__cell--segment">
+          <span className="bento__label">Segment</span>
+          <div className="bento__stage bento__stage--center">
+            <GlassSegmentedControl
+              items={segmentItems}
+              value={segmentValue}
+              onValueChange={setSegmentValue}
+              itemWidth={100}
+              itemHeight={40}
+              padding={4}
+              radialExpansion={8}
+              material="navigation"
+              pressedMaterial="selectionPressed"
+              itemClassName="segment-item"
+            />
+          </div>
+        </article>
+
+        <article className="bento__cell bento__cell--menu">
+          <span className="bento__label">Morph menu</span>
+          <div className="bento__stage bento__stage--menu">
+            <BentoMorphMenu />
+          </div>
+        </article>
+
+        <article className="bento__cell bento__cell--icons">
+          <span className="bento__label">Icon pill</span>
+          <div className="bento__stage bento__stage--center bento-icon-row">
+            {bentoIconPills.map(({ icon, label }) => (
+              <button
+                key={label}
+                type="button"
+                className="bento-icon-button"
+                data-ios-pointer-target=""
+                aria-label={label}
+              >
+                <GlassIconPill size={48} material="navigation">
+                  <HugeiconsIcon
+                    icon={icon}
+                    size={20}
+                    color="currentColor"
+                    strokeWidth={1.75}
+                    className="bento-icon-glyph"
+                    aria-hidden
+                  />
+                </GlassIconPill>
+              </button>
+            ))}
+          </div>
+        </article>
       </div>
     </section>
   );
 }
 
-function CodeBlock({ label, code }: { label: string; code: string }) {
+function CodeBlock({
+  label,
+  code,
+  language = "tsx",
+}: {
+  label: string;
+  code: string;
+  language?: "bash" | "tsx";
+}) {
+  const { copied, copy } = useClipboard(code);
+
   return (
     <div className="code-block">
       <div className="code-block__header">
-        <span>{label}</span>
-        <small>Copy and own the source</small>
+        <div className="code-block__meta">
+          <span className="code-block__label">{label}</span>
+          <span className="code-block__language">{language}</span>
+        </div>
+        <button
+          type="button"
+          className={`code-block__copy${copied ? " is-copied" : ""}`}
+          onClick={() => void copy()}
+          aria-label={copied ? "Copied" : `Copy ${label}`}
+        >
+          <HugeiconsIcon
+            icon={copied ? Tick01Icon : Copy01Icon}
+            size={14}
+            color="currentColor"
+            strokeWidth={1.75}
+            aria-hidden
+          />
+          <span>{copied ? "Copied" : "Copy"}</span>
+        </button>
       </div>
       <pre>
-        <code>{code}</code>
+        <code
+          dangerouslySetInnerHTML={{ __html: highlightCode(code, language) }}
+        />
       </pre>
+    </div>
+  );
+}
+
+function RegistryAttachment({
+  title,
+  description,
+  file,
+  command,
+}: {
+  title: string;
+  description: string;
+  file: string;
+  command: string;
+}) {
+  const { copied, copy } = useClipboard(command);
+
+  return (
+    <div className="attachment">
+      <div className="attachment__media" aria-hidden>
+        <HugeiconsIcon
+          icon={FileCodeIcon}
+          size={18}
+          color="currentColor"
+          strokeWidth={1.6}
+          aria-hidden
+        />
+      </div>
+      <div className="attachment__content">
+        <div className="attachment__title">{title}</div>
+        <div className="attachment__description">
+          {file} · {description}
+        </div>
+      </div>
+      <div className="attachment__actions">
+        <button
+          type="button"
+          className={`attachment__action${copied ? " is-copied" : ""}`}
+          onClick={() => void copy()}
+          aria-label={copied ? `Copied ${title}` : `Copy install command for ${title}`}
+        >
+          <HugeiconsIcon
+            icon={copied ? Tick01Icon : Copy01Icon}
+            size={14}
+            color="currentColor"
+            strokeWidth={1.75}
+            aria-hidden
+          />
+        </button>
+      </div>
     </div>
   );
 }
@@ -396,21 +617,15 @@ function CustomizeShowcase() {
   return (
     <section className="component-section" id="customize">
       <div className="section-heading">
-        <div>
-          <span className="eyebrow">04 · Interactive playground</span>
-          <h2>Customize the glass.</h2>
-        </div>
-        <p>
-          Start with a checked-in material preset, then tune supported per-instance
-          overrides. The generated JSX stays on the public LiquidGlass API.
-        </p>
+        <h2>Customize</h2>
+        <p>Start from a preset, then tune the public material overrides.</p>
       </div>
 
       <div className="customizer-layout">
         <div className="customizer-preview">
           <img
             className="customizer-preview__scene"
-            src="/images/pexels-gradient-1526.jpg"
+            src="/images/pexels-bento-scene.jpg"
             alt=""
             aria-hidden="true"
           />
@@ -422,16 +637,14 @@ function CustomizeShowcase() {
             className="customizer-preview__glass"
           >
             <div className="customizer-preview__content">
-              <span>Live preview</span>
               <strong>{preset}</strong>
-              <small>Adjust the controls to update this surface</small>
             </div>
           </LiquidGlass>
         </div>
 
         <div className="customizer-controls">
           <label className="customizer-select">
-            <span>Material preset</span>
+            <span>Preset</span>
             <select
               value={preset}
               onChange={(event) => selectPreset(event.currentTarget.value as CustomizerPreset)}
@@ -445,15 +658,15 @@ function CustomizeShowcase() {
           </label>
 
           <div className="customizer-sliders">
-            <SliderControl label="Refraction scale" value={scale} min={0} max={3} step={0.01} onChange={setScale} />
-            <SliderControl label="Backdrop blur" value={blur} min={0} max={8} step={0.1} display={`${blur.toFixed(1)} px`} onChange={setBlur} />
+            <SliderControl label="Scale" value={scale} min={0} max={3} step={0.01} onChange={setScale} />
+            <SliderControl label="Blur" value={blur} min={0} max={8} step={0.1} display={`${blur.toFixed(1)} px`} onChange={setBlur} />
             <SliderControl label="Tint" value={tint} min={0} max={1} step={0.01} onChange={setTint} />
-            <SliderControl label="Chromatic aberration" value={chroma} min={0} max={1} step={0.01} onChange={setChroma} />
-            <SliderControl label="Border radius" value={borderRadius} min={12} max={90} step={1} display={`${borderRadius} px`} onChange={setBorderRadius} />
+            <SliderControl label="Chroma" value={chroma} min={0} max={1} step={0.01} onChange={setChroma} />
+            <SliderControl label="Radius" value={borderRadius} min={12} max={90} step={1} display={`${borderRadius} px`} onChange={setBorderRadius} />
           </div>
 
           <label className="customizer-color">
-            <span>Glass fill</span>
+            <span>Fill</span>
             <span>
               <input type="color" value={fill} onChange={(event) => setFill(event.currentTarget.value)} />
               <output>{fill}</output>
@@ -463,100 +676,52 @@ function CustomizeShowcase() {
       </div>
 
       <div className="customizer-code">
-        <CodeBlock label="Generated JSX" code={generatedExample} />
+        <CodeBlock label="JSX" code={generatedExample} language="tsx" />
       </div>
     </section>
   );
 }
 
 function InstallationShowcase() {
+  const [origin, setOrigin] = useState("http://localhost:5173");
+
+  useLayoutEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const installCommand = `pnpm dlx shadcn@latest add ${origin}/r/liquid-glass.json`;
+
   return (
     <section className="component-section installation-section" id="installation">
       <div className="section-heading">
-        <div>
-          <span className="eyebrow">05 · Installation</span>
-          <h2>Install the source.</h2>
-        </div>
+        <h2>Install</h2>
         <p>
-          LiquidGlass is distributed through a shadcn Registry. The CLI copies
-          the complete implementation into your application—there is no private
-          LiquidGlass runtime package.
+          Distributed through the shadcn Registry. The CLI copies the source into
+          your app — no private runtime package.
         </p>
       </div>
 
-      <div className="installation-grid">
-        <article className="installation-card installation-card--primary">
-          <div className="installation-card__step">
-            <span>01</span>
-            <div>
-              <strong>Install the primitive</strong>
-              <p>
-                Replace <code>&lt;registry-url&gt;</code> with the origin hosting this
-                Registry.
-              </p>
-            </div>
-          </div>
-          <CodeBlock label="Terminal" code={installCommand} />
+      <div className="installation-stack">
+        <CodeBlock label="Terminal" code={installCommand} language="bash" />
+        <CodeBlock label="Usage" code={usageExample} language="tsx" />
 
-          <div className="installation-card__step">
-            <span>02</span>
-            <div>
-              <strong>Import the owned source</strong>
-              <p>All files are installed under components/liquid-glass.</p>
-            </div>
+        <div className="installation-packages">
+          <div className="installation-packages__heading">
+            <span>Registry packages</span>
+            <span>Copy a package install command</span>
           </div>
-          <CodeBlock label="React" code={importExample} />
-        </article>
-
-        <aside className="registry-items" aria-label="Registry items">
-          <div className="registry-items__header">
-            <span>Registry items</span>
-            <small>Choose only what you need</small>
+          <div className="attachment-group">
+            {registryPackages.map((item) => (
+              <RegistryAttachment
+                key={item.name}
+                title={item.title}
+                description={item.description}
+                file={item.file}
+                command={`pnpm dlx shadcn@latest add ${origin}/r/${item.file}`}
+              />
+            ))}
           </div>
-          <ul>
-            <li>
-              <div>
-                <strong>liquid-glass</strong>
-                <span>Core optical primitive</span>
-              </div>
-              <em>No Motion</em>
-            </li>
-            <li>
-              <div>
-                <strong>liquid-glass-navigation</strong>
-                <span>Segmented navigation and snapping</span>
-              </div>
-              <em>Motion</em>
-            </li>
-            <li>
-              <div>
-                <strong>liquid-glass-menu</strong>
-                <span>Morph menu and dynamic glass shell</span>
-              </div>
-              <em>Motion</em>
-            </li>
-            <li>
-              <div>
-                <strong>liquid-glass-magnetic-pointer</strong>
-                <span>Pointer attraction and spring return</span>
-              </div>
-              <em>No Motion</em>
-            </li>
-          </ul>
-        </aside>
-      </div>
-
-      <div className="usage-example">
-        <div className="usage-example__copy">
-          <span className="eyebrow">03 · Render</span>
-          <h3>Use it like local UI.</h3>
-          <p>
-            Materials, browser detection, and refraction math live beside the
-            component, so the installed source can be inspected and changed in
-            place.
-          </p>
         </div>
-        <CodeBlock label="Component" code={usageExample} />
       </div>
     </section>
   );
@@ -573,19 +738,24 @@ export function Playground() {
   return (
     <>
       <IOSPointer />
-      <DynamicGradientBackground />
-      <div className="backdrop-grid" aria-hidden />
+      <div className="static-backdrop" aria-hidden />
 
       <header className="site-navigation">
         <a className="brand-pill" href="#top" aria-label="LiquidGlass home">
           <LiquidGlass
-            width="100%"
+            width="max-content"
             height={48}
             borderRadius={24}
             material="navigation"
             className="brand-pill__glass"
           >
-            <span className="brand-mark">L</span>
+            <img
+              className="brand-mark"
+              src="/logo.png"
+              alt=""
+              width={38}
+              height={38}
+            />
             <span>LiquidGlass</span>
           </LiquidGlass>
         </a>
@@ -594,7 +764,7 @@ export function Playground() {
           items={topNavigationItems}
           value={topNavigationValue}
           onValueChange={navigateToSection}
-          itemWidth={76}
+          itemWidth={108}
           itemHeight={40}
           padding={4}
           radialExpansion={8}
@@ -612,37 +782,24 @@ export function Playground() {
       <main id="top">
         <section className="hero" id="menu">
           <div className="hero-copy">
-            <span className="eyebrow">Source-owned · shadcn registry</span>
-            <h1>Glass components, in every state.</h1>
-            <p>
-              Inspect menu morphing, Segment Control selection and press states,
-              and a stable Panel surface in one source-owned playground.
+            <h1>LiquidGlass</h1>
+            <p className="hero-lede">
+              Optical surfaces for the web. Install the source, own the
+              refraction.
             </p>
-          </div>
-
-          <div className="hero-orbit" aria-hidden>
-            <span>CHROMIUM</span>
-            <span>X / Y</span>
-            <span>FALLBACK</span>
-          </div>
-
-          <div className="menu-callout">
-            <span className="menu-callout__line" />
-            <div>
-              <strong>Navigation Menu</strong>
-              <p>Use the Menu control in the top-right corner.</p>
-            </div>
+            <a className="hero-cta" href="#installation">
+              Install
+            </a>
           </div>
         </section>
 
-        <SegmentShowcase />
-        <PanelShowcase />
+        <ComponentsBento />
         <CustomizeShowcase />
         <InstallationShowcase />
 
         <footer>
-          <span>LiquidGlass Registry</span>
-          <span>Primitive · Navigation · Menu · Panel · Customize</span>
+          <span>LiquidGlass</span>
+          <span>shadcn Registry</span>
         </footer>
       </main>
     </>
