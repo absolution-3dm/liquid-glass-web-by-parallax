@@ -1,6 +1,13 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Cancel01Icon,
@@ -178,6 +185,196 @@ function highlightCode(code: string, language: "bash" | "tsx") {
   return escapeHtml(text).replace(/\u0000(x+)\u0000/g, (_, marker: string) => {
     return slots[marker.length - 1] ?? "";
   });
+}
+
+function HeroOrbitTilt({
+  className,
+  lift = 0,
+  rotateX,
+  rotateY,
+  springX,
+  springY,
+  children,
+}: {
+  className: string;
+  lift?: number;
+  rotateX: MotionValue<number>;
+  rotateY: MotionValue<number>;
+  springX: MotionValue<number>;
+  springY: MotionValue<number>;
+  children: ReactNode;
+}) {
+  const x = useTransform(springX, (value) => value * lift);
+  const y = useTransform(springY, (value) => value * lift);
+
+  return (
+    <motion.div
+      className={className}
+      style={{
+        rotateX,
+        rotateY,
+        x,
+        y,
+        // Parallel / orthographic: no vanishing-point perspective.
+        transformPerspective: 0,
+        transformOrigin: "50% 50%",
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function HeroFloatStage() {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [segmentValue, setSegmentValue] = useState("optics");
+  const reduceMotionRef = useRef(false);
+
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const springX = useSpring(pointerX, { stiffness: 320, damping: 32, mass: 0.55 });
+  const springY = useSpring(pointerY, { stiffness: 320, damping: 32, mass: 0.55 });
+  const rotateX = useTransform(springY, (value) => 16 + value * -5);
+  const rotateY = useTransform(springX, (value) => -24 + value * 8);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    reduceMotionRef.current = media.matches;
+    const onChange = () => {
+      reduceMotionRef.current = media.matches;
+      if (media.matches) {
+        pointerX.set(0);
+        pointerY.set(0);
+        springX.jump(0);
+        springY.jump(0);
+      }
+    };
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, [pointerX, pointerY, springX, springY]);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (reduceMotionRef.current) return;
+      const rect = stage.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      const ny = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+      pointerX.set(Math.max(-1, Math.min(1, nx)));
+      pointerY.set(Math.max(-1, Math.min(1, ny)));
+    };
+
+    const onPointerLeave = () => {
+      pointerX.set(0);
+      pointerY.set(0);
+    };
+
+    stage.addEventListener("pointermove", onPointerMove);
+    stage.addEventListener("pointerleave", onPointerLeave);
+    return () => {
+      stage.removeEventListener("pointermove", onPointerMove);
+      stage.removeEventListener("pointerleave", onPointerLeave);
+    };
+  }, [pointerX, pointerY]);
+
+  return (
+    <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass component preview">
+      <div className="hero-orbit__tilt">
+        <HeroOrbitTilt
+          className="hero-orbit__plate"
+          rotateX={rotateX}
+          rotateY={rotateY}
+          springX={springX}
+          springY={springY}
+        >
+          <img
+            className="hero-orbit__scene"
+            src="/images/pexels-bento-scene.jpg"
+            alt=""
+          />
+        </HeroOrbitTilt>
+
+        <HeroOrbitTilt
+          className="hero-orbit__layer hero-orbit__layer--panel"
+          lift={14}
+          rotateX={rotateX}
+          rotateY={rotateY}
+          springX={springX}
+          springY={springY}
+        >
+          <LiquidGlass
+            width={220}
+            height={148}
+            borderRadius={28}
+            material="panel"
+            className="hero-orbit__panel"
+          >
+            <div className="hero-orbit__panel-content">
+              <span className="panel-kicker">Material</span>
+              <strong>Panel</strong>
+              <p>Live refraction over a tilted scene.</p>
+            </div>
+          </LiquidGlass>
+        </HeroOrbitTilt>
+
+        <HeroOrbitTilt
+          className="hero-orbit__layer hero-orbit__layer--segment"
+          lift={20}
+          rotateX={rotateX}
+          rotateY={rotateY}
+          springX={springX}
+          springY={springY}
+        >
+          <GlassSegmentedControl
+            items={segmentItems}
+            value={segmentValue}
+            onValueChange={setSegmentValue}
+            itemWidth={100}
+            itemHeight={40}
+            padding={4}
+            radialExpansion={8}
+            material="navigation"
+            pressedMaterial="selectionPressed"
+            className="hero-orbit__segment"
+            itemClassName="hero-orbit__segment-item"
+          />
+        </HeroOrbitTilt>
+
+        <HeroOrbitTilt
+          className="hero-orbit__layer hero-orbit__layer--icons"
+          lift={26}
+          rotateX={rotateX}
+          rotateY={rotateY}
+          springX={springX}
+          springY={springY}
+        >
+          {bentoIconPills.map(({ icon, label }) => (
+            <button
+              key={label}
+              type="button"
+              className="bento-icon-button"
+              data-ios-pointer-target=""
+              aria-label={label}
+            >
+              <GlassIconPill size={44} material="navigation">
+                <HugeiconsIcon
+                  icon={icon}
+                  size={18}
+                  color="currentColor"
+                  strokeWidth={1.75}
+                  className="bento-icon-glyph"
+                  aria-hidden
+                />
+              </GlassIconPill>
+            </button>
+          ))}
+        </HeroOrbitTilt>
+      </div>
+    </div>
+  );
 }
 
 function NavigationMenu() {
@@ -974,6 +1171,7 @@ export function Playground() {
               Install
             </a>
           </div>
+          <HeroFloatStage />
         </section>
 
         <ComponentsBento />

@@ -275,13 +275,148 @@ main {
 .hero {
   position: relative;
   display: grid;
-  min-height: min(72vh, 640px);
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+  gap: 24px 40px;
+  min-height: min(72vh, 680px);
   align-items: end;
   padding: 140px 0 72px;
 }
 
 .hero-copy {
-  max-width: 640px;
+  position: relative;
+  z-index: 1;
+  max-width: 520px;
+  padding-bottom: 12px;
+}
+
+.hero-orbit {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: min(460px, 62vh);
+  margin-bottom: 8px;
+  touch-action: none;
+}
+
+.hero-orbit__tilt {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+  Perspective lives on Motion wrappers (HeroOrbitTilt). Glass surfaces stay
+  untransformed so Segment's internal chip slide/padding stay correct.
+*/
+.hero-orbit__plate {
+  position: absolute;
+  inset: 10% 6% 8% 10%;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: 28px;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.1) inset,
+    0 28px 56px rgb(0 0 0 / 0.55),
+    0 8px 18px rgb(0 0 0 / 0.35);
+  background: #0a0b0c;
+}
+
+.hero-orbit__plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(155deg, rgb(255 255 255 / 0.08), transparent 42%);
+  pointer-events: none;
+}
+
+.hero-orbit__scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 40%;
+}
+
+.hero-orbit__layer {
+  position: absolute;
+  z-index: 1;
+}
+
+.hero-orbit__layer--panel {
+  left: 4%;
+  top: 28%;
+}
+
+.hero-orbit__layer--segment {
+  right: 6%;
+  top: 14%;
+}
+
+.hero-orbit__layer--icons {
+  display: flex;
+  gap: 10px;
+  right: 8%;
+  bottom: 10%;
+}
+
+.hero-orbit__panel {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.12) inset,
+    0 12px 24px rgb(0 0 0 / 0.3),
+    0 32px 64px rgb(0 0 0 / 0.45);
+}
+
+.hero-orbit__segment {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.1) inset,
+    0 14px 28px rgb(0 0 0 / 0.35),
+    0 36px 64px rgb(0 0 0 / 0.42);
+}
+
+.hero-orbit__layer--icons .bento-icon-button {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.1) inset,
+    0 16px 32px rgb(0 0 0 / 0.38),
+    0 40px 72px rgb(0 0 0 / 0.45);
+}
+
+.hero-orbit__panel .glass-surface__content {
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+}
+
+.hero-orbit__panel-content {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  width: 100%;
+  height: 100%;
+  padding: 18px 18px 16px;
+}
+
+.hero-orbit__panel-content strong {
+  font-size: 1.2rem;
+  font-weight: 510;
+  letter-spacing: -0.03em;
+}
+
+.hero-orbit__panel-content p {
+  margin: 4px 0 0;
+  color: var(--muted-strong);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+.hero-orbit__segment-item {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.hero-orbit__segment-item[aria-selected="true"] {
+  color: #f7f8f8;
 }
 
 h1,
@@ -1224,8 +1359,21 @@ footer {
   }
 
   .hero {
+    grid-template-columns: 1fr;
+    align-items: start;
     min-height: 72vh;
     padding: 108px 0 72px;
+  }
+
+  .hero-orbit {
+    order: -1;
+    height: min(340px, 48vh);
+    margin: 0 0 8px;
+  }
+
+  .hero-orbit__tilt {
+    --hero-rx: calc(12deg + (var(--hero-py) * -4deg));
+    --hero-ry: calc(-18deg + (var(--hero-px) * 6deg));
   }
 
   .bento {
@@ -1303,6 +1451,26 @@ footer {
   .hero {
     min-height: 68vh;
     padding-top: 96px;
+    gap: 24px;
+  }
+
+  .hero-orbit {
+    height: 280px;
+  }
+
+  .hero-orbit__layer--panel {
+    left: 4%;
+    top: 26%;
+  }
+
+  .hero-orbit__layer--segment {
+    right: 4%;
+    top: 12%;
+  }
+
+  .hero-orbit__layer--icons {
+    right: 6%;
+    bottom: 8%;
   }
 
   h1 {

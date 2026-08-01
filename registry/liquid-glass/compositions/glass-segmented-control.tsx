@@ -220,14 +220,16 @@ export function GlassSegmentedControl({
 
   // Single measurement pass: refreshes both the drag-snap positions and the
   // resting pill's target (one DOM read instead of two separate ones).
+  //
+  // Use layout offsets (`offsetLeft`), not `getBoundingClientRect`. Under an
+  // ancestor 3D tilt (hero orbit, etc.) screen-space deltas are foreshortened
+  // along X, so the last snap lands short of the real item and the fill
+  // looks like it has a huge right-side gap.
   const measure = useCallback(() => {
     const nav = navRef.current;
     if (!nav) return;
     itemRefs.current.length = items.length;
-    const navLeft = nav.getBoundingClientRect().left;
-    const lefts = itemRefs.current.map((el) =>
-      el ? el.getBoundingClientRect().left - navLeft : null,
-    );
+    const lefts = itemRefs.current.map((el) => (el ? el.offsetLeft : null));
     if (!lefts.every((x): x is number => x !== null)) return;
     snapsRef.current = lefts;
     const activeLeft = lefts[activeIndex];
@@ -253,7 +255,13 @@ export function GlassSegmentedControl({
       // browser still can't reinterpret the rest of the gesture as a native
       // scroll and cancel our drag out from under the user.
       event.preventDefault();
-      const dx = event.clientX - drag.pointerX;
+      // Map screen delta into layout space when an ancestor applies 3D tilt
+      // (getBoundingClientRect width ≠ offsetWidth under rotateY).
+      const nav = navRef.current;
+      const screenW = nav?.getBoundingClientRect().width ?? 0;
+      const layoutW = nav?.offsetWidth ?? 0;
+      const scaleX = screenW > 0 && layoutW > 0 ? layoutW / screenW : 1;
+      const dx = (event.clientX - drag.pointerX) * scaleX;
       drag.moved = Math.max(drag.moved, Math.abs(dx));
       const snaps = snapsRef.current;
       const lo = Math.min(...snaps);
