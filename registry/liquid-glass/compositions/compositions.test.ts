@@ -62,6 +62,21 @@ describe("LiquidGlass composition registry", () => {
     expect((source.match(/<feDisplacementMap/g) ?? []).length).toBeGreaterThanOrEqual(8);
   });
 
+  it("presents Safari morph specular via double-buffered canvases", () => {
+    const source = readFileSync(
+      "registry/liquid-glass/compositions/glass-shell-backdrop.tsx",
+      "utf8",
+    );
+    expect(source).toContain("cssBlurMorph");
+    expect(source).toContain("presentCssBlurSpecular");
+    expect(source).toContain("writeSpecularOverlay");
+    expect(source).toContain("specCanvasARef");
+    expect(source).toContain("specCanvasBRef");
+    expect(source).toContain(
+      "if (!useSvgRef.current && morphingRef.current) {\n        scheduleBake(w, h, rad)",
+    );
+  });
+
   it("keeps segmented items free of hover fill", () => {
     const source = readFileSync(
       "registry/liquid-glass/compositions/liquid-glass-compositions.css",

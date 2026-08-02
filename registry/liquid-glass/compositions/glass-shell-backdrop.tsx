@@ -11,7 +11,7 @@ import {
 } from "react";
 import {
   generateAxisLensMaps,
-  generateSpecularOverlay,
+  writeSpecularOverlay,
 } from "../refraction/lens-map";
 import {
   backdropFilterPadding,
@@ -235,6 +235,11 @@ export function GlassShellBackdrop({
   const lensClipRef = useRef<HTMLDivElement>(null);
   const lensDivRef = useRef<HTMLDivElement>(null);
   const specularOverlayRef = useRef<HTMLDivElement>(null);
+  const specCanvasARef = useRef<HTMLCanvasElement>(null);
+  const specCanvasBRef = useRef<HTMLCanvasElement>(null);
+  const specFrontIsARef = useRef(true);
+  const specularBakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const pendingSpecTokenRef = useRef<string | null>(null);
   const backdropFilterRef = useRef<SVGFilterElement>(null);
   const lensFilterRef = useRef<SVGFilterElement>(null);
   const backdropXMapRef = useRef<SVGFEImageElement>(null);
@@ -262,6 +267,8 @@ export function GlassShellBackdrop({
   const committedGenRef = useRef(0);
   const pendingMapKeyRef = useRef<string | null>(null);
   const pendingLensRef = useRef<ShellLens | null>(null);
+  /** Last presented CSS-blur specular token (double-buffered canvas path). */
+  const paintedSpecUrlRef = useRef<string | null>(null);
   const useSvgRef = useRef(false);
   const pointerPositionRef = useRef<{ x: number | null; y: number | null; active: boolean }>({
     x: null,
@@ -485,8 +492,11 @@ export function GlassShellBackdrop({
   }, [morphHost, morphing]);
 
   /**
-   * Optical bake mirrors GlassSurface.rebuild. During morph (`lod`), bake at
-   * quantized dims + capped map quality; live SVG geometry remains fractional.
+   * Optical bake mirrors GlassSurface.rebuild. During morph (`lod`), Chromium
+   * bakes at quantized dims + capped map quality while live SVG geometry stays
+   * fractional. The CSS-blur specular path (Safari/Firefox) instead rebakes at
+   * live size every frame — an 8px LOD staircase + end-of-spring replace made
+   * the Fresnel rim strobe, and freezing/stretching the first sticker was worse.
    */
   const bakeLens = (
     width: number,
@@ -500,9 +510,13 @@ export function GlassShellBackdrop({
     if (liveW < 2 || liveH < 2) return null;
 
     const lod = Boolean(opts?.lod);
-    const bakeW = lod ? quantizeMorphDim(liveW) : liveW;
-    const bakeH = lod ? quantizeMorphDim(liveH) : liveH;
-    const qualityFloor = lod ? MORPH_MAP_QUALITY : glassEngine.mapQuality;
+    // Specular-only morph: track the live silhouette each frame. Axis-map morph
+    // stays on the cheaper quantized LOD path.
+    const cssBlurMorph = lod && !useSvgRef.current;
+    const bakeW = lod && !cssBlurMorph ? quantizeMorphDim(liveW) : liveW;
+    const bakeH = lod && !cssBlurMorph ? quantizeMorphDim(liveH) : liveH;
+    const qualityFloor =
+      lod && !cssBlurMorph ? MORPH_MAP_QUALITY : glassEngine.mapQuality;
 
     const hw = bakeW / 2;
     const hh = bakeH / 2;
@@ -510,7 +524,9 @@ export function GlassShellBackdrop({
     const safeCurvature = Math.max(0, Math.min(1, m.curvature));
 
     const mapKey = [
-      lod ? "lod" : "full",
+      // cssBlurMorph keys as "full" so the settle rebake can match when size
+      // stabilizes at the same CSS box (only DPR/quality may still upgrade).
+      cssBlurMorph || !lod ? "full" : "lod",
       // The two paths bake different bitmaps from the same params: Chromium
       // gets independent X/Y displacement maps, WebKit/Firefox get the white
       // specular overlay. Keying the mode prevents a useSvg flip from serving
@@ -531,7 +547,7 @@ export function GlassShellBackdrop({
       m.specular,
       m.tint,
       qualityFloor,
-      lod ? MORPH_MAP_QUALITY_CAP : "",
+      lod && !cssBlurMorph ? MORPH_MAP_QUALITY_CAP : "",
     ].join(":");
 
     const strength = Math.max(0, m.scale);
@@ -568,12 +584,13 @@ export function GlassShellBackdrop({
       return withLiveGeometry(pendingLens);
     }
 
-    const engine = lod
-      ? { ...glassEngine, mapQuality: qualityFloor }
-      : glassEngine;
-    // Only the settled (non-LOD) bake gets the DPR boost: this one runs once
-    // per settle, but an in-flight morph bakes on every quantized step, so
-    // keeping that path at 1x is what keeps the animation itself cheap.
+    const engine =
+      lod && !cssBlurMorph
+        ? { ...glassEngine, mapQuality: qualityFloor }
+        : glassEngine;
+    // Only the settled bake gets the DPR boost. CSS-blur morph rebakes every
+    // frame at live CSS size / 1× so the rim tracks the silhouette without a
+    // Retina-sized canvas cost; Chromium axis-map LOD stays quantized + 1×.
     const params = buildLensMapParams(
       {
         halfWidth: hw,
@@ -612,17 +629,56 @@ export function GlassShellBackdrop({
         edgeOrderMapUrl: axisMaps.edgeOrderUrl,
       };
     } else {
-      const map = generateSpecularOverlay(params, Math.max(0, m.specular));
-      if (!map.url) return null;
+      // Paint into an offscreen bake canvas. Morph presentation double-buffers
+      // from this bitmap — never through background-image data-URLs (iOS Safari
+      // strobes when those URLs change every frame).
+      const bake = (specularBakeCanvasRef.current ??= document.createElement("canvas"));
+      writeSpecularOverlay(bake, params, Math.max(0, m.specular));
+      const token = `spec-canvas:${mapKey}`;
+      pendingSpecTokenRef.current = token;
       maps = {
-        mapUrl: map.url,
-        xMapUrl: map.url,
-        yMapUrl: map.url,
-        edgeOrderMapUrl: map.url,
+        mapUrl: token,
+        xMapUrl: token,
+        yMapUrl: token,
+        edgeOrderMapUrl: token,
       };
     }
 
     return withLiveGeometry(maps);
+  };
+
+  /** Present CSS-blur specular via hidden-canvas draw + opacity swap. */
+  const presentCssBlurSpecular = (token: string) => {
+    if (!token) return;
+    const frontIsA = specFrontIsARef.current;
+    const back = frontIsA ? specCanvasBRef.current : specCanvasARef.current;
+    const front = frontIsA ? specCanvasARef.current : specCanvasBRef.current;
+    if (!back || !front) return;
+
+    // Same token after a remount: just ensure the front buffer is visible.
+    if (token === paintedSpecUrlRef.current) {
+      if (front.style.opacity !== "1") front.style.opacity = "1";
+      if (back.style.opacity !== "0") back.style.opacity = "0";
+      return;
+    }
+    if (pendingSpecTokenRef.current !== token) return;
+    const bake = specularBakeCanvasRef.current;
+    if (!bake || bake.width < 1 || bake.height < 1) return;
+
+    if (back.width !== bake.width || back.height !== bake.height) {
+      // Resize only the hidden back buffer so the clear never flashes on-screen.
+      back.width = bake.width;
+      back.height = bake.height;
+    }
+    const ctx = back.getContext("2d");
+    if (!ctx) return;
+    ctx.globalCompositeOperation = "copy";
+    ctx.drawImage(bake, 0, 0);
+
+    back.style.opacity = "1";
+    front.style.opacity = "0";
+    specFrontIsARef.current = !frontIsA;
+    paintedSpecUrlRef.current = token;
   };
 
   const paintShell = (lens: ShellLens) => {
@@ -672,19 +728,25 @@ export function GlassShellBackdrop({
     if (lensDivRef.current) {
       // Chromium: specular filter on the tint paint node; parent
       // `.glass-shell-lens` owns overflow+radius so CSS AA clips the filter
-      // output. WebKit/Firefox draw the specular via the overlay div below
-      // instead — their SVG-filter pipeline rasterizes at CSS-px resolution,
-      // which pixelates the corner arcs on 2x/3x screens; the plain
-      // background-image pipeline renders at device resolution.
+      // output. WebKit/Firefox use double-buffered canvases (see
+      // presentCssBlurSpecular) — background-image data-URL swaps strobe on
+      // iOS Safari when the shell springs.
       lensDivRef.current.style.filter = useSvgRef.current
         ? `url(#${lensFilterId})`
         : "none";
+      lensDivRef.current.style.backgroundImage = "none";
+    }
+    if (!useSvgRef.current && lens.mapUrl) {
+      presentCssBlurSpecular(lens.mapUrl);
     }
     if (specularOverlayRef.current) {
-      specularOverlayRef.current.style.backgroundImage =
-        !useSvgRef.current && lens.mapUrl
-          ? `url("${lens.mapUrl}")`
-          : "none";
+      specularOverlayRef.current.style.backgroundImage = "none";
+      specularOverlayRef.current.style.mixBlendMode = "normal";
+    }
+    const showSpecCanvas = !useSvgRef.current;
+    for (const canvas of [specCanvasARef.current, specCanvasBRef.current]) {
+      if (!canvas) continue;
+      canvas.style.visibility = showSpecCanvas ? "visible" : "hidden";
     }
     if (lensClipRef.current) {
       lensClipRef.current.style.borderRadius = `${lens.radius}px`;
@@ -809,50 +871,60 @@ export function GlassShellBackdrop({
     };
   };
 
+  const finishCommit = (lens: ShellLens, gen: number, committedKey: string) => {
+    // Let decoded intermediate LODs advance the visible map while a newer
+    // one is still decoding. Only reject a result if a later generation has
+    // already committed; this prevents regressions without leaving the old
+    // endpoint map stretched across the fast first half of the spring.
+    if (gen <= committedGenRef.current) return;
+    committedGenRef.current = gen;
+    if (gen === commitGenRef.current) {
+      pendingMapKeyRef.current = null;
+      pendingLensRef.current = null;
+    }
+    // Merge any live size that arrived while the PNG was decoding so we do
+    // not briefly snap filter geometry back to the bake-time box.
+    let applied = lens;
+    const pending = pendingSizeRef.current;
+    if (pending) {
+      const live = bakeLens(pending.w, pending.h, pending.radius, {
+        lod: morphHostRef.current && morphingRef.current,
+      });
+      if (live?.mapKey === committedKey && live.mapUrl) {
+        applied = live;
+      }
+      // Even when this decode belongs to an older LOD bucket, never let it
+      // restore that bucket's geometry over the newer fractional shell box.
+      applied = withLiveGeometry(
+        applied,
+        pending.w,
+        pending.h,
+        pending.radius,
+      );
+    }
+    lensRef.current = applied;
+    applyMapHrefs(applied);
+    applyGeometry(applied);
+    paintShell(applied);
+    if (!active) setActive(true);
+  };
+
   const commitLens = (lens: ShellLens) => {
     const gen = ++commitGenRef.current;
     const committedKey = lens.mapKey;
     pendingMapKeyRef.current = committedKey;
     pendingLensRef.current = lens;
+    // CSS-blur path paints the specular as a data-URL background-image.
+    // Waiting on Image decode here meant MorphMenu often finished its open
+    // spring before the first Safari rim could appear. Canvas toDataURL is
+    // already displayable; commit synchronously.
+    if (!useSvgRef.current) {
+      finishCommit(lens, gen, committedKey);
+      return;
+    }
     whenImagesReady(
       [lens.mapUrl, lens.xMapUrl, lens.yMapUrl, lens.edgeOrderMapUrl],
-      () => {
-        // Let decoded intermediate LODs advance the visible map while a newer
-        // one is still decoding. Only reject a result if a later generation has
-        // already committed; this prevents regressions without leaving the old
-        // endpoint map stretched across the fast first half of the spring.
-        if (gen <= committedGenRef.current) return;
-        committedGenRef.current = gen;
-        if (gen === commitGenRef.current) {
-          pendingMapKeyRef.current = null;
-          pendingLensRef.current = null;
-        }
-        // Merge any live size that arrived while the PNG was decoding so we do
-        // not briefly snap filter geometry back to the bake-time box.
-        let applied = lens;
-        const pending = pendingSizeRef.current;
-        if (pending) {
-          const live = bakeLens(pending.w, pending.h, pending.radius, {
-            lod: morphHostRef.current && morphingRef.current,
-          });
-          if (live?.mapKey === committedKey && live.mapUrl) {
-            applied = live;
-          }
-          // Even when this decode belongs to an older LOD bucket, never let it
-          // restore that bucket's geometry over the newer fractional shell box.
-          applied = withLiveGeometry(
-            applied,
-            pending.w,
-            pending.h,
-            pending.radius,
-          );
-        }
-        lensRef.current = applied;
-        applyMapHrefs(applied);
-        applyGeometry(applied);
-        paintShell(applied);
-        if (!active) setActive(true);
-      },
+      () => finishCommit(lens, gen, committedKey),
     );
   };
 
@@ -943,11 +1015,19 @@ export function GlassShellBackdrop({
       // Keep the filter box on the exact fractional shell geometry; the bitmap
       // itself still refreshes through the original quantized LOD path.
       applyLiveGeometry(w, h, rad);
+      pendingSizeRef.current = { w, h, radius: rad };
+      // CSS-blur specular: one live-size rebake per frame (rAF-coalesced).
+      // Sync publishSize on every motion sample was either too sparse (8px LOD
+      // staircase) or too eager; freezing the first sticker until settle made
+      // the end swap worse. scheduleBake keeps the rim on the silhouette.
+      if (!useSvgRef.current && morphingRef.current) {
+        scheduleBake(w, h, rad);
+        return;
+      }
       // `reportMorphSize` already runs inside Motion's animation frame. Going
       // through `scheduleBake` here requests another rAF and guarantees the
       // map selection trails the fill by one frame. LOD-key/in-flight dedupe
       // keeps this synchronous call cheap except when crossing a map step.
-      pendingSizeRef.current = { w, h, radius: rad };
       publishSize(w, h, rad, { lod: morphingRef.current });
       return;
     }
@@ -992,6 +1072,12 @@ export function GlassShellBackdrop({
   useEffect(() => {
     const prev = lensRef.current;
     if (prev) {
+      // CSS-blur morph already rebakes live-size specular each frame under the
+      // same "full" key tier. Skip the morphing=true invalidation so we do not
+      // throw away the in-flight sticker; settle still refreshes once at rest.
+      if (!useSvgRef.current && morphing) {
+        return;
+      }
       // Drop cache so settle (morphing false) always gets a fresh full bake.
       lensRef.current = { ...prev, mapKey: "" };
       onShellSizeRef.current(prev.width, prev.height, prev.radius);
@@ -1113,9 +1199,11 @@ export function GlassShellBackdrop({
   const seedPx = refractionBackdropScale(Math.max(0, scale), seedW, seedH);
   const seedScales = chromaticChannelScales(seedPx, chroma);
   const specularK = specularCompositeCoefficients(Math.max(0, specular));
-  // Mount lens-filter SVG even on the CSS-blur path (Safari) so k2 specular
-  // still composites; backdrop SVG only when useSvg.
+  // Mount lens-filter SVG even on the CSS-blur path (Safari) so Chromium-style
+  // filter defs stay available after a mode flip; backdrop SVG only when useSvg.
+  // Morph hosts always mount the double-buffered specular canvases.
   const showSvg = useSvg || active;
+  const showSpecCanvases = !useSvg;
 
   return (
     <div
@@ -1592,28 +1680,28 @@ export function GlassShellBackdrop({
           ref={lensDivRef}
           className="glass-shell-lens-paint absolute inset-0"
         />
-        {/* WebKit/Firefox specular carrier — same baked per-pixel highlight
-            as the Chromium filter path, delivered as a device-resolution
-            background-image instead of a CSS-px-rasterized SVG filter.
-            Empty (no background-image) on Chromium.
-
-            Styled inline, not via a stylesheet class: this project's CSS
-            build pipeline has silently dropped rules before, and losing
-            `background-size: 100% 100%` here would paint the raw bitmap at
-            its baked pixel size — a completely broken highlight. Scaling it
-            over the element box mirrors exactly how the filter path's
-            feImage (preserveAspectRatio="none") consumed the
-            same pixels. plus-lighter reproduces the filter's additive
-            feComposite math; browsers without it (iOS < 16.4) fall back to
-            normal alpha blending — slightly milkier, never broken. */}
+        {/* CSS-blur specular: double-buffered canvases. Draw into the hidden
+            buffer, then opacity-swap so iOS never shows a cleared frame the
+            way per-frame background-image data-URL swaps do. */}
+        {showSpecCanvases ? (
+          <>
+            <canvas
+              ref={specCanvasARef}
+              className="glass-shell-spec-canvas"
+              style={{ opacity: 0 }}
+              aria-hidden
+            />
+            <canvas
+              ref={specCanvasBRef}
+              className="glass-shell-spec-canvas"
+              style={{ opacity: 0 }}
+              aria-hidden
+            />
+          </>
+        ) : null}
         <div
           ref={specularOverlayRef}
           className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundSize: "100% 100%",
-            backgroundRepeat: "no-repeat",
-            mixBlendMode: "plus-lighter",
-          }}
           aria-hidden
         />
       </div>

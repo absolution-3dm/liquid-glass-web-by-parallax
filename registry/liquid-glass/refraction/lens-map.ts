@@ -381,6 +381,36 @@ function lensMapCacheKey(p: LensMapParams): string {
 const specularOverlayCache = new Map<string, LensMapResult>();
 
 /**
+ * Paint the white-with-alpha specular term (Fresnel rim + glare arcs) into
+ * `dest` using the same per-pixel math as the displacement map's B channel.
+ *
+ * MorphMenu on iOS presents this via a double-buffered `<canvas>` (not
+ * `background-image` data-URLs) so per-frame size tracking does not strobe.
+ */
+export function writeSpecularOverlay(
+  dest: HTMLCanvasElement,
+  p: LensMapParams,
+  k2: number,
+): { maxDisplacement: number } {
+  if (dest.width !== p.width || dest.height !== p.height) {
+    dest.width = p.width;
+    dest.height = p.height;
+  }
+  const ctx = dest.getContext("2d");
+  if (!ctx) return { maxDisplacement: 0 };
+
+  const { data, maxDisplacement } = computeLensMap(p);
+  for (let i = 0; i < data.length; i += 4) {
+    const spec = data[i + 2] - 128; // B channel: 128 = no highlight
+    const a = spec > 0 ? Math.min(255, (k2 * spec + 0.5) | 0) : 0;
+    data[i] = data[i + 1] = data[i + 2] = 255;
+    data[i + 3] = a;
+  }
+  ctx.putImageData(new ImageData(data, p.width, p.height), 0, 0);
+  return { maxDisplacement };
+}
+
+/**
  * White-with-alpha PNG of just the specular term (Fresnel rim + glare arcs)
  * from the exact same per-pixel math as the displacement map's B channel.
  *
@@ -406,19 +436,8 @@ export function generateSpecularOverlay(p: LensMapParams, k2: number): LensMapRe
   }
 
   const target = scratchCanvas ??= document.createElement("canvas");
-  target.width = p.width;
-  target.height = p.height;
-  const ctx = target.getContext("2d");
-  if (!ctx) return { url: "", maxDisplacement: 0 };
-
-  const { data, maxDisplacement } = computeLensMap(p);
-  for (let i = 0; i < data.length; i += 4) {
-    const spec = data[i + 2] - 128; // B channel: 128 = no highlight
-    const a = spec > 0 ? Math.min(255, (k2 * spec + 0.5) | 0) : 0;
-    data[i] = data[i + 1] = data[i + 2] = 255;
-    data[i + 3] = a;
-  }
-  ctx.putImageData(new ImageData(data, p.width, p.height), 0, 0);
+  if (!target.getContext("2d")) return { url: "", maxDisplacement: 0 };
+  const { maxDisplacement } = writeSpecularOverlay(target, p, k2);
   const url = target.toDataURL("image/png");
 
   const result: LensMapResult = { url, maxDisplacement };

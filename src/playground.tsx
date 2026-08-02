@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import {
   motion,
   useMotionValue,
@@ -27,7 +35,6 @@ import {
 import { GlassSegmentedControl } from "../registry/liquid-glass/compositions/glass-segmented-control";
 import { GlassShellBackdrop } from "../registry/liquid-glass/compositions/glass-shell-backdrop";
 import { GlassIconPill } from "../registry/liquid-glass/compositions/glass-icon-pill";
-import { LiquidGlassCapsule } from "../registry/liquid-glass/compositions/liquid-glass-capsule";
 import { IOSPointer } from "../registry/liquid-glass/compositions/ios-pointer";
 import {
   MorphMenuHoverFill,
@@ -365,11 +372,53 @@ function HeroFloatStage() {
   );
 }
 
+/** Showcase menus start closed, then open once so the morph spring plays. */
+function useShowcaseMenuOpen(enabled: boolean, rootRef: RefObject<HTMLElement | null>) {
+  const [open, setOpen] = useState(false);
+  const playedRef = useRef(false);
+
+  useEffect(() => {
+    if (!enabled || playedRef.current) return;
+    const root = rootRef.current;
+    if (!root) return;
+
+    const play = () => {
+      if (playedRef.current) return;
+      playedRef.current = true;
+      // Wait two frames so the closed shell paints before the spring starts.
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => setOpen(true));
+      });
+    };
+
+    if (typeof IntersectionObserver === "undefined") {
+      play();
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting && entry.intersectionRatio > 0.2)) {
+          play();
+          io.disconnect();
+        }
+      },
+      { threshold: [0, 0.2, 0.4] },
+    );
+    io.observe(root);
+    return () => io.disconnect();
+  }, [enabled, rootRef]);
+
+  return [open, setOpen] as const;
+}
+
 function HeroMorphMenu() {
-  const [open, setOpen] = useState(true);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useShowcaseMenuOpen(true, stageRef);
   const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
   return (
+    <div ref={stageRef}>
     <MorphMenu.Root
       open={open}
       onOpenChange={(next) => {
@@ -428,14 +477,21 @@ function HeroMorphMenu() {
         </MorphMenu.Content>
       </MorphMenu.Container>
     </MorphMenu.Root>
+    </div>
   );
 }
 
-function BentoMorphMenu() {
-  const [open, setOpen] = useState(false);
+function BentoMorphMenu({
+  defaultOpen = false,
+}: {
+  defaultOpen?: boolean;
+}) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useShowcaseMenuOpen(defaultOpen, stageRef);
   const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
   return (
+    <div ref={stageRef}>
     <MorphMenu.Root
       open={open}
       onOpenChange={(next) => {
@@ -446,6 +502,7 @@ function BentoMorphMenu() {
       anchor="start"
       visualDuration={0.28}
       bounce={0}
+      closeOnClickOutside={!defaultOpen}
     >
       <MorphMenu.Container
         buttonSize={48}
@@ -493,39 +550,12 @@ function BentoMorphMenu() {
         </MorphMenu.Content>
       </MorphMenu.Container>
     </MorphMenu.Root>
+    </div>
   );
 }
 
 function ComponentsBento() {
   const [segmentValue, setSegmentValue] = useState("motion");
-  const capsuleConstraintsRef = useRef<HTMLDivElement>(null);
-  const capsulePlacedRef = useRef(false);
-  const capsuleWidth = 168;
-  const capsuleHeight = 120;
-  const [capsuleOrigin, setCapsuleOrigin] = useState<{ x: number; y: number } | null>(
-    null,
-  );
-
-  useLayoutEffect(() => {
-    const el = capsuleConstraintsRef.current;
-    if (!el) return;
-
-    const place = () => {
-      if (capsulePlacedRef.current || el.clientWidth <= 0 || el.clientHeight <= 0) {
-        return;
-      }
-      capsulePlacedRef.current = true;
-      setCapsuleOrigin({
-        x: Math.max(0, (el.clientWidth - capsuleWidth) / 2),
-        y: Math.max(0, (el.clientHeight - capsuleHeight) / 2),
-      });
-    };
-
-    place();
-    const ro = new ResizeObserver(place);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   return (
     <section className="component-section" id="components">
@@ -546,44 +576,10 @@ function ComponentsBento() {
           />
         </div>
 
-        <article className="bento__cell bento__cell--capsule">
-          <span className="bento__label">Capsule</span>
-          <div className="bento__stage" ref={capsuleConstraintsRef}>
-            {capsuleOrigin ? (
-              <LiquidGlassCapsule
-                width={capsuleWidth}
-                height={capsuleHeight}
-                borderRadius={60}
-                initial={capsuleOrigin}
-                dragConstraints={capsuleConstraintsRef}
-                material="navigation"
-              >
-                <span className="bento-capsule__hint">Drag</span>
-              </LiquidGlassCapsule>
-            ) : null}
-          </div>
-        </article>
-
-        <article className="bento__cell bento__cell--panel">
-          <span className="bento__label">Panel</span>
-          <div className="bento__stage bento__stage--panel">
-            <LiquidGlass
-              width="100%"
-              height={200}
-              borderRadius={28}
-              material="panel"
-              className="bento-panel__glass"
-            >
-              <div className="panel-content">
-                <div>
-                  <span className="panel-kicker">Material</span>
-                  <h3>Panel</h3>
-                </div>
-                <p className="panel-lede">
-                  Quiet content surface — Chromium refraction, frost elsewhere.
-                </p>
-              </div>
-            </LiquidGlass>
+        <article className="bento__cell bento__cell--open-menu">
+          <span className="bento__label">Open menu</span>
+          <div className="bento__stage bento__stage--menu">
+            <BentoMorphMenu defaultOpen />
           </div>
         </article>
 
@@ -1104,71 +1100,75 @@ function SiteMobileNav({
   onNavigate: (value: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (rootRef.current?.contains(event.target as Node)) return;
+      setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   return (
-    <MorphMenu.Root
-      open={open}
-      onOpenChange={(next) => {
-        clearHoveredItem();
-        setOpen(next);
-      }}
-      direction="bottom"
-      anchor="end"
-      visualDuration={0.28}
-      bounce={0}
-    >
-      <MorphMenu.Container
-        buttonSize={40}
-        menuWidth={220}
-        menuRadius={24}
-        buttonRadius={20}
-        offset={10}
-        className="site-nav-mobile__shell"
-        backdrop={<GlassShellBackdrop borderRadius={24} material="navigation" />}
+    <div className="site-nav-mobile__root" ref={rootRef}>
+      <button
+        type="button"
+        className="site-nav-mobile__icon"
+        aria-label={open ? "Close navigation" : "Open navigation"}
+        aria-expanded={open}
+        aria-controls="site-nav-mobile-menu"
+        onClick={() => setOpen((current) => !current)}
       >
-        <MorphMenu.Trigger
-          aria-label={open ? "Close navigation" : "Open navigation"}
-          className="navigation-menu__trigger site-nav-mobile__trigger"
-        >
-          <HugeiconsIcon
-            icon={Menu01Icon}
-            altIcon={Cancel01Icon}
-            showAlt={open}
-            size={18}
-            color="currentColor"
-            strokeWidth={1.75}
-            aria-hidden
-          />
-        </MorphMenu.Trigger>
+        <HugeiconsIcon
+          icon={Menu01Icon}
+          altIcon={Cancel01Icon}
+          showAlt={open}
+          size={20}
+          color="currentColor"
+          strokeWidth={1.75}
+          aria-hidden
+        />
+      </button>
 
-        <MorphMenu.Content
-          className="navigation-menu__content site-nav-mobile__content"
-          onPointerLeave={clearHoveredItem}
+      {open ? (
+        <nav
+          id="site-nav-mobile-menu"
+          className="site-nav-mobile__menu"
+          aria-label="Primary"
         >
-          <div className="navigation-menu__heading">
-            <span>Navigate</span>
-          </div>
-          <nav className="navigation-menu__items" aria-label="Primary">
-            <MorphMenuHoverFill hoveredItem={hoveredItem} />
-            {topNavigationItems.map((item) => (
-              <MorphMenu.Item
-                key={item.value}
-                className={
-                  activeValue === item.value
-                    ? "navigation-menu__item is-active"
-                    : "navigation-menu__item"
-                }
-                onPointerEnter={syncHoveredItem}
-                onSelect={() => onNavigate(item.value)}
-              >
-                <span>{item.label}</span>
-              </MorphMenu.Item>
-            ))}
-          </nav>
-        </MorphMenu.Content>
-      </MorphMenu.Container>
-    </MorphMenu.Root>
+          {topNavigationItems.map((item) => (
+            <a
+              key={item.value}
+              href={item.href}
+              className={
+                activeValue === item.value
+                  ? "site-nav-mobile__link is-active"
+                  : "site-nav-mobile__link"
+              }
+              onClick={(event) => {
+                event.preventDefault();
+                setOpen(false);
+                onNavigate(item.value);
+              }}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      ) : null}
+    </div>
   );
 }
 
