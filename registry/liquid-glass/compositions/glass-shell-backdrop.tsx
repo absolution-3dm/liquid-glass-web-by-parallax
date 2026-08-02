@@ -262,6 +262,8 @@ export function GlassShellBackdrop({
   const committedGenRef = useRef(0);
   const pendingMapKeyRef = useRef<string | null>(null);
   const pendingLensRef = useRef<ShellLens | null>(null);
+  /** Last specular data-URL painted onto the tint node (CSS-blur path). */
+  const paintedSpecUrlRef = useRef<string | null>(null);
   const useSvgRef = useRef(false);
   const pointerPositionRef = useRef<{ x: number | null; y: number | null; active: boolean }>({
     x: null,
@@ -672,35 +674,38 @@ export function GlassShellBackdrop({
     if (lensDivRef.current) {
       // Chromium: specular filter on the tint paint node; parent
       // `.glass-shell-lens` owns overflow+radius so CSS AA clips the filter
-      // output. WebKit/Firefox cannot keep a sibling `mix-blend-mode:
-      // plus-lighter` overlay alive while MorphMenu springs width/height/x/y
-      // under `-webkit-backdrop-filter` — the rim vanishes for the whole open
-      // animation. Paint the specular bitmap onto this same tint node instead
-      // so alpha composites with `background-color` in one layer (device-
-      // resolution image pipeline, no sibling blend).
+      // output. WebKit/Firefox paint the specular bitmap onto this same tint
+      // node (device-resolution image pipeline). Re-assigning backgroundImage
+      // every morph frame — or swapping a new LOD data-URL every 8px — strobes
+      // the rim; only write the URL when it actually changes, and freeze LOD
+      // swaps while morphing (see onShellSize).
       if (useSvgRef.current) {
         lensDivRef.current.style.filter = `url(#${lensFilterId})`;
-        lensDivRef.current.style.backgroundImage = "none";
-        lensDivRef.current.style.backgroundSize = "";
-        lensDivRef.current.style.backgroundRepeat = "";
-        lensDivRef.current.style.backgroundBlendMode = "normal";
+        if (paintedSpecUrlRef.current !== null) {
+          paintedSpecUrlRef.current = null;
+          lensDivRef.current.style.backgroundImage = "none";
+          lensDivRef.current.style.backgroundSize = "";
+          lensDivRef.current.style.backgroundRepeat = "";
+          lensDivRef.current.style.backgroundBlendMode = "normal";
+        }
       } else if (lens.mapUrl) {
         lensDivRef.current.style.filter = "none";
-        lensDivRef.current.style.backgroundImage = `url("${lens.mapUrl}")`;
-        lensDivRef.current.style.backgroundSize = "100% 100%";
-        lensDivRef.current.style.backgroundRepeat = "no-repeat";
-        // plus-lighter against the stylesheet tint color matches the filter
-        // path's additive feComposite; fall back to normal mid-morph if a
-        // given WebKit build still drops blended backgrounds while springing.
-        lensDivRef.current.style.backgroundBlendMode = morphingRef.current
-          ? "normal"
-          : "plus-lighter";
+        if (paintedSpecUrlRef.current !== lens.mapUrl) {
+          paintedSpecUrlRef.current = lens.mapUrl;
+          lensDivRef.current.style.backgroundImage = `url("${lens.mapUrl}")`;
+          lensDivRef.current.style.backgroundSize = "100% 100%";
+          lensDivRef.current.style.backgroundRepeat = "no-repeat";
+          lensDivRef.current.style.backgroundBlendMode = "plus-lighter";
+        }
       } else {
         lensDivRef.current.style.filter = "none";
-        lensDivRef.current.style.backgroundImage = "none";
-        lensDivRef.current.style.backgroundSize = "";
-        lensDivRef.current.style.backgroundRepeat = "";
-        lensDivRef.current.style.backgroundBlendMode = "normal";
+        if (paintedSpecUrlRef.current !== null) {
+          paintedSpecUrlRef.current = null;
+          lensDivRef.current.style.backgroundImage = "none";
+          lensDivRef.current.style.backgroundSize = "";
+          lensDivRef.current.style.backgroundRepeat = "";
+          lensDivRef.current.style.backgroundBlendMode = "normal";
+        }
       }
     }
     if (specularOverlayRef.current) {
@@ -976,11 +981,20 @@ export function GlassShellBackdrop({
       // Keep the filter box on the exact fractional shell geometry; the bitmap
       // itself still refreshes through the original quantized LOD path.
       applyLiveGeometry(w, h, rad);
+      pendingSizeRef.current = { w, h, radius: rad };
+      // CSS-blur specular is a background-image data-URL. Committing a new LOD
+      // PNG every 8px during the spring makes the Fresnel rim strobe on
+      // WebKit. Stretch the frozen bitmap with the shell; settle rebakes once.
+      if (!useSvgRef.current && morphingRef.current) {
+        if (!lensRef.current?.mapUrl) {
+          publishSize(w, h, rad, { lod: true });
+        }
+        return;
+      }
       // `reportMorphSize` already runs inside Motion's animation frame. Going
       // through `scheduleBake` here requests another rAF and guarantees the
       // map selection trails the fill by one frame. LOD-key/in-flight dedupe
       // keeps this synchronous call cheap except when crossing a map step.
-      pendingSizeRef.current = { w, h, radius: rad };
       publishSize(w, h, rad, { lod: morphingRef.current });
       return;
     }
@@ -1025,6 +1039,11 @@ export function GlassShellBackdrop({
   useEffect(() => {
     const prev = lensRef.current;
     if (prev) {
+      // CSS-blur path freezes the specular bitmap for the whole spring. Clearing
+      // mapKey on morphing=true would force a mid-open rebake and strobe the rim.
+      if (!useSvgRef.current && morphing) {
+        return;
+      }
       // Drop cache so settle (morphing false) always gets a fresh full bake.
       lensRef.current = { ...prev, mapKey: "" };
       onShellSizeRef.current(prev.width, prev.height, prev.radius);

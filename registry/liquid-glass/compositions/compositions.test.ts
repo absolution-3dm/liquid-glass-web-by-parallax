@@ -62,14 +62,16 @@ describe("LiquidGlass composition registry", () => {
     expect((source.match(/<feDisplacementMap/g) ?? []).length).toBeGreaterThanOrEqual(8);
   });
 
-  it("paints Safari morph specular on the tint node and commits without decode gate", () => {
+  it("freezes Safari specular bitmaps during morph to avoid LOD strobing", () => {
     const source = readFileSync(
       "registry/liquid-glass/compositions/glass-shell-backdrop.tsx",
       "utf8",
     );
-    expect(source).toContain('lensDivRef.current.style.backgroundImage');
-    expect(source).toContain('backgroundBlendMode = morphingRef.current');
-    expect(source).toContain('specularOverlayRef.current.style.backgroundImage = "none"');
+    expect(source).toContain("paintedSpecUrlRef");
+    expect(source).toContain(
+      "if (!useSvgRef.current && morphingRef.current)",
+    );
+    expect(source).toContain("if (!useSvgRef.current && morphing)");
     expect(source).toContain("if (!useSvgRef.current) {\n      finishCommit(lens, gen, committedKey)");
   });
 
