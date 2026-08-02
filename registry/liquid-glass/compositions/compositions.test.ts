@@ -62,16 +62,16 @@ describe("LiquidGlass composition registry", () => {
     expect((source.match(/<feDisplacementMap/g) ?? []).length).toBeGreaterThanOrEqual(8);
   });
 
-  it("freezes Safari specular bitmaps during morph to avoid LOD strobing", () => {
+  it("rebakes Safari morph specular at live size each frame", () => {
     const source = readFileSync(
       "registry/liquid-glass/compositions/glass-shell-backdrop.tsx",
       "utf8",
     );
+    expect(source).toContain("cssBlurMorph");
     expect(source).toContain("paintedSpecUrlRef");
     expect(source).toContain(
-      "if (!useSvgRef.current && morphingRef.current)",
+      "if (!useSvgRef.current && morphingRef.current) {\n        scheduleBake(w, h, rad)",
     );
-    expect(source).toContain("if (!useSvgRef.current && morphing)");
     expect(source).toContain("if (!useSvgRef.current) {\n      finishCommit(lens, gen, committedKey)");
   });
 

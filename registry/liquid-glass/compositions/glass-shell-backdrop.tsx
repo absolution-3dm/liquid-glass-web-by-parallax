@@ -487,8 +487,11 @@ export function GlassShellBackdrop({
   }, [morphHost, morphing]);
 
   /**
-   * Optical bake mirrors GlassSurface.rebuild. During morph (`lod`), bake at
-   * quantized dims + capped map quality; live SVG geometry remains fractional.
+   * Optical bake mirrors GlassSurface.rebuild. During morph (`lod`), Chromium
+   * bakes at quantized dims + capped map quality while live SVG geometry stays
+   * fractional. The CSS-blur specular path (Safari/Firefox) instead rebakes at
+   * live size every frame — an 8px LOD staircase + end-of-spring replace made
+   * the Fresnel rim strobe, and freezing/stretching the first sticker was worse.
    */
   const bakeLens = (
     width: number,
@@ -502,9 +505,13 @@ export function GlassShellBackdrop({
     if (liveW < 2 || liveH < 2) return null;
 
     const lod = Boolean(opts?.lod);
-    const bakeW = lod ? quantizeMorphDim(liveW) : liveW;
-    const bakeH = lod ? quantizeMorphDim(liveH) : liveH;
-    const qualityFloor = lod ? MORPH_MAP_QUALITY : glassEngine.mapQuality;
+    // Specular-only morph: track the live silhouette each frame. Axis-map morph
+    // stays on the cheaper quantized LOD path.
+    const cssBlurMorph = lod && !useSvgRef.current;
+    const bakeW = lod && !cssBlurMorph ? quantizeMorphDim(liveW) : liveW;
+    const bakeH = lod && !cssBlurMorph ? quantizeMorphDim(liveH) : liveH;
+    const qualityFloor =
+      lod && !cssBlurMorph ? MORPH_MAP_QUALITY : glassEngine.mapQuality;
 
     const hw = bakeW / 2;
     const hh = bakeH / 2;
@@ -512,7 +519,9 @@ export function GlassShellBackdrop({
     const safeCurvature = Math.max(0, Math.min(1, m.curvature));
 
     const mapKey = [
-      lod ? "lod" : "full",
+      // cssBlurMorph keys as "full" so the settle rebake can match when size
+      // stabilizes at the same CSS box (only DPR/quality may still upgrade).
+      cssBlurMorph || !lod ? "full" : "lod",
       // The two paths bake different bitmaps from the same params: Chromium
       // gets independent X/Y displacement maps, WebKit/Firefox get the white
       // specular overlay. Keying the mode prevents a useSvg flip from serving
@@ -533,7 +542,7 @@ export function GlassShellBackdrop({
       m.specular,
       m.tint,
       qualityFloor,
-      lod ? MORPH_MAP_QUALITY_CAP : "",
+      lod && !cssBlurMorph ? MORPH_MAP_QUALITY_CAP : "",
     ].join(":");
 
     const strength = Math.max(0, m.scale);
@@ -570,12 +579,13 @@ export function GlassShellBackdrop({
       return withLiveGeometry(pendingLens);
     }
 
-    const engine = lod
-      ? { ...glassEngine, mapQuality: qualityFloor }
-      : glassEngine;
-    // Only the settled (non-LOD) bake gets the DPR boost: this one runs once
-    // per settle, but an in-flight morph bakes on every quantized step, so
-    // keeping that path at 1x is what keeps the animation itself cheap.
+    const engine =
+      lod && !cssBlurMorph
+        ? { ...glassEngine, mapQuality: qualityFloor }
+        : glassEngine;
+    // Only the settled bake gets the DPR boost. CSS-blur morph rebakes every
+    // frame at live CSS size / 1× so the rim tracks the silhouette without a
+    // Retina-sized canvas cost; Chromium axis-map LOD stays quantized + 1×.
     const params = buildLensMapParams(
       {
         halfWidth: hw,
@@ -982,13 +992,12 @@ export function GlassShellBackdrop({
       // itself still refreshes through the original quantized LOD path.
       applyLiveGeometry(w, h, rad);
       pendingSizeRef.current = { w, h, radius: rad };
-      // CSS-blur specular is a background-image data-URL. Committing a new LOD
-      // PNG every 8px during the spring makes the Fresnel rim strobe on
-      // WebKit. Stretch the frozen bitmap with the shell; settle rebakes once.
+      // CSS-blur specular: one live-size rebake per frame (rAF-coalesced).
+      // Sync publishSize on every motion sample was either too sparse (8px LOD
+      // staircase) or too eager; freezing the first sticker until settle made
+      // the end swap worse. scheduleBake keeps the rim on the silhouette.
       if (!useSvgRef.current && morphingRef.current) {
-        if (!lensRef.current?.mapUrl) {
-          publishSize(w, h, rad, { lod: true });
-        }
+        scheduleBake(w, h, rad);
         return;
       }
       // `reportMorphSize` already runs inside Motion's animation frame. Going
@@ -1039,8 +1048,9 @@ export function GlassShellBackdrop({
   useEffect(() => {
     const prev = lensRef.current;
     if (prev) {
-      // CSS-blur path freezes the specular bitmap for the whole spring. Clearing
-      // mapKey on morphing=true would force a mid-open rebake and strobe the rim.
+      // CSS-blur morph already rebakes live-size specular each frame under the
+      // same "full" key tier. Skip the morphing=true invalidation so we do not
+      // throw away the in-flight sticker; settle still refreshes once at rest.
       if (!useSvgRef.current && morphing) {
         return;
       }
