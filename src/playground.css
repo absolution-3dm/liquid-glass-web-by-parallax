@@ -369,7 +369,6 @@ main {
   height: min(420px, 54svh);
   overflow: visible;
   touch-action: none;
-  /* Axonometric stack — parallel projection lives on the Motion stage. */
   perspective: none;
 }
 
@@ -382,29 +381,21 @@ main {
   overflow: visible;
 }
 
-.hero-orbit:not(.hero-orbit--projected) .hero-orbit__stage,
-.hero-orbit:not(.hero-orbit--projected) .hero-orbit__cluster,
-.hero-orbit:not(.hero-orbit--projected) .hero-orbit__capsule {
-  transform-style: preserve-3d;
-}
-
 .hero-orbit__cluster {
   position: relative;
   flex-shrink: 0;
 }
 
+/*
+  Each panel owns its axonometric rotateX/Y with transform-style: flat.
+  No preserve-3d ancestor — that was dropping Safari backdrop-filter mid-tilt.
+*/
 .hero-orbit__capsule {
   position: absolute;
   inset: 0;
   overflow: visible;
-  will-change: transform;
-}
-
-/* Projected Safari/Firefox path must stay flat — no 3D containing block. */
-.hero-orbit--projected .hero-orbit__stage,
-.hero-orbit--projected .hero-orbit__cluster,
-.hero-orbit--projected .hero-orbit__capsule {
   transform-style: flat;
+  will-change: transform;
 }
 
 .hero-orbit__capsule-glass {
