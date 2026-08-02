@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
   type RefObject,
 } from "react";
 import {
@@ -14,7 +13,6 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
-  type MotionValue,
 } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -194,70 +192,42 @@ function highlightCode(code: string, language: "bash" | "tsx") {
   });
 }
 
-function HeroOrbitTilt({
-  className,
-  lift = 0,
-  rotateX,
-  rotateY,
-  springX,
-  springY,
-  children,
-}: {
-  className: string;
-  lift?: number;
-  rotateX: MotionValue<number>;
-  rotateY: MotionValue<number>;
-  springX: MotionValue<number>;
-  springY: MotionValue<number>;
-  children: ReactNode;
-}) {
-  const x = useTransform(springX, (value) => value * lift);
-  const y = useTransform(springY, (value) => value * lift);
-
-  return (
-    <motion.div
-      className={className}
-      style={{
-        rotateX,
-        rotateY,
-        x,
-        y,
-        // Parallel / orthographic: no vanishing-point perspective.
-        transformPerspective: 0,
-        transformOrigin: "50% 50%",
-      }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 function HeroFloatStage() {
   const stageRef = useRef<HTMLDivElement>(null);
   const [segmentValue, setSegmentValue] = useState("optics");
+  const [compact, setCompact] = useState(false);
   const reduceMotionRef = useRef(false);
 
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
   const springX = useSpring(pointerX, { stiffness: 320, damping: 32, mass: 0.55 });
   const springY = useSpring(pointerY, { stiffness: 320, damping: 32, mass: 0.55 });
-  const rotateX = useTransform(springY, (value) => 16 + value * -5);
-  const rotateY = useTransform(springX, (value) => -24 + value * 8);
+  // Mild shared plane tilt — one transform on the stage keeps every glass
+  // surface on the same rigid 3D plane (per-layer rotate made each orbit its own origin).
+  const rotateX = useTransform(springY, (value) => 10 + value * -4);
+  const rotateY = useTransform(springX, (value) => -14 + value * 6);
 
   useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reduceMotionRef.current = media.matches;
-    const onChange = () => {
-      reduceMotionRef.current = media.matches;
-      if (media.matches) {
+    const compactMq = window.matchMedia("(max-width: 900px)");
+    const reduceMq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncCompact = () => setCompact(compactMq.matches);
+    const syncReduce = () => {
+      reduceMotionRef.current = reduceMq.matches;
+      if (reduceMq.matches) {
         pointerX.set(0);
         pointerY.set(0);
         springX.jump(0);
         springY.jump(0);
       }
     };
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
+    syncCompact();
+    syncReduce();
+    compactMq.addEventListener("change", syncCompact);
+    reduceMq.addEventListener("change", syncReduce);
+    return () => {
+      compactMq.removeEventListener("change", syncCompact);
+      reduceMq.removeEventListener("change", syncReduce);
+    };
   }, [pointerX, pointerY, springX, springY]);
 
   useEffect(() => {
@@ -287,50 +257,45 @@ function HeroFloatStage() {
     };
   }, [pointerX, pointerY]);
 
+  const iconSize = compact ? 40 : 44;
+  const segmentItemWidth = compact ? 84 : 100;
+  const segmentItemHeight = compact ? 36 : 40;
+
   return (
     <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass component preview">
-      <div className="hero-orbit__stage">
-        {/* Shared tilt, no differential lift — glass stays coplanar over the
-            full-bleed hero media instead of floating at staggered depths. */}
-        <HeroOrbitTilt
-          className="hero-orbit__layer hero-orbit__layer--menu"
-          rotateX={rotateX}
-          rotateY={rotateY}
-          springX={springX}
-          springY={springY}
-        >
-          <HeroMorphMenu />
-        </HeroOrbitTilt>
+      <motion.div
+        className="hero-orbit__stage"
+        style={{
+          rotateX,
+          rotateY,
+          // Parallel / orthographic: no vanishing-point perspective, but one
+          // shared transform so menu / segment / icons stay coplanar.
+          transformPerspective: 0,
+          transformOrigin: "50% 50%",
+          transformStyle: "preserve-3d",
+        }}
+      >
+        <div className="hero-orbit__layer hero-orbit__layer--menu">
+          <HeroMorphMenu playOpen={!compact} />
+        </div>
 
-        <HeroOrbitTilt
-          className="hero-orbit__layer hero-orbit__layer--segment"
-          rotateX={rotateX}
-          rotateY={rotateY}
-          springX={springX}
-          springY={springY}
-        >
+        <div className="hero-orbit__layer hero-orbit__layer--segment">
           <GlassSegmentedControl
             items={segmentItems}
             value={segmentValue}
             onValueChange={setSegmentValue}
-            itemWidth={100}
-            itemHeight={40}
+            itemWidth={segmentItemWidth}
+            itemHeight={segmentItemHeight}
             padding={4}
-            radialExpansion={8}
+            radialExpansion={compact ? 6 : 8}
             material="navigation"
             pressedMaterial="selectionPressed"
             className="hero-orbit__segment"
             itemClassName="hero-orbit__segment-item"
           />
-        </HeroOrbitTilt>
+        </div>
 
-        <HeroOrbitTilt
-          className="hero-orbit__layer hero-orbit__layer--icons"
-          rotateX={rotateX}
-          rotateY={rotateY}
-          springX={springX}
-          springY={springY}
-        >
+        <div className="hero-orbit__layer hero-orbit__layer--icons">
           {bentoIconPills.map(({ icon, label }) => (
             <button
               key={label}
@@ -339,10 +304,10 @@ function HeroFloatStage() {
               data-ios-pointer-target=""
               aria-label={label}
             >
-              <GlassIconPill size={44} material="navigation">
+              <GlassIconPill size={iconSize} material="navigation">
                 <HugeiconsIcon
                   icon={icon}
-                  size={18}
+                  size={compact ? 16 : 18}
                   color="currentColor"
                   strokeWidth={1.75}
                   className="bento-icon-glyph"
@@ -351,8 +316,8 @@ function HeroFloatStage() {
               </GlassIconPill>
             </button>
           ))}
-        </HeroOrbitTilt>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -397,9 +362,11 @@ function useShowcaseMenuOpen(enabled: boolean, rootRef: RefObject<HTMLElement | 
   return [open, setOpen] as const;
 }
 
-function HeroMorphMenu() {
+function HeroMorphMenu({ playOpen = true }: { playOpen?: boolean }) {
   const stageRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useShowcaseMenuOpen(true, stageRef);
+  // Keep the hero menu closed on compact viewports — an open panel collides
+  // with the segment/icons cluster on a phone-width stage.
+  const [open, setOpen] = useShowcaseMenuOpen(playOpen, stageRef);
   const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
   return (
@@ -417,8 +384,8 @@ function HeroMorphMenu() {
       closeOnClickOutside={false}
     >
       <MorphMenu.Container
-        buttonSize={48}
-        menuWidth={248}
+        buttonSize={playOpen ? 48 : 44}
+        menuWidth={playOpen ? 248 : 220}
         menuRadius={28}
         buttonRadius={24}
         offset={12}
@@ -1208,22 +1175,24 @@ export function Playground() {
           <div className="hero-media" aria-hidden="true">
             <img
               className="hero-media__image"
-              src="/images/pexels-ice-cave.jpg"
+              src="/images/hero-liquid-silk.png"
               alt=""
             />
             <div className="hero-media__veil" />
           </div>
-          <div className="hero-copy">
-            <h1>LiquidGlass</h1>
-            <p className="hero-lede">
-              Optical surfaces for the web. Install the source, own the
-              refraction.
-            </p>
-            <a className="hero-cta" href="#installation">
-              Install
-            </a>
+          <div className="hero-inner">
+            <div className="hero-copy">
+              <h1>LiquidGlass</h1>
+              <p className="hero-lede">
+                Optical surfaces for the web. Install the source, own the
+                refraction.
+              </p>
+              <a className="hero-cta" href="#installation">
+                Install
+              </a>
+            </div>
+            <HeroFloatStage />
           </div>
-          <HeroFloatStage />
         </section>
 
         <ComponentsBento />

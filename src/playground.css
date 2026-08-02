@@ -301,17 +301,17 @@ main {
   padding: 0 0 120px;
 }
 
+/* Full-viewport hero: image bleeds to the top edge under the fixed nav. */
 .hero {
   position: relative;
   isolation: isolate;
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
-  gap: 24px 40px;
-  min-height: min(72vh, 680px);
-  align-items: end;
-  padding: 140px 0 72px;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100svh;
+  min-height: 100svh;
+  margin-left: calc(50% - 50vw);
   overflow: hidden;
-  border-radius: calc(var(--radius-panel) + 4px);
+  border-radius: 0;
 }
 
 .hero-media {
@@ -320,7 +320,6 @@ main {
   inset: 0;
   pointer-events: none;
   overflow: hidden;
-  border-radius: inherit;
 }
 
 .hero-media__image {
@@ -328,16 +327,29 @@ main {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 58% 42%;
-  filter: brightness(0.78) contrast(1.08) saturate(1.05);
+  object-position: center;
+  filter: brightness(0.88) contrast(1.06) saturate(0.95);
 }
 
 .hero-media__veil {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(105deg, rgb(1 1 2 / 0.78) 0%, rgb(1 1 2 / 0.42) 42%, rgb(1 1 2 / 0.18) 68%, rgb(1 1 2 / 0.34) 100%),
-    linear-gradient(180deg, rgb(1 1 2 / 0.28) 0%, transparent 34%, rgb(1 1 2 / 0.45) 100%);
+    linear-gradient(105deg, rgb(1 1 2 / 0.72) 0%, rgb(1 1 2 / 0.34) 46%, rgb(1 1 2 / 0.16) 72%, rgb(1 1 2 / 0.28) 100%),
+    linear-gradient(180deg, rgb(1 1 2 / 0.34) 0%, transparent 28%, rgb(1 1 2 / 0.42) 100%);
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(300px, 1.05fr);
+  gap: 24px 40px;
+  align-items: end;
+  width: min(var(--page-width), calc(100% - 36px));
+  height: 100%;
+  margin: 0 auto;
+  padding: 132px 0 64px;
 }
 
 .hero-copy {
@@ -351,46 +363,56 @@ main {
   position: relative;
   z-index: 1;
   width: 100%;
-  height: min(500px, 66vh);
-  margin-bottom: 8px;
+  height: min(460px, 56svh);
   overflow: visible;
   touch-action: none;
 }
 
 .hero-orbit__stage {
-  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "menu segment"
+    "menu icons";
+  align-content: center;
+  align-items: start;
+  justify-items: start;
+  column-gap: 28px;
+  row-gap: 28px;
   width: 100%;
   height: 100%;
   overflow: visible;
-  transform-origin: 58% 46%;
 }
 
 /*
-  Perspective lives on Motion wrappers (HeroOrbitTilt). Glass surfaces stay
-  untransformed so Segment's internal chip slide/padding stay correct.
+  One shared Motion transform on `.hero-orbit__stage` keeps every glass
+  layer on the same plane. Layers themselves are layout-only (no per-item 3D).
 */
 .hero-orbit__layer {
-  position: absolute;
+  position: relative;
   z-index: 1;
   overflow: visible;
 }
 
 .hero-orbit__layer--menu {
-  left: 8%;
-  top: 16%;
+  grid-area: menu;
   z-index: 3;
+  justify-self: start;
 }
 
 .hero-orbit__layer--segment {
-  right: 6%;
-  top: 18%;
+  grid-area: segment;
+  justify-self: end;
+  align-self: start;
 }
 
 .hero-orbit__layer--icons {
+  grid-area: icons;
   display: flex;
   gap: 10px;
-  right: 10%;
-  bottom: 14%;
+  justify-self: end;
+  align-self: end;
 }
 
 .hero-orbit__segment {
@@ -1289,48 +1311,36 @@ footer {
     flex-shrink: 0;
   }
 
-  .hero {
+  .hero-inner {
     grid-template-columns: 1fr;
-    align-items: start;
-    min-height: 72vh;
-    padding: 108px 0 56px;
-  }
-
-  .hero-media__image {
-    object-position: 62% 40%;
+    align-items: stretch;
+    gap: 20px;
+    width: calc(100% - 24px);
+    padding: 96px 0 40px;
   }
 
   .hero-media__veil {
     background:
-      linear-gradient(180deg, rgb(1 1 2 / 0.22) 0%, rgb(1 1 2 / 0.18) 38%, rgb(1 1 2 / 0.72) 100%),
-      linear-gradient(90deg, rgb(1 1 2 / 0.28), transparent 55%);
+      linear-gradient(180deg, rgb(1 1 2 / 0.28) 0%, rgb(1 1 2 / 0.12) 36%, rgb(1 1 2 / 0.7) 100%),
+      linear-gradient(90deg, rgb(1 1 2 / 0.22), transparent 60%);
   }
 
   .hero-orbit {
     order: -1;
-    height: min(300px, 44vh);
-    margin: 0 0 4px;
+    height: min(280px, 38svh);
   }
 
   .hero-orbit__stage {
-    transform: scale(0.78);
-    transform-origin: 50% 42%;
+    grid-template-columns: auto 1fr;
+    column-gap: 18px;
+    row-gap: 18px;
+    align-content: center;
+    justify-items: stretch;
   }
 
-  .hero-orbit__layer--menu {
-    left: 4%;
-    top: 10%;
-  }
-
-  .hero-orbit__layer--segment {
-    right: 2%;
-    top: 8%;
-  }
-
+  .hero-orbit__layer--segment,
   .hero-orbit__layer--icons {
-    right: auto;
-    left: 10%;
-    bottom: 10%;
+    justify-self: end;
   }
 
   .bento {
@@ -1398,35 +1408,18 @@ footer {
     width: calc(100% - 24px);
   }
 
-  .hero {
-    min-height: 68vh;
-    padding: 88px 0 48px;
-    gap: 18px;
+  .hero-inner {
+    padding: 84px 0 32px;
+    gap: 16px;
   }
 
   .hero-orbit {
-    height: 250px;
+    height: min(240px, 34svh);
   }
 
   .hero-orbit__stage {
-    transform: scale(0.66);
-    transform-origin: 48% 40%;
-  }
-
-  .hero-orbit__layer--menu {
-    left: 2%;
-    top: 6%;
-  }
-
-  .hero-orbit__layer--segment {
-    right: 0;
-    top: 4%;
-  }
-
-  .hero-orbit__layer--icons {
-    left: 8%;
-    right: auto;
-    bottom: 8%;
+    column-gap: 14px;
+    row-gap: 16px;
   }
 
   h1 {
