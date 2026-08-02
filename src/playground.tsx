@@ -298,31 +298,19 @@ function HeroFloatStage() {
         </HeroOrbitTilt>
 
         <HeroOrbitTilt
-          className="hero-orbit__layer hero-orbit__layer--panel"
-          lift={14}
+          className="hero-orbit__layer hero-orbit__layer--menu"
+          lift={18}
           rotateX={rotateX}
           rotateY={rotateY}
           springX={springX}
           springY={springY}
         >
-          <LiquidGlass
-            width={220}
-            height={148}
-            borderRadius={28}
-            material="panel"
-            className="hero-orbit__panel"
-          >
-            <div className="hero-orbit__panel-content">
-              <span className="panel-kicker">Material</span>
-              <strong>Panel</strong>
-              <p>Live refraction over a tilted scene.</p>
-            </div>
-          </LiquidGlass>
+          <HeroMorphMenu />
         </HeroOrbitTilt>
 
         <HeroOrbitTilt
           className="hero-orbit__layer hero-orbit__layer--segment"
-          lift={20}
+          lift={18}
           rotateX={rotateX}
           rotateY={rotateY}
           springX={springX}
@@ -344,19 +332,8 @@ function HeroFloatStage() {
         </HeroOrbitTilt>
 
         <HeroOrbitTilt
-          className="hero-orbit__layer hero-orbit__layer--menu"
-          lift={18}
-          rotateX={rotateX}
-          rotateY={rotateY}
-          springX={springX}
-          springY={springY}
-        >
-          <HeroMorphMenu />
-        </HeroOrbitTilt>
-
-        <HeroOrbitTilt
           className="hero-orbit__layer hero-orbit__layer--icons"
-          lift={26}
+          lift={18}
           rotateX={rotateX}
           rotateY={rotateY}
           springX={springX}
@@ -389,7 +366,7 @@ function HeroFloatStage() {
 }
 
 function HeroMorphMenu() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
   return (
@@ -403,6 +380,7 @@ function HeroMorphMenu() {
       anchor="start"
       visualDuration={0.28}
       bounce={0}
+      closeOnClickOutside={false}
     >
       <MorphMenu.Container
         buttonSize={48}
@@ -1118,6 +1096,82 @@ function InstallationShowcase() {
   );
 }
 
+function SiteMobileNav({
+  activeValue,
+  onNavigate,
+}: {
+  activeValue: string;
+  onNavigate: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
+
+  return (
+    <MorphMenu.Root
+      open={open}
+      onOpenChange={(next) => {
+        clearHoveredItem();
+        setOpen(next);
+      }}
+      direction="bottom"
+      anchor="end"
+      visualDuration={0.28}
+      bounce={0}
+    >
+      <MorphMenu.Container
+        buttonSize={40}
+        menuWidth={220}
+        menuRadius={24}
+        buttonRadius={20}
+        offset={10}
+        className="site-nav-mobile__shell"
+        backdrop={<GlassShellBackdrop borderRadius={24} material="navigation" />}
+      >
+        <MorphMenu.Trigger
+          aria-label={open ? "Close navigation" : "Open navigation"}
+          className="navigation-menu__trigger site-nav-mobile__trigger"
+        >
+          <HugeiconsIcon
+            icon={Menu01Icon}
+            altIcon={Cancel01Icon}
+            showAlt={open}
+            size={18}
+            color="currentColor"
+            strokeWidth={1.75}
+            aria-hidden
+          />
+        </MorphMenu.Trigger>
+
+        <MorphMenu.Content
+          className="navigation-menu__content site-nav-mobile__content"
+          onPointerLeave={clearHoveredItem}
+        >
+          <div className="navigation-menu__heading">
+            <span>Navigate</span>
+          </div>
+          <nav className="navigation-menu__items" aria-label="Primary">
+            <MorphMenuHoverFill hoveredItem={hoveredItem} />
+            {topNavigationItems.map((item) => (
+              <MorphMenu.Item
+                key={item.value}
+                className={
+                  activeValue === item.value
+                    ? "navigation-menu__item is-active"
+                    : "navigation-menu__item"
+                }
+                onPointerEnter={syncHoveredItem}
+                onSelect={() => onNavigate(item.value)}
+              >
+                <span>{item.label}</span>
+              </MorphMenu.Item>
+            ))}
+          </nav>
+        </MorphMenu.Content>
+      </MorphMenu.Container>
+    </MorphMenu.Root>
+  );
+}
+
 export function Playground() {
   const [topNavigationValue, setTopNavigationValue] = useState("menu");
 
@@ -1155,6 +1209,13 @@ export function Playground() {
             </a>
           ))}
         </nav>
+
+        <div className="site-nav-mobile">
+          <SiteMobileNav
+            activeValue={topNavigationValue}
+            onNavigate={navigateToSection}
+          />
+        </div>
       </header>
 
       <main id="top">
