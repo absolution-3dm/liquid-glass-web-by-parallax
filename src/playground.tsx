@@ -84,11 +84,11 @@ const heroCtaMaterial = {
   chroma: 0.08,
 };
 
-/** Hero stack — navigation optics with a lighter tint so the silk reads through. */
+/** Hero stack — near-black fill so stacked panes don't wash out milky. */
 const heroStackMaterial = {
   preset: "navigation" as const,
-  tint: 0.22,
-  fill: "#101214",
+  tint: 0.1,
+  fill: "#000000",
 };
 
 /** Keep stacked hero panes from compounding backdrop saturate into neon. */
@@ -223,6 +223,11 @@ function highlightCode(code: string, language: "bash" | "tsx") {
 const HERO_AXON_ROTATE_X = -22;
 const HERO_AXON_ROTATE_Y = -28;
 
+/** Idle float: small vertical wave, staggered across the stack. */
+const HERO_FLOAT_AMPLITUDE_PX = 7;
+const HERO_FLOAT_PERIOD_SEC = 5.6;
+const HERO_FLOAT_PHASE_STEP = 0.9;
+
 /** Panel aspect used when fitting the stack into the orbit stage. */
 const HERO_PANEL_ASPECT = 212 / 188;
 
@@ -277,14 +282,16 @@ function HeroStackPanel({
   height,
   radius,
   depthStep,
-  pointerX,
+  pullPointerX,
+  floatClock,
 }: {
   index: number;
   width: number;
   height: number;
   radius: number;
   depthStep: number;
-  pointerX: MotionValue<number>;
+  pullPointerX: MotionValue<number>;
+  floatClock: MotionValue<number>;
 }) {
   // Center the Z stack on 0 so the projected stack stays visually centered.
   const z = ((HERO_CAPSULE_COUNT - 1) / 2 - index) * depthStep;
@@ -297,19 +304,24 @@ function HeroStackPanel({
   const pullDistance = height * 0.18;
   // Keep stacking order fixed — pulling must not reshuffle paint order.
   const zIndex = HERO_CAPSULE_COUNT - index;
+  const floatPhase = index * HERO_FLOAT_PHASE_STEP;
 
   const pull = useSpring(0, { stiffness: 280, damping: 28, mass: 0.55 });
 
   useEffect(() => {
-    const unsub = pointerX.on("change", (px) => {
+    const unsub = pullPointerX.on("change", (px) => {
       pull.set(heroPullProximity(Number(px), rest.x, sigma));
     });
-    pull.set(heroPullProximity(pointerX.get(), rest.x, sigma));
+    pull.set(heroPullProximity(pullPointerX.get(), rest.x, sigma));
     return unsub;
-  }, [pointerX, pull, rest.x, sigma]);
+  }, [pullPointerX, pull, rest.x, sigma]);
 
-  const x = rest.x;
-  const y = useTransform(pull, (p) => rest.y - Number(p) * pullDistance);
+  const y = useTransform([pull, floatClock], ([p, t]) => {
+    const wave =
+      Math.sin((Number(t) / HERO_FLOAT_PERIOD_SEC) * Math.PI * 2 + floatPhase) *
+      HERO_FLOAT_AMPLITUDE_PX;
+    return rest.y + wave - Number(p) * pullDistance;
+  });
 
   return (
     <motion.div
@@ -318,7 +330,7 @@ function HeroStackPanel({
         width,
         height,
         zIndex,
-        x,
+        x: rest.x,
         y,
         rotateX: HERO_AXON_ROTATE_X,
         rotateY: HERO_AXON_ROTATE_Y,
@@ -333,6 +345,7 @@ function HeroStackPanel({
         borderRadius={radius}
         material={heroStackMaterial}
         engine={heroStackEngine}
+        pointerHighlight={false}
         className="hero-orbit__capsule-glass"
       />
     </motion.div>
@@ -345,21 +358,39 @@ function HeroFloatStage() {
   const [metrics, setMetrics] = useState(HERO_PANEL_FALLBACK);
   const reduceMotionRef = useRef(false);
 
-  // Pointer X in cluster-local px (0 = cluster center). Far value collapses all pulls.
-  const pointerX = useMotionValue(10_000);
+  // Pull uses cluster-local X. Far value collapses all pulls.
+  const pullPointerX = useMotionValue(10_000);
+  const floatClock = useMotionValue(0);
 
   useEffect(() => {
     const reduceMq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const syncReduce = () => {
       reduceMotionRef.current = reduceMq.matches;
-      if (reduceMq.matches) pointerX.set(10_000);
+      if (reduceMq.matches) {
+        pullPointerX.set(10_000);
+        floatClock.set(0);
+      }
     };
     syncReduce();
     reduceMq.addEventListener("change", syncReduce);
     return () => {
       reduceMq.removeEventListener("change", syncReduce);
     };
-  }, [pointerX]);
+  }, [pullPointerX, floatClock]);
+
+  useEffect(() => {
+    if (reduceMotionRef.current) return;
+    let frame = 0;
+    const started = performance.now();
+    const tick = (now: number) => {
+      if (!reduceMotionRef.current) {
+        floatClock.set((now - started) / 1000);
+      }
+      frame = window.requestAnimationFrame(tick);
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [floatClock]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -386,28 +417,29 @@ function HeroFloatStage() {
 
   useEffect(() => {
     const stage = stageRef.current;
-    if (!stage) return;
+    const hero = stage?.closest(".hero");
+    if (!stage || !(hero instanceof HTMLElement)) return;
 
     const onPointerMove = (event: PointerEvent) => {
       if (reduceMotionRef.current) return;
       const cluster = clusterRef.current;
       if (!cluster) return;
-      const rect = cluster.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-      pointerX.set(event.clientX - (rect.left + rect.width / 2));
+      const clusterRect = cluster.getBoundingClientRect();
+      if (clusterRect.width <= 0) return;
+      pullPointerX.set(event.clientX - (clusterRect.left + clusterRect.width / 2));
     };
 
     const onPointerLeave = () => {
-      pointerX.set(10_000);
+      pullPointerX.set(10_000);
     };
 
-    stage.addEventListener("pointermove", onPointerMove);
-    stage.addEventListener("pointerleave", onPointerLeave);
+    hero.addEventListener("pointermove", onPointerMove);
+    hero.addEventListener("pointerleave", onPointerLeave);
     return () => {
-      stage.removeEventListener("pointermove", onPointerMove);
-      stage.removeEventListener("pointerleave", onPointerLeave);
+      hero.removeEventListener("pointermove", onPointerMove);
+      hero.removeEventListener("pointerleave", onPointerLeave);
     };
-  }, [pointerX]);
+  }, [pullPointerX]);
 
   const { width, height, radius, depthStep } = metrics;
 
@@ -423,7 +455,8 @@ function HeroFloatStage() {
               height={height}
               radius={radius}
               depthStep={depthStep}
-              pointerX={pointerX}
+              pullPointerX={pullPointerX}
+              floatClock={floatClock}
             />
           ))}
         </div>
