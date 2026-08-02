@@ -363,87 +363,34 @@ main {
   position: relative;
   z-index: 1;
   width: 100%;
-  height: min(460px, 56svh);
+  height: min(420px, 54svh);
   overflow: visible;
   touch-action: none;
+  perspective: 1100px;
 }
 
 .hero-orbit__stage {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "menu segment"
-    "menu icons";
-  align-content: center;
-  align-items: start;
-  justify-items: start;
-  column-gap: 28px;
-  row-gap: 28px;
+  position: relative;
   width: 100%;
   height: 100%;
   overflow: visible;
+  transform-style: preserve-3d;
 }
 
-/*
-  One shared Motion transform on `.hero-orbit__stage` keeps every glass
-  layer on the same plane. Layers themselves are layout-only (no per-item 3D).
-*/
-.hero-orbit__layer {
-  position: relative;
-  z-index: 1;
+.hero-orbit__capsule {
+  position: absolute;
   overflow: visible;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
-.hero-orbit__layer--menu {
-  grid-area: menu;
-  z-index: 3;
-  justify-self: start;
-}
-
-.hero-orbit__layer--segment {
-  grid-area: segment;
-  justify-self: end;
-  align-self: start;
-}
-
-.hero-orbit__layer--icons {
-  grid-area: icons;
-  display: flex;
-  gap: 10px;
-  justify-self: end;
-  align-self: end;
-}
-
-.hero-orbit__segment {
+.hero-orbit__capsule-glass {
+  width: 100%;
+  height: 100%;
   box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.1) inset,
-    0 14px 28px rgb(0 0 0 / 0.35),
-    0 36px 64px rgb(0 0 0 / 0.42);
-}
-
-.hero-orbit__menu-shell {
-  color: white;
-  box-shadow:
-    0 1px 1px rgb(0 0 0 / 0.35),
-    0 14px 36px rgb(0 0 0 / 0.4);
-}
-
-.hero-orbit__layer--icons .bento-icon-button {
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.1) inset,
-    0 16px 32px rgb(0 0 0 / 0.38),
-    0 40px 72px rgb(0 0 0 / 0.45);
-}
-
-.hero-orbit__segment-item {
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.hero-orbit__segment-item[aria-selected="true"] {
-  color: #f7f8f8;
+    0 1px 0 rgb(255 255 255 / 0.16) inset,
+    0 18px 36px rgb(0 0 0 / 0.32),
+    0 40px 72px rgb(0 0 0 / 0.28);
 }
 
 h1,
@@ -1340,20 +1287,7 @@ footer {
 
   .hero-orbit {
     order: -1;
-    height: min(280px, 38svh);
-  }
-
-  .hero-orbit__stage {
-    grid-template-columns: auto 1fr;
-    column-gap: 18px;
-    row-gap: 18px;
-    align-content: center;
-    justify-items: stretch;
-  }
-
-  .hero-orbit__layer--segment,
-  .hero-orbit__layer--icons {
-    justify-self: end;
+    height: min(300px, 40svh);
   }
 
   .bento {
@@ -1427,12 +1361,7 @@ footer {
   }
 
   .hero-orbit {
-    height: min(240px, 34svh);
-  }
-
-  .hero-orbit__stage {
-    column-gap: 14px;
-    row-gap: 16px;
+    height: min(260px, 36svh);
   }
 
   h1 {

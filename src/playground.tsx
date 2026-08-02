@@ -83,6 +83,9 @@ const heroCtaMaterial = {
   chroma: 0.08,
 };
 
+/** Staggered hero capsule stack — front-left to back-right. */
+const HERO_CAPSULE_COUNT = 5;
+
 const usageExample = `import { LiquidGlass } from "@/components/liquid-glass/liquid-glass"
 
 <LiquidGlass width={320} height={96} borderRadius={32} material="panel">
@@ -204,7 +207,6 @@ function highlightCode(code: string, language: "bash" | "tsx") {
 
 function HeroFloatStage() {
   const stageRef = useRef<HTMLDivElement>(null);
-  const [segmentValue, setSegmentValue] = useState("optics");
   const [compact, setCompact] = useState(false);
   const reduceMotionRef = useRef(false);
 
@@ -212,10 +214,8 @@ function HeroFloatStage() {
   const pointerY = useMotionValue(0);
   const springX = useSpring(pointerX, { stiffness: 320, damping: 32, mass: 0.55 });
   const springY = useSpring(pointerY, { stiffness: 320, damping: 32, mass: 0.55 });
-  // Mild shared plane tilt — one transform on the stage keeps every glass
-  // surface on the same rigid 3D plane (per-layer rotate made each orbit its own origin).
-  const rotateX = useTransform(springY, (value) => 10 + value * -4);
-  const rotateY = useTransform(springX, (value) => -14 + value * 6);
+  const rotateX = useTransform(springY, (value) => 12 + value * -5);
+  const rotateY = useTransform(springX, (value) => -18 + value * 7);
 
   useEffect(() => {
     const compactMq = window.matchMedia("(max-width: 900px)");
@@ -267,66 +267,49 @@ function HeroFloatStage() {
     };
   }, [pointerX, pointerY]);
 
-  const iconSize = compact ? 40 : 44;
-  const segmentItemWidth = compact ? 84 : 100;
-  const segmentItemHeight = compact ? 36 : 40;
+  const width = compact ? 54 : 78;
+  const height = compact ? 176 : 260;
+  const radius = width / 2;
+  const stepX = compact ? 30 : 46;
+  const stepY = compact ? -20 : -30;
+  const originX = compact ? 18 : 28;
+  const originY = compact ? 64 : 96;
+  const depthStep = compact ? 22 : 34;
 
   return (
-    <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass component preview">
+    <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass capsule stack">
       <motion.div
         className="hero-orbit__stage"
         style={{
           rotateX,
           rotateY,
-          // Parallel / orthographic: no vanishing-point perspective, but one
-          // shared transform so menu / segment / icons stay coplanar.
-          transformPerspective: 0,
-          transformOrigin: "50% 50%",
+          transformPerspective: 1100,
+          transformOrigin: "42% 55%",
           transformStyle: "preserve-3d",
         }}
       >
-        <div className="hero-orbit__layer hero-orbit__layer--menu">
-          <HeroMorphMenu playOpen={!compact} />
-        </div>
-
-        <div className="hero-orbit__layer hero-orbit__layer--segment">
-          <GlassSegmentedControl
-            items={segmentItems}
-            value={segmentValue}
-            onValueChange={setSegmentValue}
-            itemWidth={segmentItemWidth}
-            itemHeight={segmentItemHeight}
-            padding={4}
-            radialExpansion={compact ? 6 : 8}
-            material="navigation"
-            pressedMaterial="selectionPressed"
-            className="hero-orbit__segment"
-            itemClassName="hero-orbit__segment-item"
-          />
-        </div>
-
-        <div className="hero-orbit__layer hero-orbit__layer--icons">
-          {bentoIconPills.map(({ icon, label }) => (
-            <button
-              key={label}
-              type="button"
-              className="bento-icon-button"
-              data-ios-pointer-target=""
-              aria-label={label}
-            >
-              <GlassIconPill size={iconSize} material="navigation">
-                <HugeiconsIcon
-                  icon={icon}
-                  size={compact ? 16 : 18}
-                  color="currentColor"
-                  strokeWidth={1.75}
-                  className="bento-icon-glyph"
-                  aria-hidden
-                />
-              </GlassIconPill>
-            </button>
-          ))}
-        </div>
+        {Array.from({ length: HERO_CAPSULE_COUNT }, (_, index) => (
+          <div
+            key={index}
+            className="hero-orbit__capsule"
+            style={{
+              width,
+              height,
+              left: originX + index * stepX,
+              top: originY + index * stepY,
+              zIndex: HERO_CAPSULE_COUNT - index,
+              transform: `translateZ(${(HERO_CAPSULE_COUNT - 1 - index) * depthStep}px)`,
+            }}
+          >
+            <LiquidGlass
+              width={width}
+              height={height}
+              borderRadius={radius}
+              material="navigation"
+              className="hero-orbit__capsule-glass"
+            />
+          </div>
+        ))}
       </motion.div>
     </div>
   );
@@ -370,77 +353,6 @@ function useShowcaseMenuOpen(enabled: boolean, rootRef: RefObject<HTMLElement | 
   }, [enabled, rootRef]);
 
   return [open, setOpen] as const;
-}
-
-function HeroMorphMenu({ playOpen = true }: { playOpen?: boolean }) {
-  const stageRef = useRef<HTMLDivElement>(null);
-  // Keep the hero menu closed on compact viewports — an open panel collides
-  // with the segment/icons cluster on a phone-width stage.
-  const [open, setOpen] = useShowcaseMenuOpen(playOpen, stageRef);
-  const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
-
-  return (
-    <div ref={stageRef}>
-    <MorphMenu.Root
-      open={open}
-      onOpenChange={(next) => {
-        clearHoveredItem();
-        setOpen(next);
-      }}
-      direction="bottom"
-      anchor="start"
-      visualDuration={0.28}
-      bounce={0}
-      closeOnClickOutside={false}
-    >
-      <MorphMenu.Container
-        buttonSize={playOpen ? 48 : 44}
-        menuWidth={playOpen ? 248 : 220}
-        menuRadius={28}
-        buttonRadius={24}
-        offset={12}
-        className="hero-orbit__menu-shell"
-        backdrop={<GlassShellBackdrop borderRadius={28} material="navigation" />}
-      >
-        <MorphMenu.Trigger
-          aria-label={open ? "Close menu" : "Open menu"}
-          className="navigation-menu__trigger"
-        >
-          <HugeiconsIcon
-            icon={Menu01Icon}
-            altIcon={Cancel01Icon}
-            showAlt={open}
-            size={20}
-            color="currentColor"
-            strokeWidth={1.75}
-            aria-hidden
-          />
-        </MorphMenu.Trigger>
-
-        <MorphMenu.Content
-          className="navigation-menu__content"
-          onPointerLeave={clearHoveredItem}
-        >
-          <div className="navigation-menu__heading">
-            <span>Menu</span>
-          </div>
-          <div className="navigation-menu__items">
-            <MorphMenuHoverFill hoveredItem={hoveredItem} />
-            {menuItems.map((item) => (
-              <MorphMenu.Item
-                key={item}
-                className="navigation-menu__item"
-                onPointerEnter={syncHoveredItem}
-              >
-                <span>{item}</span>
-              </MorphMenu.Item>
-            ))}
-          </div>
-        </MorphMenu.Content>
-      </MorphMenu.Container>
-    </MorphMenu.Root>
-    </div>
-  );
 }
 
 function BentoMorphMenu({
