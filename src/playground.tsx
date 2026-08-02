@@ -298,31 +298,19 @@ function HeroFloatStage() {
         </HeroOrbitTilt>
 
         <HeroOrbitTilt
-          className="hero-orbit__layer hero-orbit__layer--panel"
-          lift={14}
+          className="hero-orbit__layer hero-orbit__layer--menu"
+          lift={18}
           rotateX={rotateX}
           rotateY={rotateY}
           springX={springX}
           springY={springY}
         >
-          <LiquidGlass
-            width={220}
-            height={148}
-            borderRadius={28}
-            material="panel"
-            className="hero-orbit__panel"
-          >
-            <div className="hero-orbit__panel-content">
-              <span className="panel-kicker">Material</span>
-              <strong>Panel</strong>
-              <p>Live refraction over a tilted scene.</p>
-            </div>
-          </LiquidGlass>
+          <HeroMorphMenu />
         </HeroOrbitTilt>
 
         <HeroOrbitTilt
           className="hero-orbit__layer hero-orbit__layer--segment"
-          lift={20}
+          lift={18}
           rotateX={rotateX}
           rotateY={rotateY}
           springX={springX}
@@ -344,19 +332,8 @@ function HeroFloatStage() {
         </HeroOrbitTilt>
 
         <HeroOrbitTilt
-          className="hero-orbit__layer hero-orbit__layer--menu"
-          lift={18}
-          rotateX={rotateX}
-          rotateY={rotateY}
-          springX={springX}
-          springY={springY}
-        >
-          <HeroMorphMenu />
-        </HeroOrbitTilt>
-
-        <HeroOrbitTilt
           className="hero-orbit__layer hero-orbit__layer--icons"
-          lift={26}
+          lift={18}
           rotateX={rotateX}
           rotateY={rotateY}
           springX={springX}
@@ -389,7 +366,7 @@ function HeroFloatStage() {
 }
 
 function HeroMorphMenu() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
   return (
@@ -403,6 +380,7 @@ function HeroMorphMenu() {
       anchor="start"
       visualDuration={0.28}
       bounce={0}
+      closeOnClickOutside={false}
     >
       <MorphMenu.Container
         buttonSize={48}

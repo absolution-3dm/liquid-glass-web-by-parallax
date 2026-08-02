@@ -315,9 +315,10 @@ main {
   overflow: visible;
 }
 
-.hero-orbit__layer--panel {
+.hero-orbit__layer--menu {
   left: 6%;
-  top: 22%;
+  top: 14%;
+  z-index: 3;
 }
 
 .hero-orbit__layer--segment {
@@ -325,24 +326,11 @@ main {
   top: 12%;
 }
 
-.hero-orbit__layer--menu {
-  left: 8%;
-  bottom: 10%;
-  z-index: 3;
-}
-
 .hero-orbit__layer--icons {
   display: flex;
   gap: 10px;
   right: 7%;
   bottom: 12%;
-}
-
-.hero-orbit__panel {
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.12) inset,
-    0 12px 24px rgb(0 0 0 / 0.3),
-    0 32px 64px rgb(0 0 0 / 0.45);
 }
 
 .hero-orbit__segment {
@@ -364,35 +352,6 @@ main {
     0 1px 0 rgb(255 255 255 / 0.1) inset,
     0 16px 32px rgb(0 0 0 / 0.38),
     0 40px 72px rgb(0 0 0 / 0.45);
-}
-
-.hero-orbit__panel .glass-surface__content {
-  align-items: stretch;
-  justify-content: stretch;
-  padding: 0;
-}
-
-.hero-orbit__panel-content {
-  display: grid;
-  gap: 6px;
-  align-content: start;
-  width: 100%;
-  height: 100%;
-  padding: 18px 18px 16px;
-}
-
-.hero-orbit__panel-content strong {
-  font-size: 1.2rem;
-  font-weight: 510;
-  letter-spacing: -0.03em;
-}
-
-.hero-orbit__panel-content p {
-  margin: 4px 0 0;
-  color: var(--muted-strong);
-  font-size: 0.82rem;
-  line-height: 1.45;
-  letter-spacing: -0.01em;
 }
 
 .hero-orbit__segment-item {
@@ -1432,19 +1391,14 @@ footer {
     height: 280px;
   }
 
-  .hero-orbit__layer--panel {
+  .hero-orbit__layer--menu {
     left: 4%;
-    top: 20%;
+    top: 8%;
   }
 
   .hero-orbit__layer--segment {
     right: 4%;
     top: 10%;
-  }
-
-  .hero-orbit__layer--menu {
-    left: 6%;
-    bottom: 8%;
   }
 
   .hero-orbit__layer--icons {
