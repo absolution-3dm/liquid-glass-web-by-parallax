@@ -1104,71 +1104,75 @@ function SiteMobileNav({
   onNavigate: (value: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (rootRef.current?.contains(event.target as Node)) return;
+      setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   return (
-    <MorphMenu.Root
-      open={open}
-      onOpenChange={(next) => {
-        clearHoveredItem();
-        setOpen(next);
-      }}
-      direction="bottom"
-      anchor="end"
-      visualDuration={0.28}
-      bounce={0}
-    >
-      <MorphMenu.Container
-        buttonSize={40}
-        menuWidth={220}
-        menuRadius={24}
-        buttonRadius={20}
-        offset={10}
-        className="site-nav-mobile__shell"
-        backdrop={<GlassShellBackdrop borderRadius={24} material="navigation" />}
+    <div className="site-nav-mobile__root" ref={rootRef}>
+      <button
+        type="button"
+        className="site-nav-mobile__icon"
+        aria-label={open ? "Close navigation" : "Open navigation"}
+        aria-expanded={open}
+        aria-controls="site-nav-mobile-menu"
+        onClick={() => setOpen((current) => !current)}
       >
-        <MorphMenu.Trigger
-          aria-label={open ? "Close navigation" : "Open navigation"}
-          className="navigation-menu__trigger site-nav-mobile__trigger"
-        >
-          <HugeiconsIcon
-            icon={Menu01Icon}
-            altIcon={Cancel01Icon}
-            showAlt={open}
-            size={18}
-            color="currentColor"
-            strokeWidth={1.75}
-            aria-hidden
-          />
-        </MorphMenu.Trigger>
+        <HugeiconsIcon
+          icon={Menu01Icon}
+          altIcon={Cancel01Icon}
+          showAlt={open}
+          size={20}
+          color="currentColor"
+          strokeWidth={1.75}
+          aria-hidden
+        />
+      </button>
 
-        <MorphMenu.Content
-          className="navigation-menu__content site-nav-mobile__content"
-          onPointerLeave={clearHoveredItem}
+      {open ? (
+        <nav
+          id="site-nav-mobile-menu"
+          className="site-nav-mobile__menu"
+          aria-label="Primary"
         >
-          <div className="navigation-menu__heading">
-            <span>Navigate</span>
-          </div>
-          <nav className="navigation-menu__items" aria-label="Primary">
-            <MorphMenuHoverFill hoveredItem={hoveredItem} />
-            {topNavigationItems.map((item) => (
-              <MorphMenu.Item
-                key={item.value}
-                className={
-                  activeValue === item.value
-                    ? "navigation-menu__item is-active"
-                    : "navigation-menu__item"
-                }
-                onPointerEnter={syncHoveredItem}
-                onSelect={() => onNavigate(item.value)}
-              >
-                <span>{item.label}</span>
-              </MorphMenu.Item>
-            ))}
-          </nav>
-        </MorphMenu.Content>
-      </MorphMenu.Container>
-    </MorphMenu.Root>
+          {topNavigationItems.map((item) => (
+            <a
+              key={item.value}
+              href={item.href}
+              className={
+                activeValue === item.value
+                  ? "site-nav-mobile__link is-active"
+                  : "site-nav-mobile__link"
+              }
+              onClick={(event) => {
+                event.preventDefault();
+                setOpen(false);
+                onNavigate(item.value);
+              }}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      ) : null}
+    </div>
   );
 }
 
