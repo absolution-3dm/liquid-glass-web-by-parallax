@@ -353,10 +353,10 @@ function HeroFloatStage() {
     };
   }, [pointerX, pointerY]);
 
-  const width = compact ? 132 : 156;
-  const height = compact ? 148 : 176;
-  const radius = compact ? 34 : 40;
-  const depthStep = compact ? 58 : 68;
+  const width = compact ? 158 : 188;
+  const height = compact ? 178 : 212;
+  const radius = compact ? 40 : 48;
+  const depthStep = compact ? 68 : 80;
 
   return (
     <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass panel stack">

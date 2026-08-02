@@ -373,7 +373,7 @@ main {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: min(520px, 62svh);
+  height: min(600px, 70svh);
   overflow: visible;
   touch-action: none;
   perspective: none;
@@ -1310,8 +1310,8 @@ footer {
   .hero-orbit {
     order: -1;
     justify-self: center;
-    width: min(100%, 420px);
-    height: min(420px, 52svh);
+    width: min(100%, 480px);
+    height: min(480px, 58svh);
     margin-inline: auto;
   }
 
@@ -1386,8 +1386,8 @@ footer {
   }
 
   .hero-orbit {
-    width: min(100%, 400px);
-    height: min(400px, 50svh);
+    width: min(100%, 460px);
+    height: min(460px, 56svh);
   }
 
   h1 {
