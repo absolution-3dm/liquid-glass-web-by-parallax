@@ -453,6 +453,13 @@ h1 {
   font-weight: 400;
 }
 
+.hero-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+}
+
 .hero-cta {
   display: inline-flex;
   align-items: center;
@@ -472,6 +479,18 @@ h1 {
   background: var(--accent-hover);
   transform: none;
   box-shadow: none;
+}
+
+.hero-cta-secondary {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: color 140ms ease;
+}
+
+.hero-cta-secondary:hover {
+  color: #f7f8f8;
 }
 
 .component-section {
@@ -499,6 +518,34 @@ h2 {
   margin: 0;
   color: var(--muted);
   font-size: 0.95rem;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+
+.section-heading code,
+.installation-section code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  color: var(--muted-strong);
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px 32px;
+}
+
+.why-point h3 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 510;
+  letter-spacing: -0.02em;
+}
+
+.why-point p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
   line-height: 1.55;
   letter-spacing: -0.01em;
 }
@@ -1256,13 +1303,36 @@ h2 {
 
 footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  gap: 20px 32px;
   padding: 40px 0 0;
   color: var(--muted);
   font-family: inherit;
   font-size: 0.8125rem;
   letter-spacing: -0.01em;
   text-transform: none;
+}
+
+.site-footer__brand,
+.site-footer__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+}
+
+.site-footer__brand span:first-child {
+  color: var(--muted-strong);
+}
+
+.site-footer__meta a {
+  color: var(--muted);
+  transition: color 140ms ease;
+}
+
+.site-footer__meta a:hover {
+  color: #f7f8f8;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1341,6 +1411,11 @@ footer {
     gap: 14px;
   }
 
+  .why-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
   .attachment-group {
     grid-template-columns: 1fr;
   }
@@ -1411,10 +1486,8 @@ footer {
   }
 
   footer {
-    gap: 20px;
-  }
-
-  footer span:last-child {
-    text-align: right;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
 }

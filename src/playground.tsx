@@ -562,8 +562,8 @@ function ComponentsBento() {
       <div className="section-heading">
         <h2>Components</h2>
         <p>
-          Live registry surfaces on a static scene — refraction without an
-          animating backdrop.
+          Composable glass chrome — menus, segments, and icon actions on a live
+          optical surface.
         </p>
       </div>
 
@@ -633,6 +633,44 @@ function ComponentsBento() {
             ))}
           </div>
         </article>
+      </div>
+    </section>
+  );
+}
+
+const whyPoints = [
+  {
+    title: "Optics",
+    body: "Axis-isolated SVG refraction on the real backdrop in Chromium — not a frosted blur pretending to bend light.",
+  },
+  {
+    title: "Ownership",
+    body: "shadcn Registry copies the source into your app. No private runtime package to depend on or version against.",
+  },
+  {
+    title: "Integrity",
+    body: "Safari and Firefox stay on honest CSS blur. No page capture, DOM clones, or fake image layers underneath.",
+  },
+] as const;
+
+function WhyShowcase() {
+  return (
+    <section className="component-section" id="why">
+      <div className="section-heading">
+        <h2>Why LiquidGlass</h2>
+        <p>
+          Most glass libraries stop at blur and tint. This one ships a validated
+          refraction pipeline and source you can keep.
+        </p>
+      </div>
+
+      <div className="why-grid">
+        {whyPoints.map((point) => (
+          <div key={point.title} className="why-point">
+            <h3>{point.title}</h3>
+            <p>{point.body}</p>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -919,7 +957,7 @@ function CustomizeShowcase() {
     <section className="component-section" id="customize">
       <div className="section-heading">
         <h2>Customize</h2>
-        <p>Start from a preset, then tune material, engine, and pointer-highlight overrides for this preview only.</p>
+        <p>Start from a preset, tune the material, and copy JSX you can own.</p>
       </div>
 
       <div className="customizer-layout">
@@ -1062,7 +1100,9 @@ function InstallationShowcase() {
         <h2>Install</h2>
         <p>
           Distributed through the shadcn Registry. The CLI copies the source into
-          your app — no private runtime package.
+          your app — no private runtime package. Install{" "}
+          <code>liquid-glass</code> for optics alone (no Motion), or add a
+          composition item when you need the animated chrome.
         </p>
       </div>
 
@@ -1223,23 +1263,48 @@ export function Playground() {
           <div className="hero-copy">
             <h1>LiquidGlass</h1>
             <p className="hero-lede">
-              Optical surfaces for the web. Install the source, own the
-              refraction.
+              Real liquid-glass refraction for live UI — install the source, own
+              the optics.
             </p>
-            <a className="hero-cta" href="#installation">
-              Install
-            </a>
+            <div className="hero-cta-group">
+              <a className="hero-cta" href="#installation">
+                Install
+              </a>
+              <a className="hero-cta-secondary" href="#components">
+                View components
+              </a>
+            </div>
           </div>
           <HeroFloatStage />
         </section>
 
         <ComponentsBento />
+        <WhyShowcase />
         <CustomizeShowcase />
         <InstallationShowcase />
 
         <footer>
-          <span>LiquidGlass</span>
-          <span>shadcn Registry</span>
+          <div className="site-footer__brand">
+            <span>LiquidGlass</span>
+            <span>Source copied into your app</span>
+          </div>
+          <div className="site-footer__meta">
+            <span>shadcn Registry</span>
+            <a
+              href="https://github.com/absolution-3dm/liquid-glass-web-by-parallax/blob/main/docs/glass-refraction.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Refraction docs
+            </a>
+            <a
+              href="https://github.com/absolution-3dm/liquid-glass-web-by-parallax/blob/main/docs/liquid-glass-compositions.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Compositions
+            </a>
+          </div>
         </footer>
       </main>
     </>
