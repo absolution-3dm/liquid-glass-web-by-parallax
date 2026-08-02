@@ -11,7 +11,7 @@ import {
 } from "react";
 import {
   generateAxisLensMaps,
-  generateSpecularOverlay,
+  writeSpecularOverlay,
 } from "../refraction/lens-map";
 import {
   backdropFilterPadding,
@@ -235,6 +235,11 @@ export function GlassShellBackdrop({
   const lensClipRef = useRef<HTMLDivElement>(null);
   const lensDivRef = useRef<HTMLDivElement>(null);
   const specularOverlayRef = useRef<HTMLDivElement>(null);
+  const specCanvasARef = useRef<HTMLCanvasElement>(null);
+  const specCanvasBRef = useRef<HTMLCanvasElement>(null);
+  const specFrontIsARef = useRef(true);
+  const specularBakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const pendingSpecTokenRef = useRef<string | null>(null);
   const backdropFilterRef = useRef<SVGFilterElement>(null);
   const lensFilterRef = useRef<SVGFilterElement>(null);
   const backdropXMapRef = useRef<SVGFEImageElement>(null);
@@ -262,7 +267,7 @@ export function GlassShellBackdrop({
   const committedGenRef = useRef(0);
   const pendingMapKeyRef = useRef<string | null>(null);
   const pendingLensRef = useRef<ShellLens | null>(null);
-  /** Last specular data-URL painted onto the tint node (CSS-blur path). */
+  /** Last presented CSS-blur specular token (double-buffered canvas path). */
   const paintedSpecUrlRef = useRef<string | null>(null);
   const useSvgRef = useRef(false);
   const pointerPositionRef = useRef<{ x: number | null; y: number | null; active: boolean }>({
@@ -624,17 +629,56 @@ export function GlassShellBackdrop({
         edgeOrderMapUrl: axisMaps.edgeOrderUrl,
       };
     } else {
-      const map = generateSpecularOverlay(params, Math.max(0, m.specular));
-      if (!map.url) return null;
+      // Paint into an offscreen bake canvas. Morph presentation double-buffers
+      // from this bitmap — never through background-image data-URLs (iOS Safari
+      // strobes when those URLs change every frame).
+      const bake = (specularBakeCanvasRef.current ??= document.createElement("canvas"));
+      writeSpecularOverlay(bake, params, Math.max(0, m.specular));
+      const token = `spec-canvas:${mapKey}`;
+      pendingSpecTokenRef.current = token;
       maps = {
-        mapUrl: map.url,
-        xMapUrl: map.url,
-        yMapUrl: map.url,
-        edgeOrderMapUrl: map.url,
+        mapUrl: token,
+        xMapUrl: token,
+        yMapUrl: token,
+        edgeOrderMapUrl: token,
       };
     }
 
     return withLiveGeometry(maps);
+  };
+
+  /** Present CSS-blur specular via hidden-canvas draw + opacity swap. */
+  const presentCssBlurSpecular = (token: string) => {
+    if (!token) return;
+    const frontIsA = specFrontIsARef.current;
+    const back = frontIsA ? specCanvasBRef.current : specCanvasARef.current;
+    const front = frontIsA ? specCanvasARef.current : specCanvasBRef.current;
+    if (!back || !front) return;
+
+    // Same token after a remount: just ensure the front buffer is visible.
+    if (token === paintedSpecUrlRef.current) {
+      if (front.style.opacity !== "1") front.style.opacity = "1";
+      if (back.style.opacity !== "0") back.style.opacity = "0";
+      return;
+    }
+    if (pendingSpecTokenRef.current !== token) return;
+    const bake = specularBakeCanvasRef.current;
+    if (!bake || bake.width < 1 || bake.height < 1) return;
+
+    if (back.width !== bake.width || back.height !== bake.height) {
+      // Resize only the hidden back buffer so the clear never flashes on-screen.
+      back.width = bake.width;
+      back.height = bake.height;
+    }
+    const ctx = back.getContext("2d");
+    if (!ctx) return;
+    ctx.globalCompositeOperation = "copy";
+    ctx.drawImage(bake, 0, 0);
+
+    back.style.opacity = "1";
+    front.style.opacity = "0";
+    specFrontIsARef.current = !frontIsA;
+    paintedSpecUrlRef.current = token;
   };
 
   const paintShell = (lens: ShellLens) => {
@@ -684,45 +728,25 @@ export function GlassShellBackdrop({
     if (lensDivRef.current) {
       // Chromium: specular filter on the tint paint node; parent
       // `.glass-shell-lens` owns overflow+radius so CSS AA clips the filter
-      // output. WebKit/Firefox paint the specular bitmap onto this same tint
-      // node (device-resolution image pipeline). Re-assigning backgroundImage
-      // every morph frame — or swapping a new LOD data-URL every 8px — strobes
-      // the rim; only write the URL when it actually changes, and freeze LOD
-      // swaps while morphing (see onShellSize).
-      if (useSvgRef.current) {
-        lensDivRef.current.style.filter = `url(#${lensFilterId})`;
-        if (paintedSpecUrlRef.current !== null) {
-          paintedSpecUrlRef.current = null;
-          lensDivRef.current.style.backgroundImage = "none";
-          lensDivRef.current.style.backgroundSize = "";
-          lensDivRef.current.style.backgroundRepeat = "";
-          lensDivRef.current.style.backgroundBlendMode = "normal";
-        }
-      } else if (lens.mapUrl) {
-        lensDivRef.current.style.filter = "none";
-        if (paintedSpecUrlRef.current !== lens.mapUrl) {
-          paintedSpecUrlRef.current = lens.mapUrl;
-          lensDivRef.current.style.backgroundImage = `url("${lens.mapUrl}")`;
-          lensDivRef.current.style.backgroundSize = "100% 100%";
-          lensDivRef.current.style.backgroundRepeat = "no-repeat";
-          lensDivRef.current.style.backgroundBlendMode = "plus-lighter";
-        }
-      } else {
-        lensDivRef.current.style.filter = "none";
-        if (paintedSpecUrlRef.current !== null) {
-          paintedSpecUrlRef.current = null;
-          lensDivRef.current.style.backgroundImage = "none";
-          lensDivRef.current.style.backgroundSize = "";
-          lensDivRef.current.style.backgroundRepeat = "";
-          lensDivRef.current.style.backgroundBlendMode = "normal";
-        }
-      }
+      // output. WebKit/Firefox use double-buffered canvases (see
+      // presentCssBlurSpecular) — background-image data-URL swaps strobe on
+      // iOS Safari when the shell springs.
+      lensDivRef.current.style.filter = useSvgRef.current
+        ? `url(#${lensFilterId})`
+        : "none";
+      lensDivRef.current.style.backgroundImage = "none";
+    }
+    if (!useSvgRef.current && lens.mapUrl) {
+      presentCssBlurSpecular(lens.mapUrl);
     }
     if (specularOverlayRef.current) {
-      // Retained for Chromium (unused) and as a non-painted slot; WebKit rim
-      // light now lives on `.glass-shell-lens-paint` above.
       specularOverlayRef.current.style.backgroundImage = "none";
       specularOverlayRef.current.style.mixBlendMode = "normal";
+    }
+    const showSpecCanvas = !useSvgRef.current;
+    for (const canvas of [specCanvasARef.current, specCanvasBRef.current]) {
+      if (!canvas) continue;
+      canvas.style.visibility = showSpecCanvas ? "visible" : "hidden";
     }
     if (lensClipRef.current) {
       lensClipRef.current.style.borderRadius = `${lens.radius}px`;
@@ -1175,9 +1199,11 @@ export function GlassShellBackdrop({
   const seedPx = refractionBackdropScale(Math.max(0, scale), seedW, seedH);
   const seedScales = chromaticChannelScales(seedPx, chroma);
   const specularK = specularCompositeCoefficients(Math.max(0, specular));
-  // Mount lens-filter SVG even on the CSS-blur path (Safari) so k2 specular
-  // still composites; backdrop SVG only when useSvg.
+  // Mount lens-filter SVG even on the CSS-blur path (Safari) so Chromium-style
+  // filter defs stay available after a mode flip; backdrop SVG only when useSvg.
+  // Morph hosts always mount the double-buffered specular canvases.
   const showSvg = useSvg || active;
+  const showSpecCanvases = !useSvg;
 
   return (
     <div
@@ -1654,10 +1680,25 @@ export function GlassShellBackdrop({
           ref={lensDivRef}
           className="glass-shell-lens-paint absolute inset-0"
         />
-        {/* Formerly the WebKit/Firefox specular carrier. Rim light now paints
-            onto `.glass-shell-lens-paint` (see paintShell) so it survives
-            MorphMenu size springs under backdrop-filter. Slot kept so the
-            imperative ref path stays stable across builds. */}
+        {/* CSS-blur specular: double-buffered canvases. Draw into the hidden
+            buffer, then opacity-swap so iOS never shows a cleared frame the
+            way per-frame background-image data-URL swaps do. */}
+        {showSpecCanvases ? (
+          <>
+            <canvas
+              ref={specCanvasARef}
+              className="glass-shell-spec-canvas"
+              style={{ opacity: 0 }}
+              aria-hidden
+            />
+            <canvas
+              ref={specCanvasBRef}
+              className="glass-shell-spec-canvas"
+              style={{ opacity: 0 }}
+              aria-hidden
+            />
+          </>
+        ) : null}
         <div
           ref={specularOverlayRef}
           className="pointer-events-none absolute inset-0"
