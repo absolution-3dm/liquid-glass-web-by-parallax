@@ -99,11 +99,15 @@
 }
 
 .glass-shell-lens-paint {
-  background: color-mix(
+  /* Longhands only — MorphMenu Safari paints the specular bitmap onto
+     background-image of this same node; a `background` shorthand here would
+     fight that inline image every stylesheet recalc. */
+  background-color: color-mix(
     in srgb,
     var(--glass-fill, #000000) calc(var(--glass-tint, var(--glass-tint-default, 0.2)) * 100%),
     transparent
   );
+  background-image: none;
 }
 
 .ios-pointer-native-hover-fill {

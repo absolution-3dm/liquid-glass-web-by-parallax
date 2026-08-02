@@ -672,30 +672,42 @@ export function GlassShellBackdrop({
     if (lensDivRef.current) {
       // Chromium: specular filter on the tint paint node; parent
       // `.glass-shell-lens` owns overflow+radius so CSS AA clips the filter
-      // output. WebKit/Firefox draw the specular via the overlay div below
-      // instead — their SVG-filter pipeline rasterizes at CSS-px resolution,
-      // which pixelates the corner arcs on 2x/3x screens; the plain
-      // background-image pipeline renders at device resolution.
-      lensDivRef.current.style.filter = useSvgRef.current
-        ? `url(#${lensFilterId})`
-        : "none";
+      // output. WebKit/Firefox cannot keep a sibling `mix-blend-mode:
+      // plus-lighter` overlay alive while MorphMenu springs width/height/x/y
+      // under `-webkit-backdrop-filter` — the rim vanishes for the whole open
+      // animation. Paint the specular bitmap onto this same tint node instead
+      // so alpha composites with `background-color` in one layer (device-
+      // resolution image pipeline, no sibling blend).
+      if (useSvgRef.current) {
+        lensDivRef.current.style.filter = `url(#${lensFilterId})`;
+        lensDivRef.current.style.backgroundImage = "none";
+        lensDivRef.current.style.backgroundSize = "";
+        lensDivRef.current.style.backgroundRepeat = "";
+        lensDivRef.current.style.backgroundBlendMode = "normal";
+      } else if (lens.mapUrl) {
+        lensDivRef.current.style.filter = "none";
+        lensDivRef.current.style.backgroundImage = `url("${lens.mapUrl}")`;
+        lensDivRef.current.style.backgroundSize = "100% 100%";
+        lensDivRef.current.style.backgroundRepeat = "no-repeat";
+        // plus-lighter against the stylesheet tint color matches the filter
+        // path's additive feComposite; fall back to normal mid-morph if a
+        // given WebKit build still drops blended backgrounds while springing.
+        lensDivRef.current.style.backgroundBlendMode = morphingRef.current
+          ? "normal"
+          : "plus-lighter";
+      } else {
+        lensDivRef.current.style.filter = "none";
+        lensDivRef.current.style.backgroundImage = "none";
+        lensDivRef.current.style.backgroundSize = "";
+        lensDivRef.current.style.backgroundRepeat = "";
+        lensDivRef.current.style.backgroundBlendMode = "normal";
+      }
     }
     if (specularOverlayRef.current) {
-      // WebKit (and Firefox) keep Fresnel on a background-image overlay with
-      // `plus-lighter`. While MorphMenu springs width/height/x/y, WebKit drops
-      // that blended layer entirely — so the rim vanishes for the whole open
-      // animation and only returns after settle. Normal blend stays visible
-      // mid-morph (slightly milkier over the tint); restore plus-lighter when
-      // the shell is at rest.
-      const showOverlay = !useSvgRef.current && Boolean(lens.mapUrl);
-      specularOverlayRef.current.style.backgroundImage = showOverlay
-        ? `url("${lens.mapUrl}")`
-        : "none";
-      specularOverlayRef.current.style.mixBlendMode = showOverlay
-        ? morphingRef.current
-          ? "normal"
-          : "plus-lighter"
-        : "normal";
+      // Retained for Chromium (unused) and as a non-painted slot; WebKit rim
+      // light now lives on `.glass-shell-lens-paint` above.
+      specularOverlayRef.current.style.backgroundImage = "none";
+      specularOverlayRef.current.style.mixBlendMode = "normal";
     }
     if (lensClipRef.current) {
       lensClipRef.current.style.borderRadius = `${lens.radius}px`;
@@ -820,50 +832,60 @@ export function GlassShellBackdrop({
     };
   };
 
+  const finishCommit = (lens: ShellLens, gen: number, committedKey: string) => {
+    // Let decoded intermediate LODs advance the visible map while a newer
+    // one is still decoding. Only reject a result if a later generation has
+    // already committed; this prevents regressions without leaving the old
+    // endpoint map stretched across the fast first half of the spring.
+    if (gen <= committedGenRef.current) return;
+    committedGenRef.current = gen;
+    if (gen === commitGenRef.current) {
+      pendingMapKeyRef.current = null;
+      pendingLensRef.current = null;
+    }
+    // Merge any live size that arrived while the PNG was decoding so we do
+    // not briefly snap filter geometry back to the bake-time box.
+    let applied = lens;
+    const pending = pendingSizeRef.current;
+    if (pending) {
+      const live = bakeLens(pending.w, pending.h, pending.radius, {
+        lod: morphHostRef.current && morphingRef.current,
+      });
+      if (live?.mapKey === committedKey && live.mapUrl) {
+        applied = live;
+      }
+      // Even when this decode belongs to an older LOD bucket, never let it
+      // restore that bucket's geometry over the newer fractional shell box.
+      applied = withLiveGeometry(
+        applied,
+        pending.w,
+        pending.h,
+        pending.radius,
+      );
+    }
+    lensRef.current = applied;
+    applyMapHrefs(applied);
+    applyGeometry(applied);
+    paintShell(applied);
+    if (!active) setActive(true);
+  };
+
   const commitLens = (lens: ShellLens) => {
     const gen = ++commitGenRef.current;
     const committedKey = lens.mapKey;
     pendingMapKeyRef.current = committedKey;
     pendingLensRef.current = lens;
+    // CSS-blur path paints the specular as a data-URL background-image.
+    // Waiting on Image decode here meant MorphMenu often finished its open
+    // spring before the first Safari rim could appear. Canvas toDataURL is
+    // already displayable; commit synchronously.
+    if (!useSvgRef.current) {
+      finishCommit(lens, gen, committedKey);
+      return;
+    }
     whenImagesReady(
       [lens.mapUrl, lens.xMapUrl, lens.yMapUrl, lens.edgeOrderMapUrl],
-      () => {
-        // Let decoded intermediate LODs advance the visible map while a newer
-        // one is still decoding. Only reject a result if a later generation has
-        // already committed; this prevents regressions without leaving the old
-        // endpoint map stretched across the fast first half of the spring.
-        if (gen <= committedGenRef.current) return;
-        committedGenRef.current = gen;
-        if (gen === commitGenRef.current) {
-          pendingMapKeyRef.current = null;
-          pendingLensRef.current = null;
-        }
-        // Merge any live size that arrived while the PNG was decoding so we do
-        // not briefly snap filter geometry back to the bake-time box.
-        let applied = lens;
-        const pending = pendingSizeRef.current;
-        if (pending) {
-          const live = bakeLens(pending.w, pending.h, pending.radius, {
-            lod: morphHostRef.current && morphingRef.current,
-          });
-          if (live?.mapKey === committedKey && live.mapUrl) {
-            applied = live;
-          }
-          // Even when this decode belongs to an older LOD bucket, never let it
-          // restore that bucket's geometry over the newer fractional shell box.
-          applied = withLiveGeometry(
-            applied,
-            pending.w,
-            pending.h,
-            pending.radius,
-          );
-        }
-        lensRef.current = applied;
-        applyMapHrefs(applied);
-        applyGeometry(applied);
-        paintShell(applied);
-        if (!active) setActive(true);
-      },
+      () => finishCommit(lens, gen, committedKey),
     );
   };
 
@@ -1603,28 +1625,13 @@ export function GlassShellBackdrop({
           ref={lensDivRef}
           className="glass-shell-lens-paint absolute inset-0"
         />
-        {/* WebKit/Firefox specular carrier — same baked per-pixel highlight
-            as the Chromium filter path, delivered as a device-resolution
-            background-image instead of a CSS-px-rasterized SVG filter.
-            Empty (no background-image) on Chromium.
-
-            Styled inline, not via a stylesheet class: this project's CSS
-            build pipeline has silently dropped rules before, and losing
-            `background-size: 100% 100%` here would paint the raw bitmap at
-            its baked pixel size — a completely broken highlight. Scaling it
-            over the element box mirrors exactly how the filter path's
-            feImage (preserveAspectRatio="none") consumed the
-            same pixels. plus-lighter reproduces the filter's additive
-            feComposite math; browsers without it (iOS < 16.4) fall back to
-            normal alpha blending — slightly milkier, never broken. */}
+        {/* Formerly the WebKit/Firefox specular carrier. Rim light now paints
+            onto `.glass-shell-lens-paint` (see paintShell) so it survives
+            MorphMenu size springs under backdrop-filter. Slot kept so the
+            imperative ref path stays stable across builds. */}
         <div
           ref={specularOverlayRef}
           className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundSize: "100% 100%",
-            backgroundRepeat: "no-repeat",
-            mixBlendMode: "plus-lighter",
-          }}
           aria-hidden
         />
       </div>
