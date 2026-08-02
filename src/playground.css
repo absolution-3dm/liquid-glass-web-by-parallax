@@ -362,6 +362,9 @@ main {
 .hero-orbit {
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: min(420px, 54svh);
   overflow: visible;
@@ -377,21 +380,31 @@ main {
   width: 100%;
   height: 100%;
   overflow: visible;
+}
+
+.hero-orbit:not(.hero-orbit--projected) .hero-orbit__stage,
+.hero-orbit:not(.hero-orbit--projected) .hero-orbit__cluster,
+.hero-orbit:not(.hero-orbit--projected) .hero-orbit__capsule {
   transform-style: preserve-3d;
 }
 
 .hero-orbit__cluster {
   position: relative;
   flex-shrink: 0;
-  transform-style: preserve-3d;
 }
 
 .hero-orbit__capsule {
   position: absolute;
   inset: 0;
   overflow: visible;
-  transform-style: preserve-3d;
   will-change: transform;
+}
+
+/* Projected Safari/Firefox path must stay flat — no 3D containing block. */
+.hero-orbit--projected .hero-orbit__stage,
+.hero-orbit--projected .hero-orbit__cluster,
+.hero-orbit--projected .hero-orbit__capsule {
+  transform-style: flat;
 }
 
 .hero-orbit__capsule-glass {
@@ -1297,7 +1310,10 @@ footer {
 
   .hero-orbit {
     order: -1;
-    height: min(340px, 46svh);
+    justify-self: center;
+    width: min(100%, 360px);
+    height: min(360px, 48svh);
+    margin-inline: auto;
   }
 
   .bento {
@@ -1371,7 +1387,8 @@ footer {
   }
 
   .hero-orbit {
-    height: min(320px, 44svh);
+    width: min(100%, 340px);
+    height: min(340px, 46svh);
   }
 
   h1 {

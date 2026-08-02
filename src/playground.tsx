@@ -13,6 +13,7 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
+  type MotionValue,
 } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -26,6 +27,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { LiquidGlass } from "../registry/liquid-glass/liquid-glass";
+import { glassBrowserSupport } from "../registry/liquid-glass/browser-support";
 import {
   resolveGlassMaterial,
   type GlassMaterialName,
@@ -209,6 +211,97 @@ function highlightCode(code: string, language: "bash" | "tsx") {
 const HERO_AXON_ROTATE_X = 30;
 const HERO_AXON_ROTATE_Y = -38;
 
+/**
+ * Project a pure-Z offset through rotateY then rotateX (Motion's composition
+ * order for the 3D stage). Used to fake the axonometric stack in 2D on
+ * Safari/Firefox, where ancestor rotateX/Y + preserve-3d drops backdrop-filter.
+ */
+function projectAxonZ(z: number, rotateXDeg: number, rotateYDeg: number) {
+  const alpha = (rotateXDeg * Math.PI) / 180;
+  const beta = (rotateYDeg * Math.PI) / 180;
+  return {
+    x: z * Math.sin(beta),
+    y: -z * Math.cos(beta) * Math.sin(alpha),
+  };
+}
+
+/** WebKit/Firefox lose CSS blur when a preserve-3d ancestor is rotating. */
+const heroUsesProjectedStack =
+  glassBrowserSupport.isSafari || glassBrowserSupport.isFirefox;
+
+function HeroStackPanel({
+  index,
+  width,
+  height,
+  radius,
+  depthStep,
+  projected,
+  springX,
+  springY,
+}: {
+  index: number;
+  width: number;
+  height: number;
+  radius: number;
+  depthStep: number;
+  projected: boolean;
+  springX: MotionValue<number>;
+  springY: MotionValue<number>;
+}) {
+  // Center the Z range on 0 so the rotated/projected stack stays visually
+  // centered in the stage (front = +Z, back = −Z).
+  const z = ((HERO_CAPSULE_COUNT - 1) / 2 - index) * depthStep;
+  const zIndex = HERO_CAPSULE_COUNT - index;
+
+  const projectedX = useTransform([springX, springY], ([px, py]) => {
+    const rotateX = HERO_AXON_ROTATE_X + Number(py) * -4;
+    const rotateY = HERO_AXON_ROTATE_Y + Number(px) * 5;
+    return projectAxonZ(z, rotateX, rotateY).x;
+  });
+  const projectedY = useTransform([springX, springY], ([px, py]) => {
+    const rotateX = HERO_AXON_ROTATE_X + Number(py) * -4;
+    const rotateY = HERO_AXON_ROTATE_Y + Number(px) * 5;
+    return projectAxonZ(z, rotateX, rotateY).y;
+  });
+
+  if (projected) {
+    return (
+      <motion.div
+        className="hero-orbit__capsule"
+        style={{ width, height, zIndex, x: projectedX, y: projectedY }}
+      >
+        <LiquidGlass
+          width={width}
+          height={height}
+          borderRadius={radius}
+          material="navigation"
+          className="hero-orbit__capsule-glass"
+        />
+      </motion.div>
+    );
+  }
+
+  return (
+    <div
+      className="hero-orbit__capsule"
+      style={{
+        width,
+        height,
+        zIndex,
+        transform: `translateZ(${z}px)`,
+      }}
+    >
+      <LiquidGlass
+        width={width}
+        height={height}
+        borderRadius={radius}
+        material="navigation"
+        className="hero-orbit__capsule-glass"
+      />
+    </div>
+  );
+}
+
 function HeroFloatStage() {
   const stageRef = useRef<HTMLDivElement>(null);
   const [compact, setCompact] = useState(false);
@@ -218,7 +311,7 @@ function HeroFloatStage() {
   const pointerY = useMotionValue(0);
   const springX = useSpring(pointerX, { stiffness: 320, damping: 32, mass: 0.55 });
   const springY = useSpring(pointerY, { stiffness: 320, damping: 32, mass: 0.55 });
-  // Pointer only nudges the axonometric pose; depth is pure translateZ.
+  // Pointer only nudges the axonometric pose; depth is pure Z.
   const rotateX = useTransform(springY, (value) => HERO_AXON_ROTATE_X + value * -4);
   const rotateY = useTransform(springX, (value) => HERO_AXON_ROTATE_Y + value * 5);
 
@@ -273,47 +366,47 @@ function HeroFloatStage() {
   }, [pointerX, pointerY]);
 
   // Near-square rounded rects, XY-aligned — only Z separates the stack.
-  const width = compact ? 104 : 124;
-  const height = compact ? 118 : 140;
-  const radius = compact ? 28 : 34;
-  const depthStep = compact ? 44 : 56;
+  // Z is centered on 0 so the axonometric / projected footprint stays visually
+  // centered when the stage itself is flex-centered.
+  const width = compact ? 112 : 124;
+  const height = compact ? 126 : 140;
+  const radius = compact ? 30 : 34;
+  const depthStep = compact ? 48 : 56;
 
   return (
-    <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass panel stack">
+    <div
+      className={`hero-orbit${heroUsesProjectedStack ? " hero-orbit--projected" : ""}`}
+      ref={stageRef}
+      aria-label="LiquidGlass panel stack"
+    >
       <motion.div
         className="hero-orbit__stage"
-        style={{
-          rotateX,
-          rotateY,
-          // Axonometric / orthographic: no perspective foreshortening.
-          transformPerspective: 0,
-          transformOrigin: "50% 50%",
-          transformStyle: "preserve-3d",
-        }}
+        style={
+          heroUsesProjectedStack
+            ? undefined
+            : {
+                rotateX,
+                rotateY,
+                // Axonometric / orthographic: no perspective foreshortening.
+                transformPerspective: 0,
+                transformOrigin: "50% 50%",
+                transformStyle: "preserve-3d",
+              }
+        }
       >
-        <div
-          className="hero-orbit__cluster"
-          style={{ width, height }}
-        >
+        <div className="hero-orbit__cluster" style={{ width, height }}>
           {Array.from({ length: HERO_CAPSULE_COUNT }, (_, index) => (
-            <div
+            <HeroStackPanel
               key={index}
-              className="hero-orbit__capsule"
-              style={{
-                width,
-                height,
-                zIndex: HERO_CAPSULE_COUNT - index,
-                transform: `translateZ(${(HERO_CAPSULE_COUNT - 1 - index) * depthStep}px)`,
-              }}
-            >
-              <LiquidGlass
-                width={width}
-                height={height}
-                borderRadius={radius}
-                material="navigation"
-                className="hero-orbit__capsule-glass"
-              />
-            </div>
+              index={index}
+              width={width}
+              height={height}
+              radius={radius}
+              depthStep={depthStep}
+              projected={heroUsesProjectedStack}
+              springX={springX}
+              springY={springY}
+            />
           ))}
         </div>
       </motion.div>
