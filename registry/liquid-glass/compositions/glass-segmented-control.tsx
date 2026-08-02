@@ -350,14 +350,25 @@ export function GlassSegmentedControl({
       // Route all subsequent events for this gesture to the item itself
       // (rather than whatever the finger/cursor happens to be over) so a
       // touch drifting off the small item's hit box mid-drag doesn't drop it.
-      event.currentTarget.setPointerCapture(event.pointerId);
+      const target = event.currentTarget;
+      target.setPointerCapture(event.pointerId);
       animate(chipPress, 1, CHIP_PRESS_SPRING);
       dragAbortRef.current?.abort();
       const ac = new AbortController();
       dragAbortRef.current = ac;
-      window.addEventListener("pointermove", handleDragMove, { signal: ac.signal });
-      window.addEventListener("pointerup", handleDragEnd, { signal: ac.signal });
-      window.addEventListener("pointercancel", handleDragEnd, { signal: ac.signal });
+      // Listen on the capture target, not `window`: with setPointerCapture the
+      // finger's events retarget here for the whole gesture. `passive: false`
+      // is required so handleDragMove's preventDefault can actually cancel
+      // native touch scrolling — a passive listener makes mouse drag work and
+      // finger drag get pointercancel'd as a scroll.
+      target.addEventListener("pointermove", handleDragMove, {
+        signal: ac.signal,
+        passive: false,
+      });
+      target.addEventListener("pointerup", handleDragEnd, { signal: ac.signal });
+      target.addEventListener("pointercancel", handleDragEnd, {
+        signal: ac.signal,
+      });
     },
     [chipX, chipPress, handleDragEnd, handleDragMove, measure],
   );
