@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
   type RefObject,
 } from "react";
 import {
@@ -74,6 +73,32 @@ const topNavigationItems = [
 
 const customizerPresets = ["regular", "navigation", "control", "panel"] as const;
 type CustomizerPreset = (typeof customizerPresets)[number];
+
+/** Hero Install CTA — cooler blue glass pill. */
+const heroCtaMaterial = {
+  preset: "control" as const,
+  fill: "#0b2f6b",
+  tint: 0.52,
+  blur: 1.25,
+  specular: 3,
+  chroma: 0.08,
+};
+
+/** Hero stack — near-black fill so stacked panes don't wash out milky. */
+const heroStackMaterial = {
+  preset: "navigation" as const,
+  tint: 0.1,
+  fill: "#000000",
+};
+
+/** Keep stacked hero panes from compounding backdrop saturate into neon. */
+const heroStackEngine = {
+  backdropSaturateSvg: 1.08,
+  backdropSaturateCssBlur: 1.08,
+};
+
+/** Staggered hero capsule stack — front-left to back-right. */
+const HERO_CAPSULE_COUNT = 5;
 
 const usageExample = `import { LiquidGlass } from "@/components/liquid-glass/liquid-glass"
 
@@ -194,179 +219,247 @@ function highlightCode(code: string, language: "bash" | "tsx") {
   });
 }
 
-function HeroOrbitTilt({
-  className,
-  lift = 0,
-  rotateX,
-  rotateY,
-  springX,
-  springY,
-  children,
+/** Axonometric resting pose — negative X tilts as if looking down from above. */
+const HERO_AXON_ROTATE_X = -22;
+const HERO_AXON_ROTATE_Y = -28;
+
+/** Idle float: small vertical wave, staggered across the stack. */
+const HERO_FLOAT_AMPLITUDE_PX = 7;
+const HERO_FLOAT_PERIOD_SEC = 5.6;
+const HERO_FLOAT_PHASE_STEP = 0.9;
+
+/** Panel aspect used when fitting the stack into the orbit stage. */
+const HERO_PANEL_ASPECT = 212 / 188;
+
+/**
+ * Pick panel metrics so the axonometric stack fills most of the stage.
+ * Sizes step by 8px to avoid thrashing LiquidGlass lens regeneration while resizing.
+ */
+function resolveHeroPanelMetrics(stageWidth: number, stageHeight: number) {
+  const safeW = Math.max(0, stageWidth);
+  const safeH = Math.max(0, stageHeight);
+  // Fill most of the stage; leave a little room for the projected Z-stack margins.
+  const widthByStage = Math.min(safeW * 0.7, safeH * 0.7 * (1 / HERO_PANEL_ASPECT));
+  const width = Math.round(
+    Math.min(360, Math.max(200, widthByStage)) / 8,
+  ) * 8;
+  const height = Math.round((width * HERO_PANEL_ASPECT) / 8) * 8;
+  const radius = Math.round(Math.min(80, Math.max(48, width * 0.255)));
+  const depthStep = Math.round(Math.min(136, Math.max(80, width * 0.42)));
+  return { width, height, radius, depthStep };
+}
+
+const HERO_PANEL_FALLBACK = resolveHeroPanelMetrics(560, 640);
+
+/**
+ * Project a pure-Z offset through rotateY then rotateX. Panels stay
+ * XY-aligned in model space; screen stagger comes only from this projection.
+ *
+ * Each panel applies the same rotateX/Y itself (transform-style: flat) instead
+ * of sitting under a preserve-3d stage — that keeps the axonometric face tilt
+ * while avoiding the WebKit bug where a rotating 3D ancestor drops
+ * backdrop-filter on some panes.
+ */
+function projectAxonZ(z: number, rotateXDeg: number, rotateYDeg: number) {
+  const alpha = (rotateXDeg * Math.PI) / 180;
+  const beta = (rotateYDeg * Math.PI) / 180;
+  return {
+    x: z * Math.sin(beta),
+    y: -z * Math.cos(beta) * Math.sin(alpha),
+  };
+}
+
+/** Soft X-proximity (0..1) from pointer to a panel's resting screen X. */
+function heroPullProximity(pointerX: number, restX: number, sigma: number) {
+  if (sigma <= 0) return 0;
+  const t = (pointerX - restX) / sigma;
+  return Math.exp(-0.5 * t * t);
+}
+
+function HeroStackPanel({
+  index,
+  width,
+  height,
+  radius,
+  depthStep,
+  pullPointerX,
+  floatClock,
 }: {
-  className: string;
-  lift?: number;
-  rotateX: MotionValue<number>;
-  rotateY: MotionValue<number>;
-  springX: MotionValue<number>;
-  springY: MotionValue<number>;
-  children: ReactNode;
+  index: number;
+  width: number;
+  height: number;
+  radius: number;
+  depthStep: number;
+  pullPointerX: MotionValue<number>;
+  floatClock: MotionValue<number>;
 }) {
-  const x = useTransform(springX, (value) => value * lift);
-  const y = useTransform(springY, (value) => value * lift);
+  // Center the Z stack on 0 so the projected stack stays visually centered.
+  const z = ((HERO_CAPSULE_COUNT - 1) / 2 - index) * depthStep;
+  const rest = projectAxonZ(z, HERO_AXON_ROTATE_X, HERO_AXON_ROTATE_Y);
+  // Spacing between neighboring rest X positions ≈ |sin(β)| * depthStep.
+  const sigma = Math.max(
+    28,
+    Math.abs(projectAxonZ(depthStep, HERO_AXON_ROTATE_X, HERO_AXON_ROTATE_Y).x) * 0.85,
+  );
+  const pullDistance = height * 0.18;
+  // Keep stacking order fixed — pulling must not reshuffle paint order.
+  const zIndex = HERO_CAPSULE_COUNT - index;
+  const floatPhase = index * HERO_FLOAT_PHASE_STEP;
+
+  const pull = useSpring(0, { stiffness: 280, damping: 28, mass: 0.55 });
+
+  useEffect(() => {
+    const unsub = pullPointerX.on("change", (px) => {
+      pull.set(heroPullProximity(Number(px), rest.x, sigma));
+    });
+    pull.set(heroPullProximity(pullPointerX.get(), rest.x, sigma));
+    return unsub;
+  }, [pullPointerX, pull, rest.x, sigma]);
+
+  const y = useTransform([pull, floatClock], ([p, t]) => {
+    const wave =
+      Math.sin((Number(t) / HERO_FLOAT_PERIOD_SEC) * Math.PI * 2 + floatPhase) *
+      HERO_FLOAT_AMPLITUDE_PX;
+    return rest.y + wave - Number(p) * pullDistance;
+  });
 
   return (
     <motion.div
-      className={className}
+      className="hero-orbit__capsule"
       style={{
-        rotateX,
-        rotateY,
-        x,
+        width,
+        height,
+        zIndex,
+        x: rest.x,
         y,
-        // Parallel / orthographic: no vanishing-point perspective.
-        transformPerspective: 0,
+        rotateX: HERO_AXON_ROTATE_X,
+        rotateY: HERO_AXON_ROTATE_Y,
+        // Large perspective ≈ orthographic axonometric foreshortening.
+        transformPerspective: 12000,
         transformOrigin: "50% 50%",
       }}
     >
-      {children}
+      <LiquidGlass
+        width={width}
+        height={height}
+        borderRadius={radius}
+        material={heroStackMaterial}
+        engine={heroStackEngine}
+        pointerHighlight={false}
+        className="hero-orbit__capsule-glass"
+      />
     </motion.div>
   );
 }
 
 function HeroFloatStage() {
   const stageRef = useRef<HTMLDivElement>(null);
-  const [segmentValue, setSegmentValue] = useState("optics");
+  const clusterRef = useRef<HTMLDivElement>(null);
+  const [metrics, setMetrics] = useState(HERO_PANEL_FALLBACK);
   const reduceMotionRef = useRef(false);
 
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
-  const springX = useSpring(pointerX, { stiffness: 320, damping: 32, mass: 0.55 });
-  const springY = useSpring(pointerY, { stiffness: 320, damping: 32, mass: 0.55 });
-  const rotateX = useTransform(springY, (value) => 16 + value * -5);
-  const rotateY = useTransform(springX, (value) => -24 + value * 8);
+  // Pull uses cluster-local X. Far value collapses all pulls.
+  const pullPointerX = useMotionValue(10_000);
+  const floatClock = useMotionValue(0);
 
   useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reduceMotionRef.current = media.matches;
-    const onChange = () => {
-      reduceMotionRef.current = media.matches;
-      if (media.matches) {
-        pointerX.set(0);
-        pointerY.set(0);
-        springX.jump(0);
-        springY.jump(0);
+    const reduceMq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncReduce = () => {
+      reduceMotionRef.current = reduceMq.matches;
+      if (reduceMq.matches) {
+        pullPointerX.set(10_000);
+        floatClock.set(0);
       }
     };
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, [pointerX, pointerY, springX, springY]);
+    syncReduce();
+    reduceMq.addEventListener("change", syncReduce);
+    return () => {
+      reduceMq.removeEventListener("change", syncReduce);
+    };
+  }, [pullPointerX, floatClock]);
+
+  useEffect(() => {
+    if (reduceMotionRef.current) return;
+    let frame = 0;
+    const started = performance.now();
+    const tick = (now: number) => {
+      if (!reduceMotionRef.current) {
+        floatClock.set((now - started) / 1000);
+      }
+      frame = window.requestAnimationFrame(tick);
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [floatClock]);
 
   useEffect(() => {
     const stage = stageRef.current;
-    if (!stage) return;
+    if (!stage || typeof ResizeObserver === "undefined") return;
+
+    const sync = () => {
+      const rect = stage.getBoundingClientRect();
+      const next = resolveHeroPanelMetrics(rect.width, rect.height);
+      setMetrics((prev) =>
+        prev.width === next.width &&
+        prev.height === next.height &&
+        prev.radius === next.radius &&
+        prev.depthStep === next.depthStep
+          ? prev
+          : next,
+      );
+    };
+
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    const hero = stage?.closest(".hero");
+    if (!stage || !(hero instanceof HTMLElement)) return;
 
     const onPointerMove = (event: PointerEvent) => {
       if (reduceMotionRef.current) return;
-      const rect = stage.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-      const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      const ny = ((event.clientY - rect.top) / rect.height) * 2 - 1;
-      pointerX.set(Math.max(-1, Math.min(1, nx)));
-      pointerY.set(Math.max(-1, Math.min(1, ny)));
+      const cluster = clusterRef.current;
+      if (!cluster) return;
+      const clusterRect = cluster.getBoundingClientRect();
+      if (clusterRect.width <= 0) return;
+      pullPointerX.set(event.clientX - (clusterRect.left + clusterRect.width / 2));
     };
 
     const onPointerLeave = () => {
-      pointerX.set(0);
-      pointerY.set(0);
+      pullPointerX.set(10_000);
     };
 
-    stage.addEventListener("pointermove", onPointerMove);
-    stage.addEventListener("pointerleave", onPointerLeave);
+    hero.addEventListener("pointermove", onPointerMove);
+    hero.addEventListener("pointerleave", onPointerLeave);
     return () => {
-      stage.removeEventListener("pointermove", onPointerMove);
-      stage.removeEventListener("pointerleave", onPointerLeave);
+      hero.removeEventListener("pointermove", onPointerMove);
+      hero.removeEventListener("pointerleave", onPointerLeave);
     };
-  }, [pointerX, pointerY]);
+  }, [pullPointerX]);
+
+  const { width, height, radius, depthStep } = metrics;
 
   return (
-    <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass component preview">
-      <div className="hero-orbit__tilt">
-        <HeroOrbitTilt
-          className="hero-orbit__plate"
-          rotateX={rotateX}
-          rotateY={rotateY}
-          springX={springX}
-          springY={springY}
-        >
-          <img
-            className="hero-orbit__scene"
-            src="/images/shan-shui-summer-mountains.jpg"
-            alt="Summer Mountains, attributed to Qu Ding — Song dynasty shan shui"
-          />
-        </HeroOrbitTilt>
-
-        <HeroOrbitTilt
-          className="hero-orbit__layer hero-orbit__layer--menu"
-          lift={18}
-          rotateX={rotateX}
-          rotateY={rotateY}
-          springX={springX}
-          springY={springY}
-        >
-          <HeroMorphMenu />
-        </HeroOrbitTilt>
-
-        <HeroOrbitTilt
-          className="hero-orbit__layer hero-orbit__layer--segment"
-          lift={18}
-          rotateX={rotateX}
-          rotateY={rotateY}
-          springX={springX}
-          springY={springY}
-        >
-          <GlassSegmentedControl
-            items={segmentItems}
-            value={segmentValue}
-            onValueChange={setSegmentValue}
-            itemWidth={100}
-            itemHeight={40}
-            padding={4}
-            radialExpansion={8}
-            material="navigation"
-            pressedMaterial="selectionPressed"
-            className="hero-orbit__segment"
-            itemClassName="hero-orbit__segment-item"
-          />
-        </HeroOrbitTilt>
-
-        <HeroOrbitTilt
-          className="hero-orbit__layer hero-orbit__layer--icons"
-          lift={18}
-          rotateX={rotateX}
-          rotateY={rotateY}
-          springX={springX}
-          springY={springY}
-        >
-          {bentoIconPills.map(({ icon, label }) => (
-            <button
-              key={label}
-              type="button"
-              className="bento-icon-button"
-              data-ios-pointer-target=""
-              aria-label={label}
-            >
-              <GlassIconPill size={44} material="navigation">
-                <HugeiconsIcon
-                  icon={icon}
-                  size={18}
-                  color="currentColor"
-                  strokeWidth={1.75}
-                  className="bento-icon-glyph"
-                  aria-hidden
-                />
-              </GlassIconPill>
-            </button>
+    <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass panel stack">
+      <div className="hero-orbit__stage">
+        <div className="hero-orbit__cluster" ref={clusterRef} style={{ width, height }}>
+          {Array.from({ length: HERO_CAPSULE_COUNT }, (_, index) => (
+            <HeroStackPanel
+              key={index}
+              index={index}
+              width={width}
+              height={height}
+              radius={radius}
+              depthStep={depthStep}
+              pullPointerX={pullPointerX}
+              floatClock={floatClock}
+            />
           ))}
-        </HeroOrbitTilt>
+        </div>
       </div>
     </div>
   );
@@ -410,75 +503,6 @@ function useShowcaseMenuOpen(enabled: boolean, rootRef: RefObject<HTMLElement | 
   }, [enabled, rootRef]);
 
   return [open, setOpen] as const;
-}
-
-function HeroMorphMenu() {
-  const stageRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useShowcaseMenuOpen(true, stageRef);
-  const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
-
-  return (
-    <div ref={stageRef}>
-    <MorphMenu.Root
-      open={open}
-      onOpenChange={(next) => {
-        clearHoveredItem();
-        setOpen(next);
-      }}
-      direction="bottom"
-      anchor="start"
-      visualDuration={0.28}
-      bounce={0}
-      closeOnClickOutside={false}
-    >
-      <MorphMenu.Container
-        buttonSize={48}
-        menuWidth={248}
-        menuRadius={28}
-        buttonRadius={24}
-        offset={12}
-        className="hero-orbit__menu-shell"
-        backdrop={<GlassShellBackdrop borderRadius={28} material="navigation" />}
-      >
-        <MorphMenu.Trigger
-          aria-label={open ? "Close menu" : "Open menu"}
-          className="navigation-menu__trigger"
-        >
-          <HugeiconsIcon
-            icon={Menu01Icon}
-            altIcon={Cancel01Icon}
-            showAlt={open}
-            size={20}
-            color="currentColor"
-            strokeWidth={1.75}
-            aria-hidden
-          />
-        </MorphMenu.Trigger>
-
-        <MorphMenu.Content
-          className="navigation-menu__content"
-          onPointerLeave={clearHoveredItem}
-        >
-          <div className="navigation-menu__heading">
-            <span>Menu</span>
-          </div>
-          <div className="navigation-menu__items">
-            <MorphMenuHoverFill hoveredItem={hoveredItem} />
-            {menuItems.map((item) => (
-              <MorphMenu.Item
-                key={item}
-                className="navigation-menu__item"
-                onPointerEnter={syncHoveredItem}
-              >
-                <span>{item}</span>
-              </MorphMenu.Item>
-            ))}
-          </div>
-        </MorphMenu.Content>
-      </MorphMenu.Container>
-    </MorphMenu.Root>
-    </div>
-  );
 }
 
 function BentoMorphMenu({
@@ -1061,8 +1085,8 @@ function InstallationShowcase() {
       <div className="section-heading">
         <h2>Install</h2>
         <p>
-          Distributed through the shadcn Registry. The CLI copies the source into
-          your app — no private runtime package.
+          Install via the shadcn Registry. The CLI copies the source into your
+          app — no private runtime package.
         </p>
       </div>
 
@@ -1220,17 +1244,39 @@ export function Playground() {
 
       <main id="top">
         <section className="hero" id="menu">
-          <div className="hero-copy">
-            <h1>LiquidGlass</h1>
-            <p className="hero-lede">
-              Optical surfaces for the web. Install the source, own the
-              refraction.
-            </p>
-            <a className="hero-cta" href="#installation">
-              Install
-            </a>
+          <div className="hero-media" aria-hidden="true">
+            <img
+              className="hero-media__image"
+              src="/images/hero-bg.jpg"
+              alt=""
+            />
+            <div className="hero-media__veil" />
           </div>
-          <HeroFloatStage />
+          <div className="hero-inner">
+            <div className="hero-copy">
+              <h1>Liquid Glass for the web.</h1>
+              <p className="hero-lede">
+                Native-feeling glass surfaces — crafted, customizable, source
+                you own.
+              </p>
+              <a
+                className="hero-cta"
+                href="#installation"
+                data-ios-pointer-target=""
+              >
+                <LiquidGlass
+                  width={120}
+                  height={44}
+                  borderRadius={22}
+                  material={heroCtaMaterial}
+                  className="hero-cta__glass"
+                >
+                  <span className="hero-cta__label">Install</span>
+                </LiquidGlass>
+              </a>
+            </div>
+            <HeroFloatStage />
+          </div>
         </section>
 
         <ComponentsBento />
