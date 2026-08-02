@@ -303,24 +303,53 @@ main {
 
 .hero {
   position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
   gap: 24px 40px;
   min-height: min(72vh, 680px);
   align-items: end;
   padding: 140px 0 72px;
+  overflow: hidden;
+  border-radius: calc(var(--radius-panel) + 4px);
+}
+
+.hero-media {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.hero-media__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 58% 42%;
+  filter: brightness(0.78) contrast(1.08) saturate(1.05);
+}
+
+.hero-media__veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(105deg, rgb(1 1 2 / 0.78) 0%, rgb(1 1 2 / 0.42) 42%, rgb(1 1 2 / 0.18) 68%, rgb(1 1 2 / 0.34) 100%),
+    linear-gradient(180deg, rgb(1 1 2 / 0.28) 0%, transparent 34%, rgb(1 1 2 / 0.45) 100%);
 }
 
 .hero-copy {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   max-width: 520px;
   padding-bottom: 12px;
 }
 
 .hero-orbit {
   position: relative;
-  z-index: 0;
+  z-index: 1;
   width: 100%;
   height: min(500px, 66vh);
   margin-bottom: 8px;
@@ -328,49 +357,18 @@ main {
   touch-action: none;
 }
 
-.hero-orbit__tilt {
+.hero-orbit__stage {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: visible;
+  transform-origin: 58% 46%;
 }
 
 /*
   Perspective lives on Motion wrappers (HeroOrbitTilt). Glass surfaces stay
   untransformed so Segment's internal chip slide/padding stay correct.
 */
-.hero-orbit__plate {
-  position: absolute;
-  inset: 8% 4% 6% 8%;
-  z-index: 0;
-  overflow: hidden;
-  border-radius: 28px;
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.1) inset,
-    0 28px 56px rgb(0 0 0 / 0.55),
-    0 8px 18px rgb(0 0 0 / 0.35);
-  background: #0a0b0c;
-}
-
-.hero-orbit__plate::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(160deg, rgb(255 255 255 / 0.07), transparent 40%),
-    linear-gradient(180deg, rgb(1 1 2 / 0.08), rgb(1 1 2 / 0.22));
-  pointer-events: none;
-}
-
-.hero-orbit__scene {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 45%;
-  filter: brightness(0.92) contrast(1.08) saturate(0.92);
-}
-
 .hero-orbit__layer {
   position: absolute;
   z-index: 1;
@@ -378,21 +376,21 @@ main {
 }
 
 .hero-orbit__layer--menu {
-  left: 6%;
-  top: 14%;
+  left: 8%;
+  top: 16%;
   z-index: 3;
 }
 
 .hero-orbit__layer--segment {
-  right: 5%;
-  top: 12%;
+  right: 6%;
+  top: 18%;
 }
 
 .hero-orbit__layer--icons {
   display: flex;
   gap: 10px;
-  right: 7%;
-  bottom: 12%;
+  right: 10%;
+  bottom: 14%;
 }
 
 .hero-orbit__segment {
@@ -446,7 +444,7 @@ h1 {
 .hero-lede {
   max-width: 42ch;
   margin-bottom: 28px;
-  color: var(--muted);
+  color: rgb(208 214 224 / 0.92);
   font-size: 1.05rem;
   line-height: 1.55;
   letter-spacing: -0.015em;
@@ -1295,13 +1293,44 @@ footer {
     grid-template-columns: 1fr;
     align-items: start;
     min-height: 72vh;
-    padding: 108px 0 72px;
+    padding: 108px 0 56px;
+  }
+
+  .hero-media__image {
+    object-position: 62% 40%;
+  }
+
+  .hero-media__veil {
+    background:
+      linear-gradient(180deg, rgb(1 1 2 / 0.22) 0%, rgb(1 1 2 / 0.18) 38%, rgb(1 1 2 / 0.72) 100%),
+      linear-gradient(90deg, rgb(1 1 2 / 0.28), transparent 55%);
   }
 
   .hero-orbit {
     order: -1;
-    height: min(340px, 48vh);
-    margin: 0 0 8px;
+    height: min(300px, 44vh);
+    margin: 0 0 4px;
+  }
+
+  .hero-orbit__stage {
+    transform: scale(0.78);
+    transform-origin: 50% 42%;
+  }
+
+  .hero-orbit__layer--menu {
+    left: 4%;
+    top: 10%;
+  }
+
+  .hero-orbit__layer--segment {
+    right: 2%;
+    top: 8%;
+  }
+
+  .hero-orbit__layer--icons {
+    right: auto;
+    left: 10%;
+    bottom: 10%;
   }
 
   .bento {
@@ -1371,27 +1400,33 @@ footer {
 
   .hero {
     min-height: 68vh;
-    padding-top: 88px;
-    gap: 24px;
+    padding: 88px 0 48px;
+    gap: 18px;
   }
 
   .hero-orbit {
-    height: 280px;
+    height: 250px;
+  }
+
+  .hero-orbit__stage {
+    transform: scale(0.66);
+    transform-origin: 48% 40%;
   }
 
   .hero-orbit__layer--menu {
-    left: 4%;
-    top: 8%;
+    left: 2%;
+    top: 6%;
   }
 
   .hero-orbit__layer--segment {
-    right: 4%;
-    top: 10%;
+    right: 0;
+    top: 4%;
   }
 
   .hero-orbit__layer--icons {
-    right: 5%;
-    bottom: 10%;
+    left: 8%;
+    right: auto;
+    bottom: 8%;
   }
 
   h1 {

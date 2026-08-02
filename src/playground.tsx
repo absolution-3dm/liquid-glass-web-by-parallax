@@ -289,24 +289,11 @@ function HeroFloatStage() {
 
   return (
     <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass component preview">
-      <div className="hero-orbit__tilt">
-        <HeroOrbitTilt
-          className="hero-orbit__plate"
-          rotateX={rotateX}
-          rotateY={rotateY}
-          springX={springX}
-          springY={springY}
-        >
-          <img
-            className="hero-orbit__scene"
-            src="/images/shan-shui-summer-mountains.jpg"
-            alt="Summer Mountains, attributed to Qu Ding — Song dynasty shan shui"
-          />
-        </HeroOrbitTilt>
-
+      <div className="hero-orbit__stage">
+        {/* Shared tilt, no differential lift — glass stays coplanar over the
+            full-bleed hero media instead of floating at staggered depths. */}
         <HeroOrbitTilt
           className="hero-orbit__layer hero-orbit__layer--menu"
-          lift={18}
           rotateX={rotateX}
           rotateY={rotateY}
           springX={springX}
@@ -317,7 +304,6 @@ function HeroFloatStage() {
 
         <HeroOrbitTilt
           className="hero-orbit__layer hero-orbit__layer--segment"
-          lift={18}
           rotateX={rotateX}
           rotateY={rotateY}
           springX={springX}
@@ -340,7 +326,6 @@ function HeroFloatStage() {
 
         <HeroOrbitTilt
           className="hero-orbit__layer hero-orbit__layer--icons"
-          lift={18}
           rotateX={rotateX}
           rotateY={rotateY}
           springX={springX}
@@ -1220,6 +1205,14 @@ export function Playground() {
 
       <main id="top">
         <section className="hero" id="menu">
+          <div className="hero-media" aria-hidden="true">
+            <img
+              className="hero-media__image"
+              src="/images/pexels-ice-cave.jpg"
+              alt=""
+            />
+            <div className="hero-media__veil" />
+          </div>
           <div className="hero-copy">
             <h1>LiquidGlass</h1>
             <p className="hero-lede">
