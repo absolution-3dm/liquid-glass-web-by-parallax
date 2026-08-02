@@ -205,6 +205,10 @@ function highlightCode(code: string, language: "bash" | "tsx") {
   });
 }
 
+/** Axonometric resting pose — parallel projection, no vanishing point. */
+const HERO_AXON_ROTATE_X = 30;
+const HERO_AXON_ROTATE_Y = -38;
+
 function HeroFloatStage() {
   const stageRef = useRef<HTMLDivElement>(null);
   const [compact, setCompact] = useState(false);
@@ -214,8 +218,9 @@ function HeroFloatStage() {
   const pointerY = useMotionValue(0);
   const springX = useSpring(pointerX, { stiffness: 320, damping: 32, mass: 0.55 });
   const springY = useSpring(pointerY, { stiffness: 320, damping: 32, mass: 0.55 });
-  const rotateX = useTransform(springY, (value) => 12 + value * -5);
-  const rotateY = useTransform(springX, (value) => -18 + value * 7);
+  // Pointer only nudges the axonometric pose; depth is pure translateZ.
+  const rotateX = useTransform(springY, (value) => HERO_AXON_ROTATE_X + value * -4);
+  const rotateY = useTransform(springX, (value) => HERO_AXON_ROTATE_Y + value * 5);
 
   useEffect(() => {
     const compactMq = window.matchMedia("(max-width: 900px)");
@@ -267,16 +272,11 @@ function HeroFloatStage() {
     };
   }, [pointerX, pointerY]);
 
-  // Near-square rounded rects (not stadium capsules).
+  // Near-square rounded rects, XY-aligned — only Z separates the stack.
   const width = compact ? 104 : 124;
   const height = compact ? 118 : 140;
   const radius = compact ? 28 : 34;
-  const stepX = compact ? 40 : 52;
-  const stepY = compact ? -32 : -40;
-  const depthStep = compact ? 26 : 36;
-  const clusterWidth = width + (HERO_CAPSULE_COUNT - 1) * stepX;
-  const clusterHeight = height + (HERO_CAPSULE_COUNT - 1) * Math.abs(stepY);
-  const baseTop = (HERO_CAPSULE_COUNT - 1) * Math.abs(stepY);
+  const depthStep = compact ? 44 : 56;
 
   return (
     <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass panel stack">
@@ -285,14 +285,15 @@ function HeroFloatStage() {
         style={{
           rotateX,
           rotateY,
-          transformPerspective: 1100,
+          // Axonometric / orthographic: no perspective foreshortening.
+          transformPerspective: 0,
           transformOrigin: "50% 50%",
           transformStyle: "preserve-3d",
         }}
       >
         <div
           className="hero-orbit__cluster"
-          style={{ width: clusterWidth, height: clusterHeight }}
+          style={{ width, height }}
         >
           {Array.from({ length: HERO_CAPSULE_COUNT }, (_, index) => (
             <div
@@ -301,8 +302,6 @@ function HeroFloatStage() {
               style={{
                 width,
                 height,
-                left: index * stepX,
-                top: baseTop + index * stepY,
                 zIndex: HERO_CAPSULE_COUNT - index,
                 transform: `translateZ(${(HERO_CAPSULE_COUNT - 1 - index) * depthStep}px)`,
               }}

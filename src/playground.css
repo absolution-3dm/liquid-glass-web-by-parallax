@@ -366,7 +366,8 @@ main {
   height: min(420px, 54svh);
   overflow: visible;
   touch-action: none;
-  perspective: 1100px;
+  /* Axonometric stack — parallel projection lives on the Motion stage. */
+  perspective: none;
 }
 
 .hero-orbit__stage {
@@ -387,6 +388,7 @@ main {
 
 .hero-orbit__capsule {
   position: absolute;
+  inset: 0;
   overflow: visible;
   transform-style: preserve-3d;
   will-change: transform;
