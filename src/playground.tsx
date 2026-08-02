@@ -27,7 +27,6 @@ import {
 import { GlassSegmentedControl } from "../registry/liquid-glass/compositions/glass-segmented-control";
 import { GlassShellBackdrop } from "../registry/liquid-glass/compositions/glass-shell-backdrop";
 import { GlassIconPill } from "../registry/liquid-glass/compositions/glass-icon-pill";
-import { LiquidGlassCapsule } from "../registry/liquid-glass/compositions/liquid-glass-capsule";
 import { IOSPointer } from "../registry/liquid-glass/compositions/ios-pointer";
 import {
   MorphMenuHoverFill,
@@ -431,8 +430,12 @@ function HeroMorphMenu() {
   );
 }
 
-function BentoMorphMenu() {
-  const [open, setOpen] = useState(false);
+function BentoMorphMenu({
+  defaultOpen = false,
+}: {
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
   return (
@@ -446,6 +449,7 @@ function BentoMorphMenu() {
       anchor="start"
       visualDuration={0.28}
       bounce={0}
+      closeOnClickOutside={!defaultOpen}
     >
       <MorphMenu.Container
         buttonSize={48}
@@ -498,34 +502,6 @@ function BentoMorphMenu() {
 
 function ComponentsBento() {
   const [segmentValue, setSegmentValue] = useState("motion");
-  const capsuleConstraintsRef = useRef<HTMLDivElement>(null);
-  const capsulePlacedRef = useRef(false);
-  const capsuleWidth = 168;
-  const capsuleHeight = 120;
-  const [capsuleOrigin, setCapsuleOrigin] = useState<{ x: number; y: number } | null>(
-    null,
-  );
-
-  useLayoutEffect(() => {
-    const el = capsuleConstraintsRef.current;
-    if (!el) return;
-
-    const place = () => {
-      if (capsulePlacedRef.current || el.clientWidth <= 0 || el.clientHeight <= 0) {
-        return;
-      }
-      capsulePlacedRef.current = true;
-      setCapsuleOrigin({
-        x: Math.max(0, (el.clientWidth - capsuleWidth) / 2),
-        y: Math.max(0, (el.clientHeight - capsuleHeight) / 2),
-      });
-    };
-
-    place();
-    const ro = new ResizeObserver(place);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   return (
     <section className="component-section" id="components">
@@ -546,44 +522,10 @@ function ComponentsBento() {
           />
         </div>
 
-        <article className="bento__cell bento__cell--capsule">
-          <span className="bento__label">Capsule</span>
-          <div className="bento__stage" ref={capsuleConstraintsRef}>
-            {capsuleOrigin ? (
-              <LiquidGlassCapsule
-                width={capsuleWidth}
-                height={capsuleHeight}
-                borderRadius={60}
-                initial={capsuleOrigin}
-                dragConstraints={capsuleConstraintsRef}
-                material="navigation"
-              >
-                <span className="bento-capsule__hint">Drag</span>
-              </LiquidGlassCapsule>
-            ) : null}
-          </div>
-        </article>
-
-        <article className="bento__cell bento__cell--panel">
-          <span className="bento__label">Panel</span>
-          <div className="bento__stage bento__stage--panel">
-            <LiquidGlass
-              width="100%"
-              height={200}
-              borderRadius={28}
-              material="panel"
-              className="bento-panel__glass"
-            >
-              <div className="panel-content">
-                <div>
-                  <span className="panel-kicker">Material</span>
-                  <h3>Panel</h3>
-                </div>
-                <p className="panel-lede">
-                  Quiet content surface — Chromium refraction, frost elsewhere.
-                </p>
-              </div>
-            </LiquidGlass>
+        <article className="bento__cell bento__cell--open-menu">
+          <span className="bento__label">Open menu</span>
+          <div className="bento__stage bento__stage--menu">
+            <BentoMorphMenu defaultOpen />
           </div>
         </article>
 
