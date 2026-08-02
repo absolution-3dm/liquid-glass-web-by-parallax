@@ -84,6 +84,19 @@ const heroCtaMaterial = {
   chroma: 0.08,
 };
 
+/** Hero stack — navigation optics with a lighter tint so the silk reads through. */
+const heroStackMaterial = {
+  preset: "navigation" as const,
+  tint: 0.22,
+  fill: "#101214",
+};
+
+/** Keep stacked hero panes from compounding backdrop saturate into neon. */
+const heroStackEngine = {
+  backdropSaturateSvg: 1.08,
+  backdropSaturateCssBlur: 1.08,
+};
+
 /** Staggered hero capsule stack — front-left to back-right. */
 const HERO_CAPSULE_COUNT = 5;
 
@@ -206,9 +219,32 @@ function highlightCode(code: string, language: "bash" | "tsx") {
   });
 }
 
-/** Axonometric resting pose — milder angle so faces stay readable. */
-const HERO_AXON_ROTATE_X = 22;
+/** Axonometric resting pose — negative X tilts as if looking down from above. */
+const HERO_AXON_ROTATE_X = -22;
 const HERO_AXON_ROTATE_Y = -28;
+
+/** Panel aspect used when fitting the stack into the orbit stage. */
+const HERO_PANEL_ASPECT = 212 / 188;
+
+/**
+ * Pick panel metrics so the axonometric stack fills most of the stage.
+ * Sizes step by 8px to avoid thrashing LiquidGlass lens regeneration while resizing.
+ */
+function resolveHeroPanelMetrics(stageWidth: number, stageHeight: number) {
+  const safeW = Math.max(0, stageWidth);
+  const safeH = Math.max(0, stageHeight);
+  // Fill most of the stage; leave a little room for the projected Z-stack margins.
+  const widthByStage = Math.min(safeW * 0.7, safeH * 0.7 * (1 / HERO_PANEL_ASPECT));
+  const width = Math.round(
+    Math.min(360, Math.max(200, widthByStage)) / 8,
+  ) * 8;
+  const height = Math.round((width * HERO_PANEL_ASPECT) / 8) * 8;
+  const radius = Math.round(Math.min(80, Math.max(48, width * 0.255)));
+  const depthStep = Math.round(Math.min(136, Math.max(80, width * 0.42)));
+  return { width, height, radius, depthStep };
+}
+
+const HERO_PANEL_FALLBACK = resolveHeroPanelMetrics(560, 640);
 
 /**
  * Project a pure-Z offset through rotateY then rotateX. Panels stay
@@ -228,41 +264,52 @@ function projectAxonZ(z: number, rotateXDeg: number, rotateYDeg: number) {
   };
 }
 
+/** Soft X-proximity (0..1) from pointer to a panel's resting screen X. */
+function heroPullProximity(pointerX: number, restX: number, sigma: number) {
+  if (sigma <= 0) return 0;
+  const t = (pointerX - restX) / sigma;
+  return Math.exp(-0.5 * t * t);
+}
+
 function HeroStackPanel({
   index,
   width,
   height,
   radius,
   depthStep,
-  rotateX,
-  rotateY,
-  springX,
-  springY,
+  pointerX,
 }: {
   index: number;
   width: number;
   height: number;
   radius: number;
   depthStep: number;
-  rotateX: MotionValue<number>;
-  rotateY: MotionValue<number>;
-  springX: MotionValue<number>;
-  springY: MotionValue<number>;
+  pointerX: MotionValue<number>;
 }) {
-  // Center the Z range on 0 so the projected stack stays visually centered.
+  // Center the Z stack on 0 so the projected stack stays visually centered.
   const z = ((HERO_CAPSULE_COUNT - 1) / 2 - index) * depthStep;
+  const rest = projectAxonZ(z, HERO_AXON_ROTATE_X, HERO_AXON_ROTATE_Y);
+  // Spacing between neighboring rest X positions ≈ |sin(β)| * depthStep.
+  const sigma = Math.max(
+    28,
+    Math.abs(projectAxonZ(depthStep, HERO_AXON_ROTATE_X, HERO_AXON_ROTATE_Y).x) * 0.85,
+  );
+  const pullDistance = height * 0.18;
+  // Keep stacking order fixed — pulling must not reshuffle paint order.
   const zIndex = HERO_CAPSULE_COUNT - index;
 
-  const x = useTransform([springX, springY], ([px, py]) => {
-    const rx = HERO_AXON_ROTATE_X + Number(py) * -4;
-    const ry = HERO_AXON_ROTATE_Y + Number(px) * 5;
-    return projectAxonZ(z, rx, ry).x;
-  });
-  const y = useTransform([springX, springY], ([px, py]) => {
-    const rx = HERO_AXON_ROTATE_X + Number(py) * -4;
-    const ry = HERO_AXON_ROTATE_Y + Number(px) * 5;
-    return projectAxonZ(z, rx, ry).y;
-  });
+  const pull = useSpring(0, { stiffness: 280, damping: 28, mass: 0.55 });
+
+  useEffect(() => {
+    const unsub = pointerX.on("change", (px) => {
+      pull.set(heroPullProximity(Number(px), rest.x, sigma));
+    });
+    pull.set(heroPullProximity(pointerX.get(), rest.x, sigma));
+    return unsub;
+  }, [pointerX, pull, rest.x, sigma]);
+
+  const x = rest.x;
+  const y = useTransform(pull, (p) => rest.y - Number(p) * pullDistance);
 
   return (
     <motion.div
@@ -273,8 +320,8 @@ function HeroStackPanel({
         zIndex,
         x,
         y,
-        rotateX,
-        rotateY,
+        rotateX: HERO_AXON_ROTATE_X,
+        rotateY: HERO_AXON_ROTATE_Y,
         // Large perspective ≈ orthographic axonometric foreshortening.
         transformPerspective: 12000,
         transformOrigin: "50% 50%",
@@ -284,7 +331,8 @@ function HeroStackPanel({
         width={width}
         height={height}
         borderRadius={radius}
-        material="navigation"
+        material={heroStackMaterial}
+        engine={heroStackEngine}
         className="hero-orbit__capsule-glass"
       />
     </motion.div>
@@ -293,38 +341,48 @@ function HeroStackPanel({
 
 function HeroFloatStage() {
   const stageRef = useRef<HTMLDivElement>(null);
-  const [compact, setCompact] = useState(false);
+  const clusterRef = useRef<HTMLDivElement>(null);
+  const [metrics, setMetrics] = useState(HERO_PANEL_FALLBACK);
   const reduceMotionRef = useRef(false);
 
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
-  const springX = useSpring(pointerX, { stiffness: 320, damping: 32, mass: 0.55 });
-  const springY = useSpring(pointerY, { stiffness: 320, damping: 32, mass: 0.55 });
-  const rotateX = useTransform(springY, (value) => HERO_AXON_ROTATE_X + value * -4);
-  const rotateY = useTransform(springX, (value) => HERO_AXON_ROTATE_Y + value * 5);
+  // Pointer X in cluster-local px (0 = cluster center). Far value collapses all pulls.
+  const pointerX = useMotionValue(10_000);
 
   useEffect(() => {
-    const compactMq = window.matchMedia("(max-width: 900px)");
     const reduceMq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const syncCompact = () => setCompact(compactMq.matches);
     const syncReduce = () => {
       reduceMotionRef.current = reduceMq.matches;
-      if (reduceMq.matches) {
-        pointerX.set(0);
-        pointerY.set(0);
-        springX.jump(0);
-        springY.jump(0);
-      }
+      if (reduceMq.matches) pointerX.set(10_000);
     };
-    syncCompact();
     syncReduce();
-    compactMq.addEventListener("change", syncCompact);
     reduceMq.addEventListener("change", syncReduce);
     return () => {
-      compactMq.removeEventListener("change", syncCompact);
       reduceMq.removeEventListener("change", syncReduce);
     };
-  }, [pointerX, pointerY, springX, springY]);
+  }, [pointerX]);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || typeof ResizeObserver === "undefined") return;
+
+    const sync = () => {
+      const rect = stage.getBoundingClientRect();
+      const next = resolveHeroPanelMetrics(rect.width, rect.height);
+      setMetrics((prev) =>
+        prev.width === next.width &&
+        prev.height === next.height &&
+        prev.radius === next.radius &&
+        prev.depthStep === next.depthStep
+          ? prev
+          : next,
+      );
+    };
+
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -332,17 +390,15 @@ function HeroFloatStage() {
 
     const onPointerMove = (event: PointerEvent) => {
       if (reduceMotionRef.current) return;
-      const rect = stage.getBoundingClientRect();
+      const cluster = clusterRef.current;
+      if (!cluster) return;
+      const rect = cluster.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
-      const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      const ny = ((event.clientY - rect.top) / rect.height) * 2 - 1;
-      pointerX.set(Math.max(-1, Math.min(1, nx)));
-      pointerY.set(Math.max(-1, Math.min(1, ny)));
+      pointerX.set(event.clientX - (rect.left + rect.width / 2));
     };
 
     const onPointerLeave = () => {
-      pointerX.set(0);
-      pointerY.set(0);
+      pointerX.set(10_000);
     };
 
     stage.addEventListener("pointermove", onPointerMove);
@@ -351,17 +407,14 @@ function HeroFloatStage() {
       stage.removeEventListener("pointermove", onPointerMove);
       stage.removeEventListener("pointerleave", onPointerLeave);
     };
-  }, [pointerX, pointerY]);
+  }, [pointerX]);
 
-  const width = compact ? 158 : 188;
-  const height = compact ? 178 : 212;
-  const radius = compact ? 40 : 48;
-  const depthStep = compact ? 68 : 80;
+  const { width, height, radius, depthStep } = metrics;
 
   return (
     <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass panel stack">
       <div className="hero-orbit__stage">
-        <div className="hero-orbit__cluster" style={{ width, height }}>
+        <div className="hero-orbit__cluster" ref={clusterRef} style={{ width, height }}>
           {Array.from({ length: HERO_CAPSULE_COUNT }, (_, index) => (
             <HeroStackPanel
               key={index}
@@ -370,10 +423,7 @@ function HeroFloatStage() {
               height={height}
               radius={radius}
               depthStep={depthStep}
-              rotateX={rotateX}
-              rotateY={rotateY}
-              springX={springX}
-              springY={springY}
+              pointerX={pointerX}
             />
           ))}
         </div>
@@ -1164,7 +1214,7 @@ export function Playground() {
           <div className="hero-media" aria-hidden="true">
             <img
               className="hero-media__image"
-              src="/images/hero-liquid-silk.png"
+              src="/images/hero-bg.jpg"
               alt=""
             />
             <div className="hero-media__veil" />
