@@ -73,6 +73,16 @@ const topNavigationItems = [
 const customizerPresets = ["regular", "navigation", "control", "panel"] as const;
 type CustomizerPreset = (typeof customizerPresets)[number];
 
+/** Hero Install CTA — cooler blue glass pill. */
+const heroCtaMaterial = {
+  preset: "control" as const,
+  fill: "#0b2f6b",
+  tint: 0.52,
+  blur: 1.25,
+  specular: 3,
+  chroma: 0.08,
+};
+
 const usageExample = `import { LiquidGlass } from "@/components/liquid-glass/liquid-glass"
 
 <LiquidGlass width={320} height={96} borderRadius={32} material="panel">
@@ -1187,8 +1197,20 @@ export function Playground() {
                 Optical surfaces for the web. Install the source, own the
                 refraction.
               </p>
-              <a className="hero-cta" href="#installation">
-                Install
+              <a
+                className="hero-cta"
+                href="#installation"
+                data-ios-pointer-target=""
+              >
+                <LiquidGlass
+                  width={120}
+                  height={44}
+                  borderRadius={22}
+                  material={heroCtaMaterial}
+                  className="hero-cta__glass"
+                >
+                  <span className="hero-cta__label">Install</span>
+                </LiquidGlass>
               </a>
             </div>
             <HeroFloatStage />

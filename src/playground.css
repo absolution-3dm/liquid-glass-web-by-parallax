@@ -476,22 +476,35 @@ h1 {
 .hero-cta {
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
-  padding: 0 16px;
+  padding: 0;
   border: 0;
-  border-radius: 8px;
-  color: #fff;
-  background: var(--accent);
-  font-size: 0.875rem;
-  font-weight: 510;
-  letter-spacing: -0.01em;
-  transition: background 140ms ease, transform 140ms ease;
+  border-radius: 9999px;
+  color: #f7f8f8;
+  background: transparent;
+  transition: transform 140ms ease;
 }
 
 .hero-cta:hover {
-  background: var(--accent-hover);
   transform: none;
-  box-shadow: none;
+}
+
+.hero-cta__glass {
+  border-radius: 9999px;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.12) inset,
+    0 10px 24px rgb(8 40 96 / 0.28),
+    0 28px 48px rgb(0 0 0 / 0.28);
+}
+
+.hero-cta__glass .glass-surface__content {
+  padding: 0 18px;
+}
+
+.hero-cta__label {
+  color: #f7f8f8;
+  font-size: 0.875rem;
+  font-weight: 510;
+  letter-spacing: -0.01em;
 }
 
 .component-section {
