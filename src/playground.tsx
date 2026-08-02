@@ -1096,6 +1096,82 @@ function InstallationShowcase() {
   );
 }
 
+function SiteMobileNav({
+  activeValue,
+  onNavigate,
+}: {
+  activeValue: string;
+  onNavigate: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
+
+  return (
+    <MorphMenu.Root
+      open={open}
+      onOpenChange={(next) => {
+        clearHoveredItem();
+        setOpen(next);
+      }}
+      direction="bottom"
+      anchor="end"
+      visualDuration={0.28}
+      bounce={0}
+    >
+      <MorphMenu.Container
+        buttonSize={40}
+        menuWidth={220}
+        menuRadius={24}
+        buttonRadius={20}
+        offset={10}
+        className="site-nav-mobile__shell"
+        backdrop={<GlassShellBackdrop borderRadius={24} material="navigation" />}
+      >
+        <MorphMenu.Trigger
+          aria-label={open ? "Close navigation" : "Open navigation"}
+          className="navigation-menu__trigger site-nav-mobile__trigger"
+        >
+          <HugeiconsIcon
+            icon={Menu01Icon}
+            altIcon={Cancel01Icon}
+            showAlt={open}
+            size={18}
+            color="currentColor"
+            strokeWidth={1.75}
+            aria-hidden
+          />
+        </MorphMenu.Trigger>
+
+        <MorphMenu.Content
+          className="navigation-menu__content site-nav-mobile__content"
+          onPointerLeave={clearHoveredItem}
+        >
+          <div className="navigation-menu__heading">
+            <span>Navigate</span>
+          </div>
+          <nav className="navigation-menu__items" aria-label="Primary">
+            <MorphMenuHoverFill hoveredItem={hoveredItem} />
+            {topNavigationItems.map((item) => (
+              <MorphMenu.Item
+                key={item.value}
+                className={
+                  activeValue === item.value
+                    ? "navigation-menu__item is-active"
+                    : "navigation-menu__item"
+                }
+                onPointerEnter={syncHoveredItem}
+                onSelect={() => onNavigate(item.value)}
+              >
+                <span>{item.label}</span>
+              </MorphMenu.Item>
+            ))}
+          </nav>
+        </MorphMenu.Content>
+      </MorphMenu.Container>
+    </MorphMenu.Root>
+  );
+}
+
 export function Playground() {
   const [topNavigationValue, setTopNavigationValue] = useState("menu");
 
@@ -1133,6 +1209,13 @@ export function Playground() {
             </a>
           ))}
         </nav>
+
+        <div className="site-nav-mobile">
+          <SiteMobileNav
+            activeValue={topNavigationValue}
+            onNavigate={navigateToSection}
+          />
+        </div>
       </header>
 
       <main id="top">
