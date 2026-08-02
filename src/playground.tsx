@@ -1002,8 +1002,8 @@ function InstallationShowcase() {
       <div className="section-heading">
         <h2>Install</h2>
         <p>
-          Distributed through the shadcn Registry. The CLI copies the source into
-          your app — no private runtime package.
+          Install via the shadcn Registry. The CLI copies the source into your
+          app — no private runtime package.
         </p>
       </div>
 
@@ -1171,10 +1171,10 @@ export function Playground() {
           </div>
           <div className="hero-inner">
             <div className="hero-copy">
-              <h1>LiquidGlass</h1>
+              <h1>Liquid Glass for the web.</h1>
               <p className="hero-lede">
-                Optical surfaces for the web. Install the source, own the
-                refraction.
+                Native-feeling glass surfaces — crafted, customizable, source
+                you own.
               </p>
               <a
                 className="hero-cta"
