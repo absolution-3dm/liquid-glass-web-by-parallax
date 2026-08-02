@@ -267,49 +267,56 @@ function HeroFloatStage() {
     };
   }, [pointerX, pointerY]);
 
-  const width = compact ? 54 : 78;
-  const height = compact ? 176 : 260;
-  const radius = width / 2;
-  const stepX = compact ? 30 : 46;
-  const stepY = compact ? -20 : -30;
-  const originX = compact ? 18 : 28;
-  const originY = compact ? 64 : 96;
-  const depthStep = compact ? 22 : 34;
+  // Near-square rounded rects (not stadium capsules).
+  const width = compact ? 104 : 124;
+  const height = compact ? 118 : 140;
+  const radius = compact ? 28 : 34;
+  const stepX = compact ? 40 : 52;
+  const stepY = compact ? -32 : -40;
+  const depthStep = compact ? 26 : 36;
+  const clusterWidth = width + (HERO_CAPSULE_COUNT - 1) * stepX;
+  const clusterHeight = height + (HERO_CAPSULE_COUNT - 1) * Math.abs(stepY);
+  const baseTop = (HERO_CAPSULE_COUNT - 1) * Math.abs(stepY);
 
   return (
-    <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass capsule stack">
+    <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass panel stack">
       <motion.div
         className="hero-orbit__stage"
         style={{
           rotateX,
           rotateY,
           transformPerspective: 1100,
-          transformOrigin: "42% 55%",
+          transformOrigin: "50% 50%",
           transformStyle: "preserve-3d",
         }}
       >
-        {Array.from({ length: HERO_CAPSULE_COUNT }, (_, index) => (
-          <div
-            key={index}
-            className="hero-orbit__capsule"
-            style={{
-              width,
-              height,
-              left: originX + index * stepX,
-              top: originY + index * stepY,
-              zIndex: HERO_CAPSULE_COUNT - index,
-              transform: `translateZ(${(HERO_CAPSULE_COUNT - 1 - index) * depthStep}px)`,
-            }}
-          >
-            <LiquidGlass
-              width={width}
-              height={height}
-              borderRadius={radius}
-              material="navigation"
-              className="hero-orbit__capsule-glass"
-            />
-          </div>
-        ))}
+        <div
+          className="hero-orbit__cluster"
+          style={{ width: clusterWidth, height: clusterHeight }}
+        >
+          {Array.from({ length: HERO_CAPSULE_COUNT }, (_, index) => (
+            <div
+              key={index}
+              className="hero-orbit__capsule"
+              style={{
+                width,
+                height,
+                left: index * stepX,
+                top: baseTop + index * stepY,
+                zIndex: HERO_CAPSULE_COUNT - index,
+                transform: `translateZ(${(HERO_CAPSULE_COUNT - 1 - index) * depthStep}px)`,
+              }}
+            >
+              <LiquidGlass
+                width={width}
+                height={height}
+                borderRadius={radius}
+                material="navigation"
+                className="hero-orbit__capsule-glass"
+              />
+            </div>
+          ))}
+        </div>
       </motion.div>
     </div>
   );
