@@ -328,15 +328,16 @@ main {
   height: 100%;
   object-fit: cover;
   object-position: center;
-  filter: brightness(0.88) contrast(1.06) saturate(0.95);
+  filter: brightness(0.94) contrast(1.04) saturate(0.98);
 }
 
 .hero-media__veil {
   position: absolute;
   inset: 0;
+  /* Soft readability wash only — keep the silk texture visible, no black sink. */
   background:
-    linear-gradient(105deg, rgb(1 1 2 / 0.72) 0%, rgb(1 1 2 / 0.34) 46%, rgb(1 1 2 / 0.16) 72%, rgb(1 1 2 / 0.28) 100%),
-    linear-gradient(180deg, rgb(1 1 2 / 0.34) 0%, transparent 28%, rgb(1 1 2 / 0.42) 100%);
+    linear-gradient(105deg, rgb(1 1 2 / 0.38) 0%, rgb(1 1 2 / 0.12) 48%, transparent 78%),
+    linear-gradient(180deg, rgb(1 1 2 / 0.22) 0%, transparent 32%, rgb(1 1 2 / 0.18) 100%);
 }
 
 .hero-inner {
@@ -357,6 +358,12 @@ main {
   z-index: 2;
   max-width: 520px;
   padding-bottom: 12px;
+  color: #f7f8f8;
+}
+
+.hero-copy h1 {
+  color: #f7f8f8;
+  text-shadow: 0 1px 18px rgb(1 1 2 / 0.35);
 }
 
 .hero-orbit {
@@ -366,7 +373,7 @@ main {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: min(420px, 54svh);
+  height: min(520px, 62svh);
   overflow: visible;
   touch-action: none;
   perspective: none;
@@ -427,11 +434,12 @@ h1 {
 .hero-lede {
   max-width: 42ch;
   margin-bottom: 28px;
-  color: rgb(208 214 224 / 0.92);
+  color: rgb(232 236 242 / 0.92);
   font-size: 1.05rem;
   line-height: 1.55;
   letter-spacing: -0.015em;
   font-weight: 400;
+  text-shadow: 0 1px 14px rgb(1 1 2 / 0.28);
 }
 
 .hero-cta {
@@ -1295,15 +1303,15 @@ footer {
 
   .hero-media__veil {
     background:
-      linear-gradient(180deg, rgb(1 1 2 / 0.28) 0%, rgb(1 1 2 / 0.12) 36%, rgb(1 1 2 / 0.7) 100%),
-      linear-gradient(90deg, rgb(1 1 2 / 0.22), transparent 60%);
+      linear-gradient(180deg, rgb(1 1 2 / 0.18) 0%, transparent 40%, rgb(1 1 2 / 0.28) 100%),
+      linear-gradient(90deg, rgb(1 1 2 / 0.14), transparent 70%);
   }
 
   .hero-orbit {
     order: -1;
     justify-self: center;
-    width: min(100%, 360px);
-    height: min(360px, 48svh);
+    width: min(100%, 420px);
+    height: min(420px, 52svh);
     margin-inline: auto;
   }
 
@@ -1378,8 +1386,8 @@ footer {
   }
 
   .hero-orbit {
-    width: min(100%, 340px);
-    height: min(340px, 46svh);
+    width: min(100%, 400px);
+    height: min(400px, 50svh);
   }
 
   h1 {

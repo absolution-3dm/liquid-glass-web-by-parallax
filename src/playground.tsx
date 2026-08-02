@@ -206,9 +206,9 @@ function highlightCode(code: string, language: "bash" | "tsx") {
   });
 }
 
-/** Axonometric resting pose — parallel projection, no vanishing point. */
-const HERO_AXON_ROTATE_X = 34;
-const HERO_AXON_ROTATE_Y = -42;
+/** Axonometric resting pose — milder angle so faces stay readable. */
+const HERO_AXON_ROTATE_X = 22;
+const HERO_AXON_ROTATE_Y = -28;
 
 /**
  * Project a pure-Z offset through rotateY then rotateX. Panels stay
@@ -353,10 +353,10 @@ function HeroFloatStage() {
     };
   }, [pointerX, pointerY]);
 
-  const width = compact ? 112 : 124;
-  const height = compact ? 126 : 140;
-  const radius = compact ? 30 : 34;
-  const depthStep = compact ? 52 : 60;
+  const width = compact ? 132 : 156;
+  const height = compact ? 148 : 176;
+  const radius = compact ? 34 : 40;
+  const depthStep = compact ? 58 : 68;
 
   return (
     <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass panel stack">
