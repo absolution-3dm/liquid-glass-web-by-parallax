@@ -62,6 +62,15 @@ describe("LiquidGlass composition registry", () => {
     expect((source.match(/<feDisplacementMap/g) ?? []).length).toBeGreaterThanOrEqual(8);
   });
 
+  it("keeps Safari morph specular visible without plus-lighter mid-spring", () => {
+    const source = readFileSync(
+      "registry/liquid-glass/compositions/glass-shell-backdrop.tsx",
+      "utf8",
+    );
+    expect(source).toContain('morphingRef.current');
+    expect(source).toMatch(/mixBlendMode = showOverlay[\s\S]*morphingRef\.current[\s\S]*"normal"[\s\S]*"plus-lighter"/);
+  });
+
   it("keeps segmented items free of hover fill", () => {
     const source = readFileSync(
       "registry/liquid-glass/compositions/liquid-glass-compositions.css",

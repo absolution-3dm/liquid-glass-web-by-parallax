@@ -681,10 +681,21 @@ export function GlassShellBackdrop({
         : "none";
     }
     if (specularOverlayRef.current) {
-      specularOverlayRef.current.style.backgroundImage =
-        !useSvgRef.current && lens.mapUrl
-          ? `url("${lens.mapUrl}")`
-          : "none";
+      // WebKit (and Firefox) keep Fresnel on a background-image overlay with
+      // `plus-lighter`. While MorphMenu springs width/height/x/y, WebKit drops
+      // that blended layer entirely — so the rim vanishes for the whole open
+      // animation and only returns after settle. Normal blend stays visible
+      // mid-morph (slightly milkier over the tint); restore plus-lighter when
+      // the shell is at rest.
+      const showOverlay = !useSvgRef.current && Boolean(lens.mapUrl);
+      specularOverlayRef.current.style.backgroundImage = showOverlay
+        ? `url("${lens.mapUrl}")`
+        : "none";
+      specularOverlayRef.current.style.mixBlendMode = showOverlay
+        ? morphingRef.current
+          ? "normal"
+          : "plus-lighter"
+        : "normal";
     }
     if (lensClipRef.current) {
       lensClipRef.current.style.borderRadius = `${lens.radius}px`;
