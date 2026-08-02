@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import {
   motion,
   useMotionValue,
@@ -364,11 +372,53 @@ function HeroFloatStage() {
   );
 }
 
+/** Showcase menus start closed, then open once so the morph spring plays. */
+function useShowcaseMenuOpen(enabled: boolean, rootRef: RefObject<HTMLElement | null>) {
+  const [open, setOpen] = useState(false);
+  const playedRef = useRef(false);
+
+  useEffect(() => {
+    if (!enabled || playedRef.current) return;
+    const root = rootRef.current;
+    if (!root) return;
+
+    const play = () => {
+      if (playedRef.current) return;
+      playedRef.current = true;
+      // Wait two frames so the closed shell paints before the spring starts.
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => setOpen(true));
+      });
+    };
+
+    if (typeof IntersectionObserver === "undefined") {
+      play();
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting && entry.intersectionRatio > 0.2)) {
+          play();
+          io.disconnect();
+        }
+      },
+      { threshold: [0, 0.2, 0.4] },
+    );
+    io.observe(root);
+    return () => io.disconnect();
+  }, [enabled, rootRef]);
+
+  return [open, setOpen] as const;
+}
+
 function HeroMorphMenu() {
-  const [open, setOpen] = useState(true);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useShowcaseMenuOpen(true, stageRef);
   const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
   return (
+    <div ref={stageRef}>
     <MorphMenu.Root
       open={open}
       onOpenChange={(next) => {
@@ -427,6 +477,7 @@ function HeroMorphMenu() {
         </MorphMenu.Content>
       </MorphMenu.Container>
     </MorphMenu.Root>
+    </div>
   );
 }
 
@@ -435,10 +486,12 @@ function BentoMorphMenu({
 }: {
   defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useShowcaseMenuOpen(defaultOpen, stageRef);
   const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
   return (
+    <div ref={stageRef}>
     <MorphMenu.Root
       open={open}
       onOpenChange={(next) => {
@@ -497,6 +550,7 @@ function BentoMorphMenu({
         </MorphMenu.Content>
       </MorphMenu.Container>
     </MorphMenu.Root>
+    </div>
   );
 }
 
