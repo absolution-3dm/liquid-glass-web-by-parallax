@@ -583,7 +583,9 @@ export const LiquidGlass = ({
   // Preview mode owns the highlight entirely (demos / mock cursors). Live
   // pointer handlers would clear on real-mouse leave while a lagged virtual
   // cursor is still over the glass.
-  const livePointerHighlight = resolvedPointerHighlight && !pointerHighlightPreview;
+  const livePointerHighlight = pointerHighlightPreview
+    ? null
+    : resolvedPointerHighlight;
 
   const surface = (
     <div
