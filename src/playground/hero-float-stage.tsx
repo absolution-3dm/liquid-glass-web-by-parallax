@@ -241,22 +241,42 @@ export function HeroFloatStage() {
     const hero = stage?.closest(".hero");
     if (!stage || !(hero instanceof HTMLElement)) return;
 
-    const onPointerMove = (event: PointerEvent) => {
-      if (reduceMotionRef.current) return;
+    // Cache cluster center — reading layout every pointermove while glass
+    // backdrops are busy can return hitchy rects and amplify pull jumps.
+    let clusterCenterX = 0;
+    let hasClusterCenter = false;
+    const syncClusterCenter = () => {
       const cluster = clusterRef.current;
       if (!cluster) return;
-      const clusterRect = cluster.getBoundingClientRect();
-      if (clusterRect.width <= 0) return;
-      pullPointerX.set(event.clientX - (clusterRect.left + clusterRect.width / 2));
+      const rect = cluster.getBoundingClientRect();
+      if (rect.width <= 0) return;
+      clusterCenterX = rect.left + rect.width / 2;
+      hasClusterCenter = true;
+    };
+    syncClusterCenter();
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (reduceMotionRef.current) return;
+      if (!hasClusterCenter) syncClusterCenter();
+      if (!hasClusterCenter) return;
+      pullPointerX.set(event.clientX - clusterCenterX);
     };
 
     const onPointerLeave = () => {
       pullPointerX.set(10_000);
     };
 
+    window.addEventListener("scroll", syncClusterCenter, { passive: true });
+    window.addEventListener("resize", syncClusterCenter);
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(syncClusterCenter) : null;
+    resizeObserver?.observe(stage);
     hero.addEventListener("pointermove", onPointerMove);
     hero.addEventListener("pointerleave", onPointerLeave);
     return () => {
+      window.removeEventListener("scroll", syncClusterCenter);
+      window.removeEventListener("resize", syncClusterCenter);
+      resizeObserver?.disconnect();
       hero.removeEventListener("pointermove", onPointerMove);
       hero.removeEventListener("pointerleave", onPointerLeave);
     };

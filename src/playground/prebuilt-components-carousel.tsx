@@ -18,12 +18,10 @@ import {
 } from "../../registry/liquid-glass/compositions/morph-menu-hover";
 import { MorphMenu } from "../../registry/liquid-glass/compositions/morph-menu";
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "../components/ui/carousel";
+  ShowcaseCarousel,
+  ShowcaseCarouselCard,
+  ShowcaseCarouselItem,
+} from "./showcase-carousel";
 
 const segmentItems = [
   { value: "overview", label: "Overview" },
@@ -121,107 +119,85 @@ export function PrebuiltComponentsCarousel() {
         </p>
       </div>
 
-      <Carousel
-        className="showcase-carousel showcase-carousel--components"
-        opts={{ align: "start", containScroll: "trimSnaps", dragFree: true }}
+      <ShowcaseCarousel
         aria-label="Liquid glass components"
+        interactive={false}
       >
-        <div className="showcase-carousel__controls">
-          <CarouselPrevious className="showcase-carousel__button" />
-          <CarouselNext className="showcase-carousel__button" />
-        </div>
-        <CarouselContent className="showcase-carousel__track">
-          <CarouselItem className="showcase-carousel__item showcase-carousel__item--component">
-            <article className="component-card">
-              <img className="showcase-card__scene" src="/images/pexels-bento-scene.jpg" alt="" aria-hidden="true" />
-              <div className="showcase-card__veil" aria-hidden="true" />
-              <div className="component-card__copy">
-                <h3>Menu</h3>
-              </div>
-              <div className="component-card__stage component-card__menu-states">
-                <div className="component-card__menu-preview">
-                  <ShowcaseMorphMenu defaultOpen />
-                </div>
-              </div>
-            </article>
-          </CarouselItem>
+        <ShowcaseCarouselItem>
+          <ShowcaseCarouselCard
+            title="Menu"
+            stageClassName="showcase-card__menu-states"
+          >
+            <div className="showcase-card__menu-preview">
+              <ShowcaseMorphMenu defaultOpen />
+            </div>
+          </ShowcaseCarouselCard>
+        </ShowcaseCarouselItem>
 
-          <CarouselItem className="showcase-carousel__item showcase-carousel__item--component">
-            <article className="component-card">
-              <img className="showcase-card__scene" src="/images/pexels-bento-scene.jpg" alt="" aria-hidden="true" />
-              <div className="showcase-card__veil" aria-hidden="true" />
-              <div className="component-card__copy">
-                <h3>Segmented Control</h3>
+        <ShowcaseCarouselItem>
+          <ShowcaseCarouselCard title="Segmented Control">
+            <div className="showcase-card__segment-states">
+              <div className="showcase-card__state showcase-card__state--segment showcase-card__state--resting">
+                <GlassSegmentedControl
+                  items={segmentItems}
+                  value={restingSegmentValue}
+                  onValueChange={setRestingSegmentValue}
+                  itemWidth={80}
+                  itemHeight={40}
+                  padding={4}
+                  radialExpansion={8}
+                  material="navigation"
+                  pressedMaterial="selectionPressed"
+                  itemClassName="segment-item"
+                />
               </div>
-              <div className="component-card__stage component-card__stage--center">
-                <div className="component-card__segment-states">
-                  <div className="component-card__state component-card__state--segment component-card__state--resting">
-                    <GlassSegmentedControl
-                      items={segmentItems}
-                      value={restingSegmentValue}
-                      onValueChange={setRestingSegmentValue}
-                      itemWidth={80}
-                      itemHeight={40}
-                      padding={4}
-                      radialExpansion={8}
-                      material="navigation"
-                      pressedMaterial="selectionPressed"
-                      itemClassName="segment-item"
-                    />
-                  </div>
-                  <div className="component-card__state component-card__state--segment">
-                    <GlassSegmentedControl
-                      items={segmentItems}
-                      value={pressedSegmentValue}
-                      onValueChange={setPressedSegmentValue}
-                      itemWidth={80}
-                      itemHeight={40}
-                      padding={4}
-                      radialExpansion={8}
-                      material="navigation"
-                      pressedMaterial="selectionPressed"
-                      pressedPreview
-                      itemClassName="segment-item"
-                    />
-                  </div>
-                </div>
+              <div className="showcase-card__state showcase-card__state--segment">
+                <GlassSegmentedControl
+                  items={segmentItems}
+                  value={pressedSegmentValue}
+                  onValueChange={setPressedSegmentValue}
+                  itemWidth={80}
+                  itemHeight={40}
+                  padding={4}
+                  radialExpansion={8}
+                  material="navigation"
+                  pressedMaterial="selectionPressed"
+                  pressedPreview
+                  itemClassName="segment-item"
+                />
               </div>
-            </article>
-          </CarouselItem>
+            </div>
+          </ShowcaseCarouselCard>
+        </ShowcaseCarouselItem>
 
-          <CarouselItem className="showcase-carousel__item showcase-carousel__item--component">
-            <article className="component-card">
-              <img className="showcase-card__scene" src="/images/pexels-bento-scene.jpg" alt="" aria-hidden="true" />
-              <div className="showcase-card__veil" aria-hidden="true" />
-              <div className="component-card__copy">
-                <h3>Icon Pills</h3>
-              </div>
-              <div className="component-card__stage component-card__stage--center component-card__icons">
-                {showcaseIconPills.map(({ icon, label }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    className="component-card__icon-button"
-                    data-ios-pointer-target=""
-                    aria-label={label}
-                  >
-                    <GlassIconPill size={48} material="navigation">
-                      <HugeiconsIcon
-                        icon={icon}
-                        size={20}
-                        color="currentColor"
-                        strokeWidth={1.75}
-                        className="component-card__icon"
-                        aria-hidden
-                      />
-                    </GlassIconPill>
-                  </button>
-                ))}
-              </div>
-            </article>
-          </CarouselItem>
-        </CarouselContent>
-      </Carousel>
+        <ShowcaseCarouselItem>
+          <ShowcaseCarouselCard
+            title="Icon Pills"
+            stageClassName="showcase-card__icons"
+          >
+            {showcaseIconPills.map(({ icon, label }) => (
+              <button
+                key={label}
+                type="button"
+                className="showcase-card__icon-button"
+                data-ios-pointer-target=""
+                aria-label={label}
+              >
+                <GlassIconPill size={48} material="navigation">
+                  <HugeiconsIcon
+                    icon={icon}
+                    size={20}
+                    color="currentColor"
+                    strokeWidth={1.75}
+                    className="showcase-card__icon"
+                    aria-hidden
+                  />
+                </GlassIconPill>
+              </button>
+            ))}
+          </ShowcaseCarouselCard>
+        </ShowcaseCarouselItem>
+      </ShowcaseCarousel>
     </section>
   );
 }

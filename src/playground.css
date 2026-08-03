@@ -332,8 +332,8 @@ main {
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
-  /* The hero remains the clipping window while the image is anchored to the viewport. */
-  background-attachment: fixed;
+  /* Scroll with the hero — a viewport-fixed image forces Chromium to
+     re-evaluate every glass backdrop-filter as content moves over it. */
 }
 
 .hero-media::after {
@@ -520,33 +520,50 @@ h1 {
   margin-bottom: 36px;
 }
 
-.section-heading__title-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 10px 14px;
+.section-heading__title {
+  margin: 0;
 }
 
-.section-heading__action {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  transition: color 140ms ease;
+.section-heading__title-link {
+  color: inherit;
 }
 
-.section-heading__action:hover {
-  color: #f7f8f8;
+.section-heading__title-link:hover,
+.section-heading__title-link:focus-visible {
+  color: inherit;
 }
 
-.section-heading__action:focus-visible {
+.section-heading__title-link:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 4px;
   border-radius: 6px;
+}
+
+.section-heading__action-swap {
+  display: inline-grid;
+  justify-items: start;
+}
+
+.section-heading__action-swap-idle,
+.section-heading__action-swap-hover {
+  grid-area: 1 / 1;
+}
+
+.section-heading__action-swap-hover {
+  visibility: hidden;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  text-decoration-thickness: 1px;
+}
+
+.section-heading__title-link:hover .section-heading__action-swap-idle,
+.section-heading__title-link:focus-visible .section-heading__action-swap-idle {
+  visibility: hidden;
+}
+
+.section-heading__title-link:hover .section-heading__action-swap-hover,
+.section-heading__title-link:focus-visible .section-heading__action-swap-hover {
+  visibility: visible;
 }
 
 h2 {
@@ -810,24 +827,21 @@ h2 {
 .showcase-carousel__item {
   flex-grow: 0;
   flex-shrink: 0;
+  /* Material Design uncontained: fixed preferred item width, edge overflow. */
   flex-basis: min(480px, calc(100vw - (var(--page-gutter) * 2) - 48px));
   width: min(480px, calc(100vw - (var(--page-gutter) * 2) - 48px));
   min-width: 260px;
 }
 
-.showcase-carousel__item--component {
-  flex-basis: min(480px, calc(100vw - (var(--page-gutter) * 2) - 48px));
-  width: min(480px, calc(100vw - (var(--page-gutter) * 2) - 48px));
-}
-
-.attribute-card,
-.component-card {
+.showcase-card {
   position: relative;
   isolation: isolate;
   height: 380px;
+  padding: 22px;
   overflow: hidden;
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-panel);
+  /* MD3 carousel items use shape.extraLarge (~28dp). */
+  border-radius: 28px;
   background: var(--surface-1);
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.3);
 }
@@ -851,16 +865,12 @@ h2 {
   background: linear-gradient(180deg, rgb(1 1 2 / 0.18), rgb(1 1 2 / 0.64));
 }
 
-.attribute-card {
-  padding: 22px;
-}
-
-.attribute-card__copy {
+.showcase-card__copy {
   position: relative;
   z-index: 2;
 }
 
-.attribute-card h3 {
+.showcase-card h3 {
   margin: 0;
   color: #f7f8f8;
   font-size: 1.15rem;
@@ -868,39 +878,35 @@ h2 {
   letter-spacing: -0.025em;
 }
 
-.attribute-card__stage {
+.showcase-card__stage {
   position: absolute;
   z-index: 1;
   inset: 0;
   display: grid;
   place-items: center;
+  padding: 20px;
 }
 
-.attribute-card__glass {
+.showcase-card__glass {
   box-shadow: 0 18px 42px rgb(0 0 0 / 0.34);
 }
 
-.attribute-card--pointer-demo,
-.attribute-card--pointer-demo * {
+.showcase-card--pointer-demo,
+.showcase-card--pointer-demo * {
   cursor: none !important;
 }
 
-html.ios-pointer-ready .attribute-card--pointer-demo,
-html.ios-pointer-ready .attribute-card--pointer-demo * {
-  cursor: none !important;
-}
-
-.attribute-card--pointer-demo .glass-surface__pointer-highlight {
+.showcase-card--pointer-demo .glass-surface__pointer-highlight {
   transition-duration: 0ms;
 }
 
-.attribute-card__pointer-demo {
+.showcase-card__pointer-demo {
   position: relative;
   width: min(250px, calc(100% - 32px));
   height: 128px;
 }
 
-.attribute-card__mock-pointer {
+.showcase-card__mock-pointer {
   position: absolute;
   z-index: 4;
   width: 22px;
@@ -912,59 +918,33 @@ html.ios-pointer-ready .attribute-card--pointer-demo * {
   pointer-events: none;
 }
 
-.component-card {
-  height: 380px;
-  padding: 22px;
-}
-
-.component-card__copy {
-  position: relative;
-  z-index: 2;
-}
-
-.component-card h3 {
-  margin: 0;
-  color: #f7f8f8;
-  font-size: 1.15rem;
-  font-weight: 510;
-  letter-spacing: -0.025em;
-}
-
-.component-card__stage {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-}
-
-.component-card__stage--center {
-  display: grid;
-  place-items: center;
-}
-
-.component-card__menu-states {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.showcase-card__menu-states {
   overflow: hidden;
 }
 
-.component-card__menu-preview {
+/*
+  MorphMenu lays out from the trigger and expands downward with absolute
+  content — the in-flow box is only ~48px, and direction=bottom adds a 12px
+  y-offset when open. Size the preview so the painted open shell centers.
+*/
+.showcase-card__menu-preview {
   position: relative;
   width: 248px;
-  height: 280px;
+  /* open shell (~191) + 2× direction offset (12) so shell mid == preview mid */
+  height: 215px;
 }
 
-.component-card__segment-states {
+.showcase-card__segment-states {
   display: grid;
   gap: 28px;
   justify-items: center;
 }
 
-.component-card__state--segment {
+.showcase-card__state--segment {
   padding: 8px;
 }
 
-.component-card__state--resting .glass-segmented-surface .glass-surface__state {
+.showcase-card__state--resting .glass-segmented-surface .glass-surface__state {
   overflow: hidden;
   border-radius: inherit;
 }
@@ -976,42 +956,43 @@ html.ios-pointer-ready .attribute-card--pointer-demo * {
     0 12px 32px rgb(0 0 0 / 0.35);
 }
 
-.component-card__icons {
+.showcase-card__icons {
   display: flex;
   flex-wrap: wrap;
+  align-content: center;
   align-items: center;
   justify-content: center;
   gap: 12px;
 }
 
-.component-card__icon-button {
+.showcase-card__icon-button {
   padding: 0;
   border: 0;
   background: transparent;
   border-radius: 50%;
 }
 
-.component-card__icon {
+.showcase-card__icon {
   display: block;
   color: white;
 }
 
 /*
-  Showcase demos are visual-only inside the carousel. GlassSegmentedControl
-  (and similar) set touch-action: none + preventDefault, which swallows the
-  horizontal pan on narrow screens where the demo fills most of the card.
+  Non-interactive showcase demos: GlassSegmentedControl (and similar) set
+  touch-action: none + preventDefault, which swallows horizontal pan on
+  narrow screens where the demo fills most of the card.
 */
-.showcase-carousel--components .component-card__stage,
-.showcase-carousel--components .component-card__stage * {
+.showcase-carousel--noninteractive .showcase-card__stage,
+.showcase-carousel--noninteractive .showcase-card__stage * {
   pointer-events: none !important;
 }
 
-.showcase-carousel--components .component-card {
+.showcase-carousel--noninteractive .showcase-card {
   touch-action: pan-x;
   cursor: grab;
 }
 
-.showcase-carousel--components .component-card:active {
+.showcase-carousel--noninteractive .showcase-card:active {
   cursor: grabbing;
 }
 
@@ -1702,8 +1683,7 @@ footer {
     padding: 100px 0 44px;
   }
 
-  .showcase-carousel__item,
-  .showcase-carousel__item--component {
+  .showcase-carousel__item {
     flex-basis: min(400px, calc(100vw - (var(--page-gutter) * 2) - 40px));
     width: min(400px, calc(100vw - (var(--page-gutter) * 2) - 40px));
     min-width: 240px;
@@ -1861,15 +1841,13 @@ footer {
     margin: -20px 0 18px;
   }
 
-  .showcase-carousel__item,
-  .showcase-carousel__item--component {
+  .showcase-carousel__item {
     flex-basis: calc(100vw - (var(--page-gutter) * 2) - 28px);
     width: calc(100vw - (var(--page-gutter) * 2) - 28px);
     min-width: 0;
   }
 
-  .attribute-card,
-  .component-card {
+  .showcase-card {
     height: 360px;
   }
 

@@ -10,9 +10,6 @@ const ATTRACTION_EXIT_MARGIN_PX = 16;
 const TARGET_SPRING_STIFFNESS = 260;
 const TARGET_SPRING_DAMPING = 29;
 const TARGET_SPRING_MASS = 0.8;
-const POINTER_SPRING_STIFFNESS = 430;
-const POINTER_SPRING_DAMPING = 38;
-const POINTER_SPRING_MASS = 0.65;
 
 // Press-drag deformation (Apple liquid-glass buttons): while the primary
 // button is held, the control follows the pointer with a rubber-band that
@@ -223,93 +220,18 @@ function getAttractionTarget(target: EventTarget | null) {
 }
 
 /**
- * iPad-style pointer: the dot follows the native mouse through a restrained
- * spring while interactive controls move subtly toward it.
+ * Fine-pointer attraction: interactive controls ease toward the native cursor
+ * and press-drag with a rubber-band squish. Uses the OS cursor (no custom lag
+ * dot) so tracking stays 1:1.
  */
 export function IOSPointer() {
   const targetRef = useRef<AttractedTarget | null>(null);
-  const cursorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
     if (!window.matchMedia("(pointer: fine)").matches) return;
 
     root.classList.add("ios-pointer-ready");
-    const cursor = cursorRef.current;
-    const cursorSpring = {
-      frame: null as number | null,
-      initialized: false,
-      lastTime: null as number | null,
-      targetX: 0,
-      targetY: 0,
-      vx: 0,
-      vy: 0,
-      x: 0,
-      y: 0,
-    };
-
-    const paintCursor = () => {
-      cursor?.style.setProperty("--ios-pointer-x", `${cursorSpring.x}px`);
-      cursor?.style.setProperty("--ios-pointer-y", `${cursorSpring.y}px`);
-    };
-
-    const tickCursor = (time: number) => {
-      cursorSpring.frame = null;
-      const elapsed =
-        cursorSpring.lastTime === null ? 1 / 60 : (time - cursorSpring.lastTime) / 1000;
-      const dt = Math.min(0.032, Math.max(1 / 240, elapsed));
-      cursorSpring.lastTime = time;
-      const ax =
-        (-POINTER_SPRING_STIFFNESS * (cursorSpring.x - cursorSpring.targetX) -
-          POINTER_SPRING_DAMPING * cursorSpring.vx) /
-        POINTER_SPRING_MASS;
-      const ay =
-        (-POINTER_SPRING_STIFFNESS * (cursorSpring.y - cursorSpring.targetY) -
-          POINTER_SPRING_DAMPING * cursorSpring.vy) /
-        POINTER_SPRING_MASS;
-      cursorSpring.vx += ax * dt;
-      cursorSpring.vy += ay * dt;
-      cursorSpring.x += cursorSpring.vx * dt;
-      cursorSpring.y += cursorSpring.vy * dt;
-      paintCursor();
-
-      const settled =
-        Math.abs(cursorSpring.x - cursorSpring.targetX) < 0.05 &&
-        Math.abs(cursorSpring.y - cursorSpring.targetY) < 0.05 &&
-        Math.abs(cursorSpring.vx) < 0.05 &&
-        Math.abs(cursorSpring.vy) < 0.05;
-      if (settled) {
-        cursorSpring.x = cursorSpring.targetX;
-        cursorSpring.y = cursorSpring.targetY;
-        cursorSpring.vx = 0;
-        cursorSpring.vy = 0;
-        paintCursor();
-        return;
-      }
-      cursorSpring.frame = requestAnimationFrame(tickCursor);
-    };
-
-    const updateCursor = (event: PointerEvent) => {
-      if (!cursor) return;
-      const suppressed =
-        event.target instanceof Element &&
-        Boolean(event.target.closest("[data-ios-pointer-suppress]"));
-      cursor.toggleAttribute("data-ios-pointer-suppressed", suppressed);
-      cursor.setAttribute("data-ios-pointer-visible", "");
-      cursorSpring.targetX = event.clientX;
-      cursorSpring.targetY = event.clientY;
-      if (!cursorSpring.initialized) {
-        cursorSpring.initialized = true;
-        cursorSpring.x = event.clientX;
-        cursorSpring.y = event.clientY;
-        paintCursor();
-        return;
-      }
-      if (cursorSpring.frame === null) {
-        cursorSpring.lastTime = null;
-        cursorSpring.frame = requestAnimationFrame(tickCursor);
-      }
-    };
 
     const controllers = new Set<AttractedTarget>();
     const companionControllers = new Map<HTMLElement, CompanionController>();
@@ -855,7 +777,6 @@ export function IOSPointer() {
 
     const onPointerMove = (event: PointerEvent) => {
       if (event.pointerType !== "mouse") return;
-      updateCursor(event);
 
       const pressed = targetRef.current;
       if (pressed?.pressing) {
@@ -902,7 +823,6 @@ export function IOSPointer() {
     };
 
     const onPointerLeave = () => {
-      cursor?.removeAttribute("data-ios-pointer-visible");
       // A held button keeps deforming even if the cursor leaves the window;
       // only release ends it. Idle hover attraction still clears normally.
       if (targetRef.current?.pressing) return;
@@ -978,9 +898,6 @@ export function IOSPointer() {
       }
       targetRef.current = null;
       root.classList.remove("ios-pointer-ready");
-      if (cursorSpring.frame !== null) cancelAnimationFrame(cursorSpring.frame);
-      cursor?.removeAttribute("data-ios-pointer-visible");
-      cursor?.removeAttribute("data-ios-pointer-suppressed");
       proximityObserver.disconnect();
       window.removeEventListener("resize", invalidateProximityCandidates);
       window.removeEventListener("scroll", invalidateProximityCandidates, true);
@@ -995,5 +912,5 @@ export function IOSPointer() {
     };
   }, []);
 
-  return <div ref={cursorRef} className="ios-pointer-cursor" aria-hidden />;
+  return null;
 }

@@ -7,21 +7,17 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useMotionValue, useSpring } from "motion/react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { MousePointer2 } from "lucide-react";
 import {
   LiquidGlass,
   type LiquidGlassProps,
 } from "../../registry/liquid-glass/liquid-glass";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "../components/ui/carousel";
 import { Link } from "./router";
+import {
+  ShowcaseCarousel,
+  ShowcaseCarouselCard,
+  ShowcaseCarouselItem,
+} from "./showcase-carousel";
 
 type MaterialAttributeCardConfig = {
   title: string;
@@ -133,7 +129,7 @@ function MaterialAttributeCard({ attribute }: { attribute: MaterialAttributeCard
     strength = initialPreview.strength ?? 0.78,
   ) => {
     if (!attribute.mockPointer || event.pointerType !== "mouse") return;
-    const demo = event.currentTarget.querySelector<HTMLElement>(".attribute-card__pointer-demo");
+    const demo = event.currentTarget.querySelector<HTMLElement>(".showcase-card__pointer-demo");
     if (!demo) return;
     const bounds = demo.getBoundingClientRect();
     const x = (event.clientX - bounds.left) / bounds.width;
@@ -154,8 +150,9 @@ function MaterialAttributeCard({ attribute }: { attribute: MaterialAttributeCard
   };
 
   return (
-    <article
-      className={`attribute-card${attribute.mockPointer ? " attribute-card--pointer-demo" : ""}`}
+    <ShowcaseCarouselCard
+      title={attribute.title}
+      className={attribute.mockPointer ? "showcase-card--pointer-demo" : undefined}
       data-ios-pointer-suppress={attribute.mockPointer ? "" : undefined}
       onPointerEnter={attribute.mockPointer ? followPointer : undefined}
       onPointerMove={attribute.mockPointer ? followPointer : undefined}
@@ -171,48 +168,36 @@ function MaterialAttributeCard({ attribute }: { attribute: MaterialAttributeCard
           : undefined
       }
     >
-      <img
-        className="showcase-card__scene"
-        src="/images/pexels-bento-scene.jpg"
-        alt=""
-        aria-hidden="true"
-      />
-      <div className="showcase-card__veil" aria-hidden="true" />
-      <div className="attribute-card__copy">
-        <h3>{attribute.title}</h3>
-      </div>
-      <div className="attribute-card__stage">
-        {attribute.mockPointer ? (
-          <div className="attribute-card__pointer-demo">
-            <LiquidGlass
-              width="100%"
-              height="100%"
-              borderRadius={attribute.borderRadius}
-              material={attribute.material}
-              engine={attribute.engine}
-              pointerHighlight={attribute.pointerHighlight}
-              pointerHighlightPreview={preview}
-              className="attribute-card__glass"
-            />
-            <MousePointer2
-              className="attribute-card__mock-pointer"
-              style={{ left: `${cursorPosition.x * 100}%`, top: `${cursorPosition.y * 100}%` }}
-              aria-hidden
-            />
-          </div>
-        ) : (
+      {attribute.mockPointer ? (
+        <div className="showcase-card__pointer-demo">
           <LiquidGlass
-            width="min(250px, calc(100% - 32px))"
-            height={128}
+            width="100%"
+            height="100%"
             borderRadius={attribute.borderRadius}
             material={attribute.material}
             engine={attribute.engine}
             pointerHighlight={attribute.pointerHighlight}
-            className="attribute-card__glass"
+            pointerHighlightPreview={preview}
+            className="showcase-card__glass"
           />
-        )}
-      </div>
-    </article>
+          <MousePointer2
+            className="showcase-card__mock-pointer"
+            style={{ left: `${cursorPosition.x * 100}%`, top: `${cursorPosition.y * 100}%` }}
+            aria-hidden
+          />
+        </div>
+      ) : (
+        <LiquidGlass
+          width="min(250px, calc(100% - 32px))"
+          height={128}
+          borderRadius={attribute.borderRadius}
+          material={attribute.material}
+          engine={attribute.engine}
+          pointerHighlight={attribute.pointerHighlight}
+          className="showcase-card__glass"
+        />
+      )}
+    </ShowcaseCarouselCard>
   );
 }
 
@@ -220,41 +205,27 @@ export function MaterialAttributesCarousel() {
   return (
     <section className="component-section" id="attributes">
       <div className="section-heading">
-        <div className="section-heading__title-row">
-          <h2>Material Attributes</h2>
-          <Link to="/customize" className="section-heading__action">
-            <span>Customize</span>
-            <HugeiconsIcon
-              icon={ArrowRight01Icon}
-              size={14}
-              color="currentColor"
-              strokeWidth={1.75}
-              aria-hidden
-            />
+        <h2 className="section-heading__title">
+          <Link to="/customize" className="section-heading__title-link">
+            Fully{" "}
+            <span className="section-heading__action-swap">
+              <span className="section-heading__action-swap-idle">Customizable</span>
+              <span className="section-heading__action-swap-hover">Customize</span>
+            </span>
           </Link>
-        </div>
+        </h2>
         <p>
           Tune the optical field, surface lighting, color separation, and interaction independently.
         </p>
       </div>
 
-      <Carousel
-        className="showcase-carousel showcase-carousel--attributes"
-        opts={{ align: "start", containScroll: "trimSnaps", dragFree: true }}
-        aria-label="Liquid glass material attributes"
-      >
-        <div className="showcase-carousel__controls">
-          <CarouselPrevious className="showcase-carousel__button" />
-          <CarouselNext className="showcase-carousel__button" />
-        </div>
-        <CarouselContent className="showcase-carousel__track">
-          {materialAttributeCards.map((attribute) => (
-            <CarouselItem className="showcase-carousel__item" key={attribute.title}>
-              <MaterialAttributeCard attribute={attribute} />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-      </Carousel>
+      <ShowcaseCarousel aria-label="Liquid glass material attributes">
+        {materialAttributeCards.map((attribute) => (
+          <ShowcaseCarouselItem key={attribute.title}>
+            <MaterialAttributeCard attribute={attribute} />
+          </ShowcaseCarouselItem>
+        ))}
+      </ShowcaseCarousel>
     </section>
   );
 }

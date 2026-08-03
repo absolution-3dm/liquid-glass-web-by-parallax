@@ -133,7 +133,7 @@
       "name": "liquid-glass-magnetic-pointer",
       "type": "registry:ui",
       "title": "Parallax Glass Magnetic Pointer",
-      "description": "Motion-free fine-pointer attraction, press-drag deformation, and spring return.",
+      "description": "Fine-pointer attraction, press-drag deformation, and spring return using the native OS cursor.",
       "files": [
         {
           "path": "registry/liquid-glass/compositions/ios-pointer.tsx",

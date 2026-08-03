@@ -3,40 +3,6 @@
   scale: var(--ios-pointer-squish-x, 1) var(--ios-pointer-squish-y, 1);
 }
 
-@media (pointer: fine) {
-  html.ios-pointer-ready,
-  html.ios-pointer-ready * {
-    cursor: none !important;
-  }
-}
-
-.ios-pointer-cursor {
-  position: fixed;
-  z-index: 2147483647;
-  top: 0;
-  left: 0;
-  width: 15px;
-  height: 15px;
-  border: 1px solid rgb(0 0 0 / 0.18);
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.82);
-  opacity: 0;
-  transform: translate3d(var(--ios-pointer-x, -24px), var(--ios-pointer-y, -24px), 0)
-    translate(-50%, -50%);
-  transition: opacity 80ms ease-out;
-  pointer-events: none;
-  will-change: transform;
-}
-
-.ios-pointer-cursor[data-ios-pointer-visible]:not([data-ios-pointer-suppressed]) {
-  opacity: 1;
-}
-
-.ios-pointer-cursor[data-ios-pointer-suppressed] {
-  opacity: 0;
-  transition-duration: 0ms;
-}
-
 .glass-pill-surface .glass-surface__content {
   padding: 0;
 }
