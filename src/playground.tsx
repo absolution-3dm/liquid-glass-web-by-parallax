@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
 import {
@@ -131,7 +132,7 @@ const usageExample = `import { LiquidGlass } from "@/components/liquid-glass/liq
 const registryPackages = [
   {
     name: "liquid-glass",
-    title: "LiquidGlass",
+    title: "Parallax Glass",
     description: "Primitive · Chromium refraction",
     file: "liquid-glass.json",
   },
@@ -173,29 +174,18 @@ const showcaseIconPills = [
   { icon: Settings01Icon, label: "Settings" },
 ] as const;
 
-const materialAttributeCards = [
-  {
-    title: "Refraction",
-    description: "Bend the scene behind the surface to control the strength and physical depth of the lens.",
-    material: { preset: "regular", scale: 1.65, depth: 28, blur: 0.75, tint: 0.08 },
-    borderRadius: 64,
-    pointerHighlight: false,
-  },
-  {
-    title: "Edge Highlight",
-    description: "Shape the bright rim and directional sheen that make the glass edge readable.",
-    material: { preset: "regular", scale: 0.7, edgeHighlight: 2, glow: 0.12, specular: 4 },
-    borderRadius: 64,
-    pointerHighlight: false,
-  },
-  {
-    title: "Chromatic Aberration",
-    description: "Split color channels around refracted edges for a subtle optical spectrum.",
-    material: { preset: "regular", scale: 1.5, depth: 28, chroma: 1, splay: 0.92, blur: 0, tint: 0.08 },
-    engine: { chromaRedBoost: 0.55, chromaGreenBoost: 0.25 },
-    borderRadius: 64,
-    pointerHighlight: false,
-  },
+type MaterialAttributeCardConfig = {
+  title: string;
+  description: string;
+  material: NonNullable<LiquidGlassProps["material"]>;
+  engine?: LiquidGlassProps["engine"];
+  borderRadius: number;
+  pointerHighlight: LiquidGlassProps["pointerHighlight"];
+  mockPointer?: boolean;
+  pointerHighlightPreview?: LiquidGlassProps["pointerHighlightPreview"];
+};
+
+const materialAttributeCards: ReadonlyArray<MaterialAttributeCardConfig> = [
   {
     title: "Pointer Highlight",
     description: "Add a responsive bloom that follows the pointer and intensifies while pressing.",
@@ -212,6 +202,35 @@ const materialAttributeCards = [
     pointerHighlightPreview: { x: 0.68, y: 0.25, strength: 0.78 },
   },
   {
+    title: "Chromatic Aberration",
+    description: "Split color channels around refracted edges for a subtle optical spectrum.",
+    material: { preset: "regular", scale: 1.5, depth: 28, chroma: 1, splay: 0.92, blur: 0, tint: 0.08 },
+    engine: { chromaRedBoost: 0.55, chromaGreenBoost: 0.25 },
+    borderRadius: 64,
+    pointerHighlight: false,
+  },
+  {
+    title: "Edge Highlight",
+    description: "Shape the bright rim and directional sheen that make the glass edge readable.",
+    material: { preset: "regular", scale: 0.7, edgeHighlight: 2, glow: 0.12, specular: 4 },
+    borderRadius: 64,
+    pointerHighlight: false,
+  },
+  {
+    title: "Refraction",
+    description: "Bend the scene behind the surface to control the strength and physical depth of the lens.",
+    material: { preset: "regular", scale: 1.65, depth: 28, blur: 0.75, tint: 0.08 },
+    borderRadius: 64,
+    pointerHighlight: false,
+  },
+  {
+    title: "Shape & Depth",
+    description: "Tune how the optical field rolls from the center into corners and rounded edges.",
+    material: { preset: "regular", scale: 1.9, depth: 40, curvature: 0.65, splay: 0.65, blur: 0, tint: 0.08 },
+    borderRadius: 64,
+    pointerHighlight: false,
+  },
+  {
     title: "Blur & Tint",
     description: "Separate content from a busy backdrop with adjustable softness, opacity, and color.",
     material: {
@@ -226,23 +245,7 @@ const materialAttributeCards = [
     borderRadius: 64,
     pointerHighlight: false,
   },
-  {
-    title: "Shape & Depth",
-    description: "Tune how the optical field rolls from the center into corners and rounded edges.",
-    material: { preset: "regular", scale: 1.9, depth: 40, curvature: 0.65, splay: 0.65, blur: 0, tint: 0.08 },
-    borderRadius: 64,
-    pointerHighlight: false,
-  },
-] satisfies ReadonlyArray<{
-  title: string;
-  description: string;
-  material: NonNullable<LiquidGlassProps["material"]>;
-  engine?: LiquidGlassProps["engine"];
-  borderRadius: number;
-  pointerHighlight: LiquidGlassProps["pointerHighlight"];
-  mockPointer?: boolean;
-  pointerHighlightPreview?: LiquidGlassProps["pointerHighlightPreview"];
-}>;
+];
 
 function useClipboard(text: string) {
   const [copied, setCopied] = useState(false);
@@ -547,7 +550,7 @@ function HeroFloatStage() {
   const { width, height, radius, depthStep } = metrics;
 
   return (
-    <div className="hero-orbit" ref={stageRef} aria-label="LiquidGlass panel stack">
+    <div className="hero-orbit" ref={stageRef} aria-label="Parallax Glass panel stack">
       <div className="hero-orbit__stage">
         <div className="hero-orbit__cluster" ref={clusterRef} style={{ width, height }}>
           {Array.from({ length: HERO_CAPSULE_COUNT }, (_, index) => (
@@ -659,39 +662,140 @@ function MaterialAttributesCarousel() {
         <CarouselContent className="showcase-carousel__track">
           {materialAttributeCards.map((attribute) => (
             <CarouselItem className="showcase-carousel__item" key={attribute.title}>
-              <article className="attribute-card">
-                <img
-                  className="showcase-card__scene"
-                  src="/images/pexels-bento-scene.jpg"
-                  alt=""
-                  aria-hidden="true"
-                />
-                <div className="showcase-card__veil" aria-hidden="true" />
-                <div className="attribute-card__copy">
-                  <h3>{attribute.title}</h3>
-                  <p>{attribute.description}</p>
-                </div>
-                <div className="attribute-card__stage">
-                  <LiquidGlass
-                    width="min(250px, calc(100% - 32px))"
-                    height={128}
-                    borderRadius={attribute.borderRadius}
-                    material={attribute.material}
-                    engine={attribute.engine}
-                    pointerHighlight={attribute.pointerHighlight}
-                    pointerHighlightPreview={attribute.pointerHighlightPreview}
-                    className={`attribute-card__glass${attribute.mockPointer ? " attribute-card__glass--pointer-demo" : ""}`}
-                  />
-                  {attribute.mockPointer ? (
-                    <MousePointer2 className="attribute-card__mock-pointer" aria-hidden />
-                  ) : null}
-                </div>
-              </article>
+              <MaterialAttributeCard attribute={attribute} />
             </CarouselItem>
           ))}
         </CarouselContent>
       </Carousel>
     </section>
+  );
+}
+
+function MaterialAttributeCard({ attribute }: { attribute: MaterialAttributeCardConfig }) {
+  const initialPreview = attribute.pointerHighlightPreview ?? { x: 0.68, y: 0.25, strength: 0.78 };
+  const [preview, setPreview] = useState(initialPreview);
+  const [cursorPosition, setCursorPosition] = useState({ x: initialPreview.x, y: initialPreview.y });
+  const pointerStrengthRef = useRef(initialPreview.strength ?? 0.78);
+  const cursorTargetX = useMotionValue(initialPreview.x);
+  const cursorTargetY = useMotionValue(initialPreview.y);
+  const cursorX = useSpring(cursorTargetX, { stiffness: 430, damping: 38, mass: 0.65 });
+  const cursorY = useSpring(cursorTargetY, { stiffness: 430, damping: 38, mass: 0.65 });
+
+  useEffect(() => {
+    if (!attribute.mockPointer) return;
+    let frame: number | null = null;
+
+    const syncAnimatedPointer = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        const x = cursorX.get();
+        const y = cursorY.get();
+        const isOverGlass = x >= 0 && x <= 1 && y >= 0 && y <= 1;
+        setCursorPosition({ x, y });
+        setPreview({
+          x: Math.max(0, Math.min(1, x)),
+          y: Math.max(0, Math.min(1, y)),
+          strength: isOverGlass ? pointerStrengthRef.current : 0,
+        });
+      });
+    };
+
+    const unsubscribeX = cursorX.on("change", syncAnimatedPointer);
+    const unsubscribeY = cursorY.on("change", syncAnimatedPointer);
+    return () => {
+      unsubscribeX();
+      unsubscribeY();
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
+  }, [attribute.mockPointer, cursorX, cursorY]);
+
+  const followPointer = (
+    event: ReactPointerEvent<HTMLElement>,
+    strength = initialPreview.strength ?? 0.78,
+  ) => {
+    if (!attribute.mockPointer || event.pointerType !== "mouse") return;
+    const demo = event.currentTarget.querySelector<HTMLElement>(".attribute-card__pointer-demo");
+    if (!demo) return;
+    const bounds = demo.getBoundingClientRect();
+    const x = (event.clientX - bounds.left) / bounds.width;
+    const y = (event.clientY - bounds.top) / bounds.height;
+    if (pointerStrengthRef.current !== strength) {
+      const animatedX = cursorX.get();
+      const animatedY = cursorY.get();
+      const isOverGlass = animatedX >= 0 && animatedX <= 1 && animatedY >= 0 && animatedY <= 1;
+      setPreview({
+        x: Math.max(0, Math.min(1, animatedX)),
+        y: Math.max(0, Math.min(1, animatedY)),
+        strength: isOverGlass ? strength : 0,
+      });
+    }
+    pointerStrengthRef.current = strength;
+    cursorTargetX.set(x);
+    cursorTargetY.set(y);
+  };
+
+  return (
+    <article
+      className={`attribute-card${attribute.mockPointer ? " attribute-card--pointer-demo" : ""}`}
+      data-ios-pointer-suppress={attribute.mockPointer ? "" : undefined}
+      onPointerEnter={attribute.mockPointer ? followPointer : undefined}
+      onPointerMove={attribute.mockPointer ? followPointer : undefined}
+      onPointerDown={attribute.mockPointer ? (event) => followPointer(event, 1) : undefined}
+      onPointerUp={attribute.mockPointer ? followPointer : undefined}
+      onPointerLeave={
+        attribute.mockPointer
+          ? () => {
+              pointerStrengthRef.current = initialPreview.strength ?? 0.78;
+              cursorTargetX.set(initialPreview.x);
+              cursorTargetY.set(initialPreview.y);
+            }
+          : undefined
+      }
+    >
+      <img
+        className="showcase-card__scene"
+        src="/images/pexels-bento-scene.jpg"
+        alt=""
+        aria-hidden="true"
+      />
+      <div className="showcase-card__veil" aria-hidden="true" />
+      <div className="attribute-card__copy">
+        <h3>{attribute.title}</h3>
+        <p>{attribute.description}</p>
+      </div>
+      <div className="attribute-card__stage">
+        {attribute.mockPointer ? (
+          <div className="attribute-card__pointer-demo">
+            <LiquidGlass
+              width="100%"
+              height="100%"
+              borderRadius={attribute.borderRadius}
+              material={attribute.material}
+              engine={attribute.engine}
+              pointerHighlight={attribute.pointerHighlight}
+              pointerHighlightPreview={preview}
+              className="attribute-card__glass"
+            />
+            <MousePointer2
+              className="attribute-card__mock-pointer"
+              style={{ left: `${cursorPosition.x * 100}%`, top: `${cursorPosition.y * 100}%` }}
+              aria-hidden
+            />
+          </div>
+        ) : (
+          <LiquidGlass
+            width="min(250px, calc(100% - 32px))"
+            height={128}
+            borderRadius={attribute.borderRadius}
+            material={attribute.material}
+            engine={attribute.engine}
+            pointerHighlight={attribute.pointerHighlight}
+            className="attribute-card__glass"
+          />
+        )}
+      </div>
+    </article>
   );
 }
 
@@ -1437,7 +1541,7 @@ export function Playground() {
 
       <header className="site-navigation">
         <a className="site-brand" href="#top">
-          LiquidGlass
+          Parallax Glass
         </a>
 
         <nav className="site-nav-links" aria-label="Primary">
@@ -1475,7 +1579,7 @@ export function Playground() {
           </div>
           <div className="hero-inner">
             <div className="hero-copy">
-              <h1>Liquid Glass for the web.</h1>
+              <h1>Parallax Glass for the web.</h1>
               <p className="hero-lede">
                 Native-feeling glass surfaces — crafted, customizable, source
                 you own.
@@ -1506,7 +1610,7 @@ export function Playground() {
         <InstallationShowcase />
 
         <footer>
-          <span>LiquidGlass</span>
+          <span>Parallax Glass</span>
           <span>shadcn Registry</span>
         </footer>
       </main>
