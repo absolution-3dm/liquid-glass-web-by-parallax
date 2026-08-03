@@ -227,7 +227,7 @@ const HERO_AXON_ROTATE_Y = -28;
 const HERO_FLOAT_AMPLITUDE_PX = 7;
 const HERO_FLOAT_PERIOD_SEC = 5.6;
 const HERO_FLOAT_PHASE_STEP = 0.9;
-const HERO_FLOAT_FPS = 30;
+const HERO_FLOAT_FPS = 15;
 
 /** Panel aspect used when fitting the stack into the orbit stage. */
 const HERO_PANEL_ASPECT = 212 / 188;
