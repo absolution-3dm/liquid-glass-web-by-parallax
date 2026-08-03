@@ -245,21 +245,7 @@ a {
 
 .navigation-menu__content {
   z-index: 3;
-  min-height: 240px;
   padding: 15px 10px 10px;
-}
-
-.navigation-menu__heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 5px 10px 13px;
-  color: var(--muted);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  text-transform: none;
 }
 
 .navigation-menu__items {
@@ -556,8 +542,16 @@ h2 {
   overflow-x: auto;
   overflow-y: hidden;
   cursor: grab;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
+}
+
+.showcase-carousel [data-slot="carousel-content"]::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .showcase-carousel [data-slot="carousel-content"]:active {
@@ -792,10 +786,6 @@ h2 {
   width: 248px;
 }
 
-.component-card__state--collapsed-menu {
-  width: 48px;
-}
-
 .component-card__menu-preview {
   position: relative;
 }
@@ -803,11 +793,6 @@ h2 {
 .component-card__menu-preview--expanded {
   width: 248px;
   height: 340px;
-}
-
-.component-card__menu-preview--collapsed {
-  width: 48px;
-  height: 48px;
 }
 
 .component-card__segment-states {
@@ -1394,6 +1379,36 @@ h2 {
   color: var(--muted-strong);
 }
 
+.package-manager-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.025);
+}
+
+.package-manager-switch button {
+  min-width: 44px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  text-transform: lowercase;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.package-manager-switch button:hover,
+.package-manager-switch button.is-active {
+  color: #f7f8f8;
+  background: rgb(255 255 255 / 0.08);
+}
+
 .code-block__language {
   display: inline-flex;
   align-items: center;
@@ -1666,11 +1681,6 @@ footer {
 
   .component-card {
     height: 560px;
-  }
-
-  .component-card__menu-states {
-    flex-direction: column;
-    gap: 14px;
   }
 
   .customizer-controls {

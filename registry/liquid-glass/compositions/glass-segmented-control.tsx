@@ -292,7 +292,7 @@ export function GlassSegmentedControl({
       dragAbortRef.current = null;
       dragRef.current = null;
       draggingRef.current = false;
-      animate(chipPress, 0, CHIP_SNAP_SPRING);
+      animate(chipPress, pressedPreview ? 1 : 0, CHIP_SNAP_SPRING);
       if (drag.moved > CHIP_DRAG_CLICK_CANCEL_PX) suppressClickRef.current = true;
 
       const targetIndex = nearestSnapIndex(chipX.get());
@@ -302,7 +302,7 @@ export function GlassSegmentedControl({
         animate(chipX, snapsRef.current[activeIndexRef.current], CHIP_SNAP_SPRING);
       }
     },
-    [chipX, chipPress, items, nearestSnapIndex, onValueChange],
+    [chipX, chipPress, items, nearestSnapIndex, onValueChange, pressedPreview],
   );
 
   // Click switching shares one overlapping timeline: movement and the glass
@@ -319,16 +319,20 @@ export function GlassSegmentedControl({
         duration: CHIP_SWITCH_DURATION,
         ease: CHIP_SWITCH_EASE,
       });
-      const material = animate(chipPress, [chipPress.get(), 1, 1, 0], {
-        duration: CHIP_SWITCH_DURATION,
-        times: [0, 0.24, 0.62, 1],
-        ease: "easeInOut",
-      });
-
-      await Promise.all([movement, material]);
+      if (pressedPreview) {
+        chipPress.set(1);
+        await movement;
+      } else {
+        const material = animate(chipPress, [chipPress.get(), 1, 1, 0], {
+          duration: CHIP_SWITCH_DURATION,
+          times: [0, 0.24, 0.62, 1],
+          ease: "easeInOut",
+        });
+        await Promise.all([movement, material]);
+      }
       if (epoch === switchEpochRef.current) switchingRef.current = false;
     },
-    [chipPress, chipX, items, measure, onValueChange],
+    [chipPress, chipX, items, measure, onValueChange, pressedPreview],
   );
 
   const handleChipPointerDown = useCallback(

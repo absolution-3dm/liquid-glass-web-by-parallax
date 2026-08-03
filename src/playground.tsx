@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import {
   motion,
@@ -596,9 +597,6 @@ function ShowcaseMorphMenu({
             className="navigation-menu__content"
             onPointerLeave={clearHoveredItem}
           >
-            <div className="navigation-menu__heading">
-              <span>Menu</span>
-            </div>
             <div className="navigation-menu__items">
               <MorphMenuHoverFill hoveredItem={hoveredItem} />
               {menuItems.map((item) => (
@@ -674,7 +672,8 @@ function MaterialAttributesCarousel() {
 }
 
 function PrebuiltComponentsCarousel() {
-  const [segmentValue, setSegmentValue] = useState("motion");
+  const [restingSegmentValue, setRestingSegmentValue] = useState("motion");
+  const [pressedSegmentValue, setPressedSegmentValue] = useState("motion");
 
   return (
     <section className="component-section" id="components">
@@ -699,18 +698,12 @@ function PrebuiltComponentsCarousel() {
             <article className="component-card">
               <img className="showcase-card__scene" src="/images/pexels-bento-scene.jpg" alt="" aria-hidden="true" />
               <div className="showcase-card__veil" aria-hidden="true" />
-              <span className="component-card__label">Morph Menu</span>
+              <span className="component-card__label">Menu</span>
               <div className="component-card__stage component-card__menu-states">
                 <div className="component-card__state component-card__state--expanded-menu">
                   <span>Expanded</span>
                   <div className="component-card__menu-preview component-card__menu-preview--expanded">
                     <ShowcaseMorphMenu defaultOpen />
-                  </div>
-                </div>
-                <div className="component-card__state component-card__state--collapsed-menu">
-                  <span>Collapsed</span>
-                  <div className="component-card__menu-preview component-card__menu-preview--collapsed">
-                    <ShowcaseMorphMenu />
                   </div>
                 </div>
               </div>
@@ -728,12 +721,12 @@ function PrebuiltComponentsCarousel() {
                     <span>Resting</span>
                     <GlassSegmentedControl
                       items={segmentItems}
-                      value={segmentValue}
-                      onValueChange={setSegmentValue}
+                      value={restingSegmentValue}
+                      onValueChange={setRestingSegmentValue}
                       itemWidth={80}
                       itemHeight={40}
                       padding={4}
-                      radialExpansion={0}
+                      radialExpansion={8}
                       material="navigation"
                       pressedMaterial="selectionPressed"
                       itemClassName="segment-item"
@@ -743,8 +736,8 @@ function PrebuiltComponentsCarousel() {
                     <span>Pressed</span>
                     <GlassSegmentedControl
                       items={segmentItems}
-                      value={segmentValue}
-                      onValueChange={setSegmentValue}
+                      value={pressedSegmentValue}
+                      onValueChange={setPressedSegmentValue}
                       itemWidth={80}
                       itemHeight={40}
                       padding={4}
@@ -799,10 +792,12 @@ function CodeBlock({
   label,
   code,
   language = "tsx",
+  headerControl,
 }: {
   label: string;
   code: string;
   language?: "bash" | "tsx";
+  headerControl?: ReactNode;
 }) {
   const { copied, copy } = useClipboard(code);
 
@@ -811,6 +806,7 @@ function CodeBlock({
       <div className="code-block__header">
         <div className="code-block__meta">
           <span className="code-block__label">{label}</span>
+          {headerControl}
           <span className="code-block__language">{language}</span>
         </div>
         <button
@@ -1221,12 +1217,17 @@ function CustomizeShowcase() {
 
 function InstallationShowcase() {
   const [origin, setOrigin] = useState("http://localhost:5173");
+  const [packageManager, setPackageManager] = useState<"pnpm" | "npm">("pnpm");
 
   useLayoutEffect(() => {
     setOrigin(window.location.origin);
   }, []);
 
-  const installCommand = `pnpm dlx shadcn@latest add ${origin}/r/liquid-glass.json`;
+  const registryInstallCommand = (file: string) =>
+    packageManager === "pnpm"
+      ? `pnpm dlx shadcn@latest add ${origin}/r/${file}`
+      : `npx shadcn@latest add ${origin}/r/${file}`;
+  const installCommand = registryInstallCommand("liquid-glass.json");
 
   return (
     <section className="component-section installation-section" id="installation">
@@ -1239,7 +1240,27 @@ function InstallationShowcase() {
       </div>
 
       <div className="installation-stack">
-        <CodeBlock label="Terminal" code={installCommand} language="bash" />
+        <CodeBlock
+          label="Terminal"
+          code={installCommand}
+          language="bash"
+          headerControl={
+            <div className="package-manager-switch" role="tablist" aria-label="Package manager">
+              {(["pnpm", "npm"] as const).map((manager) => (
+                <button
+                  key={manager}
+                  type="button"
+                  role="tab"
+                  aria-selected={packageManager === manager}
+                  className={packageManager === manager ? "is-active" : ""}
+                  onClick={() => setPackageManager(manager)}
+                >
+                  {manager}
+                </button>
+              ))}
+            </div>
+          }
+        />
         <CodeBlock label="Usage" code={usageExample} language="tsx" />
 
         <div className="installation-packages">
@@ -1254,7 +1275,7 @@ function InstallationShowcase() {
                 title={item.title}
                 description={item.description}
                 file={item.file}
-                command={`pnpm dlx shadcn@latest add ${origin}/r/${item.file}`}
+                command={registryInstallCommand(item.file)}
               />
             ))}
           </div>
@@ -1347,8 +1368,41 @@ function SiteMobileNav({
 export function Playground() {
   const [topNavigationValue, setTopNavigationValue] = useState("menu");
 
+  useEffect(() => {
+    let frame = 0;
+    const updateActiveSection = () => {
+      frame = 0;
+      const activationLine = window.innerHeight * 0.3;
+      let activeValue = topNavigationItems[0].value;
+
+      for (const item of topNavigationItems) {
+        const section = document.getElementById(item.value);
+        if (!section) continue;
+        if (section.getBoundingClientRect().top <= activationLine) {
+          activeValue = item.value;
+        }
+      }
+
+      setTopNavigationValue((current) =>
+        current === activeValue ? current : activeValue,
+      );
+    };
+    const scheduleUpdate = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(updateActiveSection);
+    };
+
+    updateActiveSection();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+    };
+  }, []);
+
   const navigateToSection = (value: string) => {
-    setTopNavigationValue(value);
     document.getElementById(value)?.scrollIntoView({ behavior: "smooth" });
   };
 
