@@ -1,7 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { LiquidGlass } from "../../registry/liquid-glass/liquid-glass";
+import { useMemo, useState, type ReactNode } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  CodeIcon,
+  ColorsIcon,
+  CpuIcon,
+  Cursor02Icon,
+  DropletIcon,
+  Layers01Icon,
+  SlidersHorizontalIcon,
+  SparklesIcon,
+} from "@hugeicons/core-free-icons";
 import {
   resolveGlassMaterial,
   type GlassMaterialName,
@@ -19,6 +29,13 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
   advancedMaterialParamDefs,
   diffPartial,
   engineParamDefs,
@@ -28,9 +45,54 @@ import {
   type PointerState,
 } from "../customizer-params";
 import { CodeBlock } from "./code-block";
+import { CustomizerDraggableGlass } from "./customizer-draggable-glass";
 
 const customizerPresets = ["regular", "navigation", "control", "panel"] as const;
 type CustomizerPreset = (typeof customizerPresets)[number];
+
+function CustomizerSectionSummary({
+  icon,
+  children,
+}: {
+  icon: typeof DropletIcon;
+  children: ReactNode;
+}) {
+  return (
+    <summary className="customizer-section__summary">
+      <span className="customizer-section__summary-label">
+        <HugeiconsIcon
+          icon={icon}
+          size={14}
+          color="currentColor"
+          strokeWidth={1.75}
+          aria-hidden
+        />
+        <span>{children}</span>
+      </span>
+    </summary>
+  );
+}
+
+function CustomizerLabelWithIcon({
+  icon,
+  children,
+}: {
+  icon: typeof DropletIcon;
+  children: ReactNode;
+}) {
+  return (
+    <span className="customizer-label-with-icon">
+      <HugeiconsIcon
+        icon={icon}
+        size={14}
+        color="currentColor"
+        strokeWidth={1.75}
+        aria-hidden
+      />
+      <span>{children}</span>
+    </span>
+  );
+}
 
 export function CustomizeShowcase() {
   const engineDefaults = useMemo(() => glassEngineSnapshot(), []);
@@ -218,69 +280,79 @@ export function CustomizeShowcase() {
 
   return (
     <div className="customizer-layout">
-      <div className="customizer-preview">
-        <img
-          className="customizer-preview__scene"
-          src="/images/pexels-bento-scene.jpg"
-          alt=""
-          aria-hidden="true"
-        />
-        <LiquidGlass
-          width="min(340px, calc(100% - 32px))"
-          height={180}
-          borderRadius={borderRadius}
-          material={material}
-          engine={Object.keys(engineOverrides).length > 0 ? engineOverrides : undefined}
-          pointerHighlight={pointerHighlightProp}
-          className="customizer-preview__glass"
-        >
-          <div className="customizer-preview__content">
-            <strong>{preset}</strong>
-          </div>
-        </LiquidGlass>
-      </div>
+      <CustomizerDraggableGlass
+        borderRadius={borderRadius}
+        material={material}
+        engine={Object.keys(engineOverrides).length > 0 ? engineOverrides : undefined}
+        pointerHighlight={pointerHighlightProp}
+      />
 
       <div className="customizer-controls">
         <Tabs className="customizer-tabs" defaultValue="controls">
           <TabsList className="customizer-tabs__list" aria-label="Customize panel view">
             <TabsTrigger className="customizer-tabs__trigger" value="controls">
+              <HugeiconsIcon
+                icon={SlidersHorizontalIcon}
+                size={14}
+                color="currentColor"
+                strokeWidth={1.75}
+                aria-hidden
+              />
               Controls
             </TabsTrigger>
             <TabsTrigger className="customizer-tabs__trigger" value="jsx">
+              <HugeiconsIcon
+                icon={CodeIcon}
+                size={14}
+                color="currentColor"
+                strokeWidth={1.75}
+                aria-hidden
+              />
               JSX
             </TabsTrigger>
           </TabsList>
 
           <TabsContent className="customizer-tabs__content" value="controls">
-            <label className="customizer-select">
-              <span>Preset</span>
-              <select
+            <div className="customizer-select">
+              <label className="customizer-select__label" htmlFor="customizer-preset">
+                <CustomizerLabelWithIcon icon={Layers01Icon}>Preset</CustomizerLabelWithIcon>
+              </label>
+              <Select
                 value={preset}
-                onChange={(event) =>
-                  selectPreset(event.currentTarget.value as CustomizerPreset)
-                }
+                onValueChange={(value) => selectPreset(value as CustomizerPreset)}
               >
-                {customizerPresets.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <SelectTrigger id="customizer-preset" className="customizer-select__trigger w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="customizer-select__content" position="popper" align="start">
+                  {customizerPresets.map((name) => (
+                    <SelectItem key={name} value={name} className="customizer-select__item">
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <details className="customizer-section" open>
-              <summary className="customizer-section__summary">Material</summary>
+              <CustomizerSectionSummary icon={DropletIcon}>Material</CustomizerSectionSummary>
               <div className="customizer-sliders">
                 <GlassSlider label="Scale" value={scale} min={0} max={3} step={0.01} onChange={setScale} />
                 <GlassSlider label="Blur" value={blur} min={0} max={8} step={0.1} display={`${blur.toFixed(1)} px`} onChange={setBlur} />
                 <GlassSlider label="Tint" value={tint} min={0} max={1} step={0.01} onChange={setTint} />
                 <GlassSlider label="Chroma" value={chroma} min={0} max={1} step={0.01} onChange={setChroma} />
                 <GlassSlider label="Radius" value={borderRadius} min={12} max={90} step={1} display={`${borderRadius} px`} onChange={setBorderRadius} />
+                <CustomizeColorField
+                  label="Fill"
+                  icon={ColorsIcon}
+                  value={fill}
+                  onChange={setFill}
+                />
               </div>
             </details>
 
             <details className="customizer-section">
-              <summary className="customizer-section__summary">Advanced Material</summary>
+              <CustomizerSectionSummary icon={SparklesIcon}>Advanced Material</CustomizerSectionSummary>
               <div className="customizer-sliders">
                 {advancedMaterialParamDefs.map((param) => (
                   <GlassSlider
@@ -300,7 +372,7 @@ export function CustomizeShowcase() {
             </details>
 
             <details className="customizer-section">
-              <summary className="customizer-section__summary">Engine</summary>
+              <CustomizerSectionSummary icon={CpuIcon}>Engine</CustomizerSectionSummary>
               <div className="customizer-sliders">
                 {engineParamDefs.map((param) => (
                   <GlassSlider
@@ -318,7 +390,7 @@ export function CustomizeShowcase() {
             </details>
 
             <details className="customizer-section">
-              <summary className="customizer-section__summary">Pointer Highlight</summary>
+              <CustomizerSectionSummary icon={Cursor02Icon}>Pointer Highlight</CustomizerSectionSummary>
               <label className="customizer-toggle">
                 <span>Enabled</span>
                 <input
@@ -343,8 +415,6 @@ export function CustomizeShowcase() {
                 ))}
               </div>
             </details>
-
-            <CustomizeColorField label="Fill" value={fill} onChange={setFill} />
           </TabsContent>
 
           <TabsContent className="customizer-tabs__content customizer-tabs__content--code" value="jsx">

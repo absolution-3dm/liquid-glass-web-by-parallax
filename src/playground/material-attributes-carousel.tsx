@@ -210,11 +210,11 @@ function MaterialAttributeCard({ attribute }: { attribute: MaterialAttributeCard
 
 export function MaterialAttributesCarousel() {
   return (
-    <section className="component-section" id="attributes">
+    <section className="component-section" id="customize">
       <div className="section-heading">
         <Link to="/customize" className="section-heading__link">
           <h2 className="section-heading__title">
-            <span className="section-heading__title-text">Fully Customizable</span>
+            <span className="section-heading__title-text">Customize</span>
             <span className="section-heading__title-arrow" aria-hidden>
               <HugeiconsIcon
                 icon={ArrowRight02Icon}
@@ -224,10 +224,10 @@ export function MaterialAttributesCarousel() {
               />
             </span>
           </h2>
-          <p>
-            Tune the optical field, surface lighting, color separation, and interaction independently.
-          </p>
         </Link>
+        <p>
+          Tune the optical field, surface lighting, color separation, and interaction independently.
+        </p>
       </div>
 
       <ShowcaseCarousel aria-label="Liquid glass material attributes">
