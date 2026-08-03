@@ -37,7 +37,7 @@ const CAROUSEL_BG = "/images/Carousel Background";
 const materialAttributeCards: ReadonlyArray<MaterialAttributeCardConfig> = [
   {
     title: "Pointer Highlight",
-    background: `${CAROUSEL_BG}/01-pointer.png`,
+    background: `${CAROUSEL_BG}/03-edge.png`,
     material: { preset: "control", scale: 1.55, depth: 32, blur: 3, tint: 0.32, fill: "#080808" },
     borderRadius: 64,
     pointerHighlight: {
@@ -60,7 +60,7 @@ const materialAttributeCards: ReadonlyArray<MaterialAttributeCardConfig> = [
   },
   {
     title: "Edge Highlight",
-    background: `${CAROUSEL_BG}/03-edge.png`,
+    background: `${CAROUSEL_BG}/01-pointer.png`,
     material: { preset: "regular", scale: 1.05, depth: 24, blur: 3, edgeHighlight: 2, glow: 0.12, specular: 4 },
     borderRadius: 64,
     pointerHighlight: false,
