@@ -153,6 +153,44 @@ Each chromatic refraction branch (red, green, and blue) must retain both
 opposite-order axis branches and use its channel's full scale consistently
 across all four displacement primitives.
 
+## Cost of one backdrop evaluation
+
+Chromium re-evaluates a `backdrop-filter: url(...)` graph whenever the content
+it samples moves. On the landing hero, five panels overlap by roughly 72% each,
+so their backdrops form a chain: every panel refracts the already-filtered
+output of the ones behind it, and moving any panel invalidates every panel in
+front of it. Frozen, that chain composites once and costs nothing measurable;
+animated, it is the dominant cost on the first screen.
+
+What one evaluation costs tracks the displacement map's own pixel count far
+more than the filter region, because each `feImage` source is resampled per
+evaluation. Measured on that hero stack with all five panels driven at refresh
+rate:
+
+```text
+map 360x408 (147k px)  ~30 fps
+map 282x320 ( 90k px)  ~45 fps
+map 240x274 ( 66k px)   60 fps
+```
+
+`mapMaxPixels` in `engine.json` therefore caps the map's *area*, not its long
+edge. Capping the long edge would crush the short edge of a wide, short surface
+such as a navigation bar; an area budget leaves those untouched, since they are
+already cheap, and only downsamples large square-ish panels where the bevel
+occupies a small fraction of the bitmap. A frozen side-by-side of the hero at
+the full-resolution map versus the capped one put fewer than 0.1% of pixels
+more than 8/255 apart.
+
+This is a sampling-density knob, not a change to the graph: the number of
+displacement passes, their order, and the axis isolation above are unaffected.
+One-shot bakes that want full resolution regardless of per-frame cost (the
+settled `GlassShellBackdrop` bake) pass `Infinity` to opt out.
+
+Skipping work is cheaper than shrinking it. A surface with `pointerHighlight`
+disabled omits the saturate/brightness/mask/composite chain from its backdrop
+graph entirely: with a 0x0 mask that chain is an identity, but Chromium still
+rasterizes it over the whole filter region on every evaluation.
+
 ## Investigation history
 
 The following controlled changes produced no visual change and therefore did

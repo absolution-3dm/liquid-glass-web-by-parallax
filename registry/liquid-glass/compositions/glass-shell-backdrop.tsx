@@ -608,6 +608,11 @@ export function GlassShellBackdrop({
       engine,
       lod ? 1 : mapBakeDpr(),
       lod ? MORPH_MAP_QUALITY_CAP : SETTLED_MAP_QUALITY_CAP,
+      // Both shell paths size themselves through the explicit long-edge caps
+      // above, so they opt out of the engine's shared area budget: the morph
+      // bake is already below it, and the settled bake deliberately trades
+      // bitmap size for the rim sharpness documented on the cap constant.
+      Number.POSITIVE_INFINITY,
     );
     // Chromium consumes independent X/Y displacement maps through its SVG
     // backdrop filter. WebKit/Firefox never use it (CSS-blur

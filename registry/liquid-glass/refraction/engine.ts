@@ -5,6 +5,23 @@ import engineConfig from "./engine.json";
 export type GlassEngineParams = {
   /** Minimum displacement-map long-edge resolution in pixels. */
   mapQuality: number;
+  /**
+   * Upper bound on the displacement map's own pixel count.
+   *
+   * Chromium re-samples every `feImage` source each time a backdrop filter is
+   * re-evaluated, so one evaluation costs roughly in proportion to the map's
+   * area rather than to the filter region. Measured on the hero stack (five
+   * chained backdrops driven at refresh rate): a 360×408 map held ~30fps, a
+   * 282×320 map ~45fps, and a 226×256 map a full 60fps, while a frozen
+   * side-by-side put fewer than 0.1% of pixels more than 8/255 apart.
+   *
+   * Capping area rather than the long edge is what keeps that cheap: a wide,
+   * short surface (a navigation bar) has a small area already and stays at
+   * full resolution, so it never gets its short edge crushed. Only large
+   * square-ish panels are downsampled, and those are exactly the ones whose
+   * bevel occupies a small fraction of the bitmap.
+   */
+  mapMaxPixels: number;
   glowSpread: number;
   glowExponent: number;
   edgeWidth: number;
@@ -123,6 +140,10 @@ export function evenMapSize(value: number) {
  * GlassSurface mid-spring); pass a real `dpr` only for one-shot/settled
  * bakes, where a few-KB-bigger canvas+PNG cost is a one-time expense rather
  * than a per-frame one.
+ *
+ * `maxPixels` is the area budget described on {@link GlassEngineParams.mapMaxPixels}.
+ * It applies after the long-edge clamp and preserves aspect ratio, so it only
+ * shrinks maps whose total area exceeds the budget.
  */
 export function mapDimensionsForElement(
   width: number,
@@ -130,6 +151,7 @@ export function mapDimensionsForElement(
   baseQuality: number,
   maxQuality = 1024,
   dpr = 1,
+  maxPixels = Number.POSITIVE_INFINITY,
 ): { width: number; height: number } {
   const safeWidth = Math.max(1, width);
   const safeHeight = Math.max(1, height);
@@ -142,16 +164,26 @@ export function mapDimensionsForElement(
   );
   const scale = longEdge / longerCssEdge;
 
-  if (safeWidth >= safeHeight) {
-    return {
-      width: longEdge,
-      height: evenMapSize(safeHeight * scale),
-    };
-  }
+  const mapWidth =
+    safeWidth >= safeHeight ? longEdge : evenMapSize(safeWidth * scale);
+  const mapHeight =
+    safeWidth >= safeHeight ? evenMapSize(safeHeight * scale) : longEdge;
 
+  return clampMapArea(mapWidth, mapHeight, maxPixels);
+}
+
+/** Scale a map down to `maxPixels` total, keeping its aspect ratio. */
+function clampMapArea(
+  width: number,
+  height: number,
+  maxPixels: number,
+): { width: number; height: number } {
+  const area = width * height;
+  if (!(maxPixels > 0) || area <= maxPixels) return { width, height };
+  const scale = Math.sqrt(maxPixels / area);
   return {
-    width: evenMapSize(safeWidth * scale),
-    height: longEdge,
+    width: evenMapSize(width * scale),
+    height: evenMapSize(height * scale),
   };
 }
 
@@ -232,6 +264,12 @@ export function buildLensMapParams(
   dpr = 1,
   /** See {@link mapDimensionsForElement}'s `maxQuality` param. */
   maxQuality = 1024,
+  /**
+   * See {@link mapDimensionsForElement}'s `maxPixels` param. Defaults to the
+   * engine's area budget; pass `Infinity` for one-shot bakes that want the
+   * full resolution regardless of what a per-frame surface could afford.
+   */
+  maxPixels = engine.mapMaxPixels,
 ): LensMapParams {
   const { halfWidth: hw, halfHeight: hh, radius, material } = args;
 
@@ -241,6 +279,7 @@ export function buildLensMapParams(
     engine.mapQuality,
     maxQuality,
     dpr,
+    maxPixels,
   );
 
   return {

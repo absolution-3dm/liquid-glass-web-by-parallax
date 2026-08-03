@@ -58,6 +58,29 @@ describe("aspect-correct lens maps", () => {
     });
   });
 
+  it("scales a large panel down to the area budget, keeping aspect ratio", () => {
+    // The hero stack panel: 360x408 is 147k px, well over the 64k budget.
+    // Both edges round out to even, so the area lands just above the budget.
+    expect(mapDimensionsForElement(360, 408, 256, 1024, 1, 65536)).toEqual({
+      width: 240,
+      height: 274,
+    });
+  });
+
+  it("leaves a wide, short surface at full resolution under the area budget", () => {
+    // Capping the long edge instead would crush this bar's 56px short edge;
+    // its area is already far below the budget, so it must pass through.
+    expect(mapDimensionsForElement(800, 56, 256, 1024, 1, 65536)).toEqual(
+      mapDimensionsForElement(800, 56, 256),
+    );
+  });
+
+  it("ignores the area budget when a caller opts out", () => {
+    expect(
+      mapDimensionsForElement(450, 300, 256, 1024, 3, Number.POSITIVE_INFINITY),
+    ).toEqual({ width: 1024, height: 684 });
+  });
+
   it("allocates and mirrors a rectangular displacement field", () => {
     const { data } = computeLensMap(baseParams);
     expect(data).toHaveLength(baseParams.width * baseParams.height * 4);

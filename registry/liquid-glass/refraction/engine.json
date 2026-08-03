@@ -1,5 +1,6 @@
 {
   "mapQuality": 256,
+  "mapMaxPixels": 65536,
   "glowSpread": 0.16,
   "glowExponent": 2.5,
   "edgeWidth": 3,

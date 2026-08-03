@@ -443,7 +443,19 @@ export const LiquidGlass = ({
     ["--backdrop-filter-id" as string]: lens ? `url(#${backdropFilterId})` : undefined,
   };
 
-  const backdropInput = lens && lens.backdropBlurPx > 0 ? "blurredBackdrop" : "pointerBackdrop";
+  /**
+   * With no pointer bloom the saturate → brightness → mask → composite chain
+   * below is an identity: its `feImage` mask stays 0×0, so the masked boost is
+   * empty and compositing it over `SourceGraphic` returns `SourceGraphic`.
+   * Chromium still rasterizes those primitives over the whole filter region on
+   * every re-evaluation, so skip the chain outright and read the source
+   * directly instead.
+   */
+  const pointerBackdropResult = resolvedPointerHighlight
+    ? "pointerBackdrop"
+    : "SourceGraphic";
+  const backdropInput =
+    lens && lens.backdropBlurPx > 0 ? "blurredBackdrop" : pointerBackdropResult;
   const refractionProgressValue = refractionProgress
     ? Math.max(0, Math.min(1, refractionProgress.get()))
     : 1;
@@ -751,31 +763,35 @@ export const LiquidGlass = ({
                   Top/bottom and side branches use opposite pass orders so
                   each region's tangential axis is applied last;
                   see docs/glass-refraction.md before changing this structure. */}
-              <feColorMatrix
-                in="SourceGraphic"
-                type="saturate"
-                values={String(glassPointerHighlight.saturation)}
-                result="pointerSaturated"
-              />
-              <feComponentTransfer in="pointerSaturated" result="pointerBright">
-                <feFuncR type="linear" slope={glassPointerHighlight.brightness} />
-                <feFuncG type="linear" slope={glassPointerHighlight.brightness} />
-                <feFuncB type="linear" slope={glassPointerHighlight.brightness} />
-              </feComponentTransfer>
-              <feImage
-                ref={pointerMaskRef}
-                href={glassPointerHighlightMaskUrl}
-                x="0"
-                y="0"
-                width="0"
-                height="0"
-                preserveAspectRatio="none"
-                result="pointerMask"
-              />
-              <feComposite in="pointerBright" in2="pointerMask" operator="in" result="pointerBoost" />
-              <feComposite in="pointerBoost" in2="SourceGraphic" operator="over" result="pointerBackdrop" />
+              {resolvedPointerHighlight ? (
+                <>
+                  <feColorMatrix
+                    in="SourceGraphic"
+                    type="saturate"
+                    values={String(glassPointerHighlight.saturation)}
+                    result="pointerSaturated"
+                  />
+                  <feComponentTransfer in="pointerSaturated" result="pointerBright">
+                    <feFuncR type="linear" slope={glassPointerHighlight.brightness} />
+                    <feFuncG type="linear" slope={glassPointerHighlight.brightness} />
+                    <feFuncB type="linear" slope={glassPointerHighlight.brightness} />
+                  </feComponentTransfer>
+                  <feImage
+                    ref={pointerMaskRef}
+                    href={glassPointerHighlightMaskUrl}
+                    x="0"
+                    y="0"
+                    width="0"
+                    height="0"
+                    preserveAspectRatio="none"
+                    result="pointerMask"
+                  />
+                  <feComposite in="pointerBright" in2="pointerMask" operator="in" result="pointerBoost" />
+                  <feComposite in="pointerBoost" in2="SourceGraphic" operator="over" result="pointerBackdrop" />
+                </>
+              ) : null}
               <feGaussianBlur
-                in="pointerBackdrop"
+                in={pointerBackdropResult}
                 stdDeviation={lens.backdropBlurPx}
                 result="blurredBackdrop"
               />
