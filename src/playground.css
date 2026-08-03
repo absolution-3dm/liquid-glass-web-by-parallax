@@ -1549,9 +1549,77 @@ html.customize-page-active #root {
   gap: 14px;
 }
 
+.installation-split {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.9fr) minmax(0, 1.35fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.installation-preview {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+}
+
+.installation-preview__label {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #f7f8f8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.installation-preview__icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.installation-preview__magnetic-stage {
+  inset: 56px 22px 22px;
+  display: block;
+}
+
+.installation-preview__magnetic {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+}
+
+.installation-preview__magnetic-target {
+  display: grid;
+  place-items: center;
+  transition: transform 120ms ease-out;
+  will-change: transform;
+}
+
+.installation-preview__capsule-stage {
+  inset: 56px 22px 22px;
+  display: block;
+}
+
+.installation-preview__capsule {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 18px;
+}
+
 .installation-packages {
   display: grid;
+  align-content: start;
   gap: 10px;
+  min-width: 0;
+  height: 100%;
   padding: 14px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-panel);
@@ -1569,38 +1637,48 @@ html.customize-page-active #root {
   font-weight: 500;
 }
 
-.installation-packages__heading span:last-child {
-  color: rgb(138 143 152 / 0.72);
-}
-
 .attachment-group {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
+.attachment-group--stack {
+  grid-template-columns: 1fr;
+}
+
 .attachment {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   min-width: 0;
-  padding: 10px 10px 10px 12px;
+  padding: 12px 12px 12px 14px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface-2);
+  text-align: left;
 }
 
-.attachment__media {
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  color: var(--muted-strong);
-  background: rgb(255 255 255 / 0.04);
-  border: 1px solid var(--line);
+.attachment--selectable {
+  width: 100%;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.attachment--selectable:hover {
+  border-color: rgb(255 255 255 / 0.14);
+  background: rgb(255 255 255 / 0.035);
+}
+
+.attachment--selectable.is-selected {
+  border-color: rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04);
 }
 
 .attachment__content {
@@ -1619,42 +1697,23 @@ html.customize-page-active #root {
 }
 
 .attachment__description {
-  overflow: hidden;
-  margin-top: 2px;
+  margin-top: 4px;
   color: var(--muted);
   font-size: 0.6875rem;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+.attachment__id {
+  display: block;
+  margin-top: 6px;
+  overflow: hidden;
+  color: rgb(138 143 152 / 0.72);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.625rem;
   letter-spacing: -0.01em;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.attachment__actions {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-}
-
-.attachment__action {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  color: var(--muted);
-  background: transparent;
-  cursor: pointer;
-  transition: color 120ms ease, background 120ms ease;
-}
-
-.attachment__action:hover {
-  color: var(--muted-strong);
-  background: rgb(255 255 255 / 0.06);
-}
-
-.attachment__action.is-copied {
-  color: #7ddea2;
 }
 
 .code-block {
@@ -1870,12 +1929,13 @@ footer {
     --customize-back-inset: 16px;
   }
 
+  .installation-split,
   .attachment-group {
     grid-template-columns: 1fr;
   }
 
-  .installation-packages__heading span:last-child {
-    display: none;
+  .installation-preview {
+    min-height: 360px;
   }
 }
 

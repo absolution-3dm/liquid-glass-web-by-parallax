@@ -2,11 +2,7 @@
 
 import type { ReactNode } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Copy01Icon,
-  FileCodeIcon,
-  Tick01Icon,
-} from "@hugeicons/core-free-icons";
+import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { highlightCode } from "./highlight-code";
 import { useClipboard } from "./use-clipboard";
 
@@ -52,56 +48,6 @@ export function CodeBlock({
           dangerouslySetInnerHTML={{ __html: highlightCode(code, language) }}
         />
       </pre>
-    </div>
-  );
-}
-
-export function RegistryAttachment({
-  title,
-  description,
-  file,
-  command,
-}: {
-  title: string;
-  description: string;
-  file: string;
-  command: string;
-}) {
-  const { copied, copy } = useClipboard(command);
-
-  return (
-    <div className="attachment">
-      <div className="attachment__media" aria-hidden>
-        <HugeiconsIcon
-          icon={FileCodeIcon}
-          size={18}
-          color="currentColor"
-          strokeWidth={1.6}
-          aria-hidden
-        />
-      </div>
-      <div className="attachment__content">
-        <div className="attachment__title">{title}</div>
-        <div className="attachment__description">
-          {file} · {description}
-        </div>
-      </div>
-      <div className="attachment__actions">
-        <button
-          type="button"
-          className={`attachment__action${copied ? " is-copied" : ""}`}
-          onClick={() => void copy()}
-          aria-label={copied ? `Copied ${title}` : `Copy install command for ${title}`}
-        >
-          <HugeiconsIcon
-            icon={copied ? Tick01Icon : Copy01Icon}
-            size={14}
-            color="currentColor"
-            strokeWidth={1.75}
-            aria-hidden
-          />
-        </button>
-      </div>
     </div>
   );
 }
