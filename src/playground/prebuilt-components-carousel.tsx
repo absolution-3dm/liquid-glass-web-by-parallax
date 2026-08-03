@@ -37,6 +37,8 @@ const showcaseIconPills = [
   { icon: Settings01Icon, label: "Settings" },
 ] as const;
 
+const CAROUSEL_BG = "/images/Carousel Background";
+
 function ShowcaseMorphMenu({
   defaultOpen = false,
 }: {
@@ -126,6 +128,7 @@ export function PrebuiltComponentsCarousel() {
         <ShowcaseCarouselItem>
           <ShowcaseCarouselCard
             title="Menu"
+            background={`${CAROUSEL_BG}/05-shape.png`}
             stageClassName="showcase-card__menu-states"
           >
             <div className="showcase-card__menu-preview">
@@ -135,7 +138,10 @@ export function PrebuiltComponentsCarousel() {
         </ShowcaseCarouselItem>
 
         <ShowcaseCarouselItem>
-          <ShowcaseCarouselCard title="Segmented Control">
+          <ShowcaseCarouselCard
+            title="Segmented Control"
+            background={`${CAROUSEL_BG}/07-sphere.png`}
+          >
             <div className="showcase-card__segment-states">
               <div className="showcase-card__state showcase-card__state--segment showcase-card__state--resting">
                 <GlassSegmentedControl
@@ -173,6 +179,7 @@ export function PrebuiltComponentsCarousel() {
         <ShowcaseCarouselItem>
           <ShowcaseCarouselCard
             title="Icon Pills"
+            background={`${CAROUSEL_BG}/03-edge.png`}
             stageClassName="showcase-card__icons"
           >
             {showcaseIconPills.map(({ icon, label }) => (

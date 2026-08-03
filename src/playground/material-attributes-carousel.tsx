@@ -12,6 +12,8 @@ import {
   LiquidGlass,
   type LiquidGlassProps,
 } from "../../registry/liquid-glass/liquid-glass";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { Link } from "./router";
 import {
   ShowcaseCarousel,
@@ -21,6 +23,7 @@ import {
 
 type MaterialAttributeCardConfig = {
   title: string;
+  background: string;
   material: NonNullable<LiquidGlassProps["material"]>;
   engine?: LiquidGlassProps["engine"];
   borderRadius: number;
@@ -29,10 +32,13 @@ type MaterialAttributeCardConfig = {
   pointerHighlightPreview?: LiquidGlassProps["pointerHighlightPreview"];
 };
 
+const CAROUSEL_BG = "/images/Carousel Background";
+
 const materialAttributeCards: ReadonlyArray<MaterialAttributeCardConfig> = [
   {
     title: "Pointer Highlight",
-    material: { preset: "control", tint: 0.32, fill: "#080808" },
+    background: `${CAROUSEL_BG}/01-pointer.png`,
+    material: { preset: "control", scale: 1.55, depth: 32, blur: 3, tint: 0.32, fill: "#080808" },
     borderRadius: 64,
     pointerHighlight: {
       radius: 112,
@@ -46,34 +52,34 @@ const materialAttributeCards: ReadonlyArray<MaterialAttributeCardConfig> = [
   },
   {
     title: "Chromatic Aberration",
-    material: { preset: "regular", scale: 1.5, depth: 28, chroma: 1, splay: 0.92, blur: 0, tint: 0.08 },
+    background: `${CAROUSEL_BG}/02-chroma.png`,
+    material: { preset: "regular", scale: 2.1, depth: 40, chroma: 1, splay: 0.92, blur: 3, tint: 0.08 },
     engine: { chromaRedBoost: 0.55, chromaGreenBoost: 0.25 },
     borderRadius: 64,
     pointerHighlight: false,
   },
   {
     title: "Edge Highlight",
-    material: { preset: "regular", scale: 0.7, edgeHighlight: 2, glow: 0.12, specular: 4 },
+    background: `${CAROUSEL_BG}/03-edge.png`,
+    material: { preset: "regular", scale: 1.05, depth: 24, blur: 3, edgeHighlight: 2, glow: 0.12, specular: 4 },
     borderRadius: 64,
     pointerHighlight: false,
   },
   {
     title: "Refraction",
-    material: { preset: "regular", scale: 1.65, depth: 28, blur: 0.75, tint: 0.08 },
-    borderRadius: 64,
-    pointerHighlight: false,
-  },
-  {
-    title: "Shape & Depth",
-    material: { preset: "regular", scale: 1.9, depth: 40, curvature: 0.65, splay: 0.65, blur: 0, tint: 0.08 },
+    background: `${CAROUSEL_BG}/04-refraction.png`,
+    material: { preset: "regular", scale: 2.35, depth: 44, blur: 3, tint: 0.08 },
     borderRadius: 64,
     pointerHighlight: false,
   },
   {
     title: "Blur & Tint",
+    background: `${CAROUSEL_BG}/06-blur.png`,
     material: {
       preset: "panel",
-      blur: 1.8,
+      scale: 1.7,
+      depth: 40,
+      blur: 8,
       tint: 0.3,
       fill: "#15233d",
       edgeHighlight: 1.5,
@@ -152,6 +158,7 @@ function MaterialAttributeCard({ attribute }: { attribute: MaterialAttributeCard
   return (
     <ShowcaseCarouselCard
       title={attribute.title}
+      background={attribute.background}
       className={attribute.mockPointer ? "showcase-card--pointer-demo" : undefined}
       data-ios-pointer-suppress={attribute.mockPointer ? "" : undefined}
       onPointerEnter={attribute.mockPointer ? followPointer : undefined}
@@ -205,18 +212,22 @@ export function MaterialAttributesCarousel() {
   return (
     <section className="component-section" id="attributes">
       <div className="section-heading">
-        <h2 className="section-heading__title">
-          <Link to="/customize" className="section-heading__title-link">
-            Fully{" "}
-            <span className="section-heading__action-swap">
-              <span className="section-heading__action-swap-idle">Customizable</span>
-              <span className="section-heading__action-swap-hover">Customize</span>
+        <Link to="/customize" className="section-heading__link">
+          <h2 className="section-heading__title">
+            <span className="section-heading__title-text">Fully Customizable</span>
+            <span className="section-heading__title-arrow" aria-hidden>
+              <HugeiconsIcon
+                icon={ArrowRight02Icon}
+                size={28}
+                color="currentColor"
+                strokeWidth={2}
+              />
             </span>
-          </Link>
-        </h2>
-        <p>
-          Tune the optical field, surface lighting, color separation, and interaction independently.
-        </p>
+          </h2>
+          <p>
+            Tune the optical field, surface lighting, color separation, and interaction independently.
+          </p>
+        </Link>
       </div>
 
       <ShowcaseCarousel aria-label="Liquid glass material attributes">

@@ -520,50 +520,47 @@ h1 {
   margin-bottom: 36px;
 }
 
-.section-heading__title {
-  margin: 0;
-}
-
-.section-heading__title-link {
+.section-heading__link {
+  display: grid;
+  gap: 12px;
   color: inherit;
+  text-decoration: none;
 }
 
-.section-heading__title-link:hover,
-.section-heading__title-link:focus-visible {
-  color: inherit;
-}
-
-.section-heading__title-link:focus-visible {
+.section-heading__link:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
   border-radius: 6px;
 }
 
-.section-heading__action-swap {
-  display: inline-grid;
-  justify-items: start;
+.section-heading__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
 }
 
-.section-heading__action-swap-idle,
-.section-heading__action-swap-hover {
-  grid-area: 1 / 1;
+.section-heading__title-arrow {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 1.05em;
+  height: 1.05em;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  color: inherit;
+  transition: transform 180ms ease, background-color 180ms ease;
 }
 
-.section-heading__action-swap-hover {
-  visibility: hidden;
-  text-decoration: underline;
-  text-underline-offset: 0.12em;
-  text-decoration-thickness: 1px;
+.section-heading__title-arrow svg {
+  width: 0.62em;
+  height: 0.62em;
 }
 
-.section-heading__title-link:hover .section-heading__action-swap-idle,
-.section-heading__title-link:focus-visible .section-heading__action-swap-idle {
-  visibility: hidden;
-}
-
-.section-heading__title-link:hover .section-heading__action-swap-hover,
-.section-heading__title-link:focus-visible .section-heading__action-swap-hover {
-  visibility: visible;
+.section-heading__link:hover .section-heading__title-arrow,
+.section-heading__link:focus-visible .section-heading__title-arrow {
+  transform: translateX(5px);
+  background: rgb(255 255 255 / 0.16);
 }
 
 h2 {
