@@ -375,13 +375,13 @@ main {
   content: "";
   position: absolute;
   z-index: 0;
-  /* Bleed past edges so the blur doesn't flash transparent at the crop. */
-  inset: -12px;
+  inset: 0;
+  /* Blur is pre-baked into the asset — avoids live filter:blur on a
+     full-viewport / high-DPI layer behind the glass stack. */
   background-image: url("/images/hero-bg.jpg");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
-  filter: blur(12px);
 }
 
 .hero-media__veil {
