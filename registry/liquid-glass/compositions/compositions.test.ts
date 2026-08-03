@@ -90,4 +90,19 @@ describe("LiquidGlass composition registry", () => {
       /\.glass-segmented-item:hover[\s\S]*background-color/,
     );
   });
+
+  it("keeps segmented chip drag touch-capable via non-passive pointermove", () => {
+    const source = readFileSync(
+      "registry/liquid-glass/compositions/glass-segmented-control.tsx",
+      "utf8",
+    );
+    expect(source).toContain('addEventListener("pointermove", handleDragMove');
+    expect(source).toContain("passive: false");
+    expect(source).toContain("setPointerCapture(event.pointerId)");
+    // Window-level passive defaults made finger drags cancel as scrolls while
+    // mouse still worked — keep listeners on the capture target instead.
+    expect(source).not.toContain(
+      'window.addEventListener("pointermove", handleDragMove',
+    );
+  });
 });
