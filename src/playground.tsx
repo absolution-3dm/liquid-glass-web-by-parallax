@@ -78,7 +78,7 @@ type CustomizerPreset = (typeof customizerPresets)[number];
 const heroCtaMaterial = {
   preset: "control" as const,
   fill: "#0b2f6b",
-  tint: 0.52,
+  tint: 0.82,
   blur: 1.25,
   specular: 3,
   chroma: 0.08,
@@ -87,13 +87,18 @@ const heroCtaMaterial = {
 /** Hero stack — near-black fill so stacked panes don't wash out milky. */
 const heroStackMaterial = {
   preset: "navigation" as const,
-  tint: 0.1,
+  scale: 0.9,
+  splay: 1,
+  blur: 2,
+  tint: 0.15,
+
+  depth: 45,
   fill: "#000000",
 };
 
 /** Keep stacked hero panes from compounding backdrop saturate into neon. */
 const heroStackEngine = {
-  backdropSaturateSvg: 1.08,
+  backdropSaturateSvg: 1.1,
   backdropSaturateCssBlur: 1.08,
 };
 
@@ -224,10 +229,14 @@ const HERO_AXON_ROTATE_X = -22;
 const HERO_AXON_ROTATE_Y = -28;
 
 /** Idle float: small vertical wave, staggered across the stack. */
-const HERO_FLOAT_AMPLITUDE_PX = 7;
+const HERO_FLOAT_AMPLITUDE_PX = 5;
 const HERO_FLOAT_PERIOD_SEC = 5.6;
 const HERO_FLOAT_PHASE_STEP = 0.9;
-const HERO_FLOAT_FPS = 15;
+const HERO_FLOAT_FPS = 12;
+
+/** Pointer pull: shorter travel with a tighter falloff around the hovered pane. */
+const HERO_PULL_DISTANCE_RATIO = 0.14;
+const HERO_PULL_SIGMA_RATIO = 0.62;
 
 /** Panel aspect used when fitting the stack into the orbit stage. */
 const HERO_PANEL_ASPECT = 212 / 188;
@@ -300,9 +309,10 @@ function HeroStackPanel({
   // Spacing between neighboring rest X positions ≈ |sin(β)| * depthStep.
   const sigma = Math.max(
     28,
-    Math.abs(projectAxonZ(depthStep, HERO_AXON_ROTATE_X, HERO_AXON_ROTATE_Y).x) * 0.85,
+    Math.abs(projectAxonZ(depthStep, HERO_AXON_ROTATE_X, HERO_AXON_ROTATE_Y).x) *
+      HERO_PULL_SIGMA_RATIO,
   );
-  const pullDistance = height * 0.18;
+  const pullDistance = height * HERO_PULL_DISTANCE_RATIO;
   // Keep stacking order fixed — pulling must not reshuffle paint order.
   const zIndex = HERO_CAPSULE_COUNT - index;
   const floatPhase = index * HERO_FLOAT_PHASE_STEP;
