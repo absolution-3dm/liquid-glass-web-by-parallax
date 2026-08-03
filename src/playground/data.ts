@@ -2,7 +2,6 @@ export const topNavigationItems = [
   { value: "menu", label: "Home", href: "#menu" },
   { value: "attributes", label: "Attributes", href: "#attributes" },
   { value: "components", label: "Components", href: "#components" },
-  { value: "customize", label: "Customize", href: "#customize" },
   { value: "installation", label: "Install", href: "#installation" },
 ];
 

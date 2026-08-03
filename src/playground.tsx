@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { LiquidGlass } from "../registry/liquid-glass/liquid-glass";
 import { IOSPointer } from "../registry/liquid-glass/compositions/ios-pointer";
-import { CustomizeShowcase } from "./playground/customize-showcase";
 import { heroCtaMaterial, topNavigationItems } from "./playground/data";
 import { HeroFloatStage } from "./playground/hero-float-stage";
 import { InstallationShowcase } from "./playground/installation-showcase";
 import { MaterialAttributesCarousel } from "./playground/material-attributes-carousel";
 import { PrebuiltComponentsCarousel } from "./playground/prebuilt-components-carousel";
+import { Link } from "./playground/router";
 import { SiteMobileNav } from "./playground/site-mobile-nav";
 
 export function Playground() {
@@ -58,9 +58,9 @@ export function Playground() {
       <div className="static-backdrop" aria-hidden />
 
       <header className="site-navigation">
-        <a className="site-brand" href="#top">
+        <Link to="/" className="site-brand">
           Parallax Glass
-        </a>
+        </Link>
 
         <nav className="site-nav-links" aria-label="Primary">
           {topNavigationItems.map((item) => (
@@ -124,7 +124,6 @@ export function Playground() {
 
         <MaterialAttributesCarousel />
         <PrebuiltComponentsCarousel />
-        <CustomizeShowcase />
         <InstallationShowcase />
 
         <footer>

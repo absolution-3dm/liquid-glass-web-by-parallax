@@ -217,148 +217,141 @@ export function CustomizeShowcase() {
   ]);
 
   return (
-    <section className="component-section" id="customize">
-      <div className="section-heading">
-        <h2>Customize</h2>
-        <p>Start from a preset, then tune material, engine, and pointer-highlight overrides for this preview only.</p>
+    <div className="customizer-layout">
+      <div className="customizer-preview">
+        <img
+          className="customizer-preview__scene"
+          src="/images/pexels-bento-scene.jpg"
+          alt=""
+          aria-hidden="true"
+        />
+        <LiquidGlass
+          width="min(340px, calc(100% - 32px))"
+          height={180}
+          borderRadius={borderRadius}
+          material={material}
+          engine={Object.keys(engineOverrides).length > 0 ? engineOverrides : undefined}
+          pointerHighlight={pointerHighlightProp}
+          className="customizer-preview__glass"
+        >
+          <div className="customizer-preview__content">
+            <strong>{preset}</strong>
+          </div>
+        </LiquidGlass>
       </div>
 
-      <div className="customizer-layout">
-        <div className="customizer-preview">
-          <img
-            className="customizer-preview__scene"
-            src="/images/pexels-bento-scene.jpg"
-            alt=""
-            aria-hidden="true"
-          />
-          <LiquidGlass
-            width="min(340px, calc(100% - 32px))"
-            height={180}
-            borderRadius={borderRadius}
-            material={material}
-            engine={Object.keys(engineOverrides).length > 0 ? engineOverrides : undefined}
-            pointerHighlight={pointerHighlightProp}
-            className="customizer-preview__glass"
-          >
-            <div className="customizer-preview__content">
-              <strong>{preset}</strong>
-            </div>
-          </LiquidGlass>
-        </div>
+      <div className="customizer-controls">
+        <Tabs className="customizer-tabs" defaultValue="controls">
+          <TabsList className="customizer-tabs__list" aria-label="Customize panel view">
+            <TabsTrigger className="customizer-tabs__trigger" value="controls">
+              Controls
+            </TabsTrigger>
+            <TabsTrigger className="customizer-tabs__trigger" value="jsx">
+              JSX
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="customizer-controls">
-          <Tabs className="customizer-tabs" defaultValue="controls">
-            <TabsList className="customizer-tabs__list" aria-label="Customize panel view">
-              <TabsTrigger className="customizer-tabs__trigger" value="controls">
-                Controls
-              </TabsTrigger>
-              <TabsTrigger className="customizer-tabs__trigger" value="jsx">
-                JSX
-              </TabsTrigger>
-            </TabsList>
+          <TabsContent className="customizer-tabs__content" value="controls">
+            <label className="customizer-select">
+              <span>Preset</span>
+              <select
+                value={preset}
+                onChange={(event) =>
+                  selectPreset(event.currentTarget.value as CustomizerPreset)
+                }
+              >
+                {customizerPresets.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <TabsContent className="customizer-tabs__content" value="controls">
-              <label className="customizer-select">
-                <span>Preset</span>
-                <select
-                  value={preset}
-                  onChange={(event) =>
-                    selectPreset(event.currentTarget.value as CustomizerPreset)
-                  }
-                >
-                  {customizerPresets.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <details className="customizer-section" open>
+              <summary className="customizer-section__summary">Material</summary>
+              <div className="customizer-sliders">
+                <GlassSlider label="Scale" value={scale} min={0} max={3} step={0.01} onChange={setScale} />
+                <GlassSlider label="Blur" value={blur} min={0} max={8} step={0.1} display={`${blur.toFixed(1)} px`} onChange={setBlur} />
+                <GlassSlider label="Tint" value={tint} min={0} max={1} step={0.01} onChange={setTint} />
+                <GlassSlider label="Chroma" value={chroma} min={0} max={1} step={0.01} onChange={setChroma} />
+                <GlassSlider label="Radius" value={borderRadius} min={12} max={90} step={1} display={`${borderRadius} px`} onChange={setBorderRadius} />
+              </div>
+            </details>
 
-              <details className="customizer-section" open>
-                <summary className="customizer-section__summary">Material</summary>
-                <div className="customizer-sliders">
-                  <GlassSlider label="Scale" value={scale} min={0} max={3} step={0.01} onChange={setScale} />
-                  <GlassSlider label="Blur" value={blur} min={0} max={8} step={0.1} display={`${blur.toFixed(1)} px`} onChange={setBlur} />
-                  <GlassSlider label="Tint" value={tint} min={0} max={1} step={0.01} onChange={setTint} />
-                  <GlassSlider label="Chroma" value={chroma} min={0} max={1} step={0.01} onChange={setChroma} />
-                  <GlassSlider label="Radius" value={borderRadius} min={12} max={90} step={1} display={`${borderRadius} px`} onChange={setBorderRadius} />
-                </div>
-              </details>
-
-              <details className="customizer-section">
-                <summary className="customizer-section__summary">Advanced Material</summary>
-                <div className="customizer-sliders">
-                  {advancedMaterialParamDefs.map((param) => (
-                    <GlassSlider
-                      key={param.key}
-                      label={param.label}
-                      value={advancedMaterialValues[param.key as keyof typeof advancedMaterialValues]}
-                      min={param.min}
-                      max={param.max}
-                      step={param.step}
-                      display={param.format?.(advancedMaterialValues[param.key as keyof typeof advancedMaterialValues])}
-                      onChange={(value) =>
-                        setAdvancedMaterialValue(param.key as keyof typeof advancedMaterialValues, value)
-                      }
-                    />
-                  ))}
-                </div>
-              </details>
-
-              <details className="customizer-section">
-                <summary className="customizer-section__summary">Engine</summary>
-                <div className="customizer-sliders">
-                  {engineParamDefs.map((param) => (
-                    <GlassSlider
-                      key={param.key}
-                      label={param.label}
-                      value={engine[param.key as keyof EngineState]}
-                      min={param.min}
-                      max={param.max}
-                      step={param.step}
-                      display={param.format?.(engine[param.key as keyof EngineState])}
-                      onChange={(value) => setEngineValue(param.key as keyof EngineState, value)}
-                    />
-                  ))}
-                </div>
-              </details>
-
-              <details className="customizer-section">
-                <summary className="customizer-section__summary">Pointer Highlight</summary>
-                <label className="customizer-toggle">
-                  <span>Enabled</span>
-                  <input
-                    type="checkbox"
-                    checked={pointerHighlightEnabled}
-                    onChange={(event) => setPointerHighlightEnabled(event.currentTarget.checked)}
+            <details className="customizer-section">
+              <summary className="customizer-section__summary">Advanced Material</summary>
+              <div className="customizer-sliders">
+                {advancedMaterialParamDefs.map((param) => (
+                  <GlassSlider
+                    key={param.key}
+                    label={param.label}
+                    value={advancedMaterialValues[param.key as keyof typeof advancedMaterialValues]}
+                    min={param.min}
+                    max={param.max}
+                    step={param.step}
+                    display={param.format?.(advancedMaterialValues[param.key as keyof typeof advancedMaterialValues])}
+                    onChange={(value) =>
+                      setAdvancedMaterialValue(param.key as keyof typeof advancedMaterialValues, value)
+                    }
                   />
-                </label>
-                <div className={`customizer-sliders${pointerHighlightEnabled ? "" : " customizer-sliders--disabled"}`}>
-                  {pointerParamDefs.map((param) => (
-                    <GlassSlider
-                      key={param.key}
-                      label={param.label}
-                      value={pointerHighlight[param.key as keyof PointerState]}
-                      min={param.min}
-                      max={param.max}
-                      step={param.step}
-                      display={param.format?.(pointerHighlight[param.key as keyof PointerState])}
-                      disabled={!pointerHighlightEnabled}
-                      onChange={(value) => setPointerValue(param.key as keyof PointerState, value)}
-                    />
-                  ))}
-                </div>
-              </details>
+                ))}
+              </div>
+            </details>
 
-              <CustomizeColorField label="Fill" value={fill} onChange={setFill} />
-            </TabsContent>
+            <details className="customizer-section">
+              <summary className="customizer-section__summary">Engine</summary>
+              <div className="customizer-sliders">
+                {engineParamDefs.map((param) => (
+                  <GlassSlider
+                    key={param.key}
+                    label={param.label}
+                    value={engine[param.key as keyof EngineState]}
+                    min={param.min}
+                    max={param.max}
+                    step={param.step}
+                    display={param.format?.(engine[param.key as keyof EngineState])}
+                    onChange={(value) => setEngineValue(param.key as keyof EngineState, value)}
+                  />
+                ))}
+              </div>
+            </details>
 
-            <TabsContent className="customizer-tabs__content customizer-tabs__content--code" value="jsx">
-              <CodeBlock label="JSX" code={generatedExample} language="tsx" />
-            </TabsContent>
-          </Tabs>
-        </div>
+            <details className="customizer-section">
+              <summary className="customizer-section__summary">Pointer Highlight</summary>
+              <label className="customizer-toggle">
+                <span>Enabled</span>
+                <input
+                  type="checkbox"
+                  checked={pointerHighlightEnabled}
+                  onChange={(event) => setPointerHighlightEnabled(event.currentTarget.checked)}
+                />
+              </label>
+              <div className={`customizer-sliders${pointerHighlightEnabled ? "" : " customizer-sliders--disabled"}`}>
+                {pointerParamDefs.map((param) => (
+                  <GlassSlider
+                    key={param.key}
+                    label={param.label}
+                    value={pointerHighlight[param.key as keyof PointerState]}
+                    min={param.min}
+                    max={param.max}
+                    step={param.step}
+                    display={param.format?.(pointerHighlight[param.key as keyof PointerState])}
+                    disabled={!pointerHighlightEnabled}
+                    onChange={(value) => setPointerValue(param.key as keyof PointerState, value)}
+                  />
+                ))}
+              </div>
+            </details>
+
+            <CustomizeColorField label="Fill" value={fill} onChange={setFill} />
+          </TabsContent>
+
+          <TabsContent className="customizer-tabs__content customizer-tabs__content--code" value="jsx">
+            <CodeBlock label="JSX" code={generatedExample} language="tsx" />
+          </TabsContent>
+        </Tabs>
       </div>
-    </section>
+    </div>
   );
 }

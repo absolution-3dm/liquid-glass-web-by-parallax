@@ -7,6 +7,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useMotionValue, useSpring } from "motion/react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { MousePointer2 } from "lucide-react";
 import {
   LiquidGlass,
@@ -19,6 +21,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../components/ui/carousel";
+import { Link } from "./router";
 
 type MaterialAttributeCardConfig = {
   title: string;
@@ -217,7 +220,19 @@ export function MaterialAttributesCarousel() {
   return (
     <section className="component-section" id="attributes">
       <div className="section-heading">
-        <h2>Material Attributes</h2>
+        <div className="section-heading__title-row">
+          <h2>Material Attributes</h2>
+          <Link to="/customize" className="section-heading__action">
+            <span>Customize</span>
+            <HugeiconsIcon
+              icon={ArrowRight01Icon}
+              size={14}
+              color="currentColor"
+              strokeWidth={1.75}
+              aria-hidden
+            />
+          </Link>
+        </div>
         <p>
           Tune the optical field, surface lighting, color separation, and interaction independently.
         </p>
