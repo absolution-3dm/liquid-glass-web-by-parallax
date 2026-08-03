@@ -76,6 +76,29 @@ body {
   background: var(--canvas);
 }
 
+.page-shell {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.page-shell--customize {
+  height: 100%;
+  min-height: 100%;
+}
+
+.site-navigation__appear {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: inherit;
+  width: 100%;
+  pointer-events: none;
+}
+
+.site-navigation__appear > * {
+  pointer-events: auto;
+}
+
 button,
 a {
   color: inherit;
@@ -129,15 +152,16 @@ a {
 }
 
 .site-navigation {
+  --nav-inset: 18px;
   position: fixed;
   z-index: 100;
-  top: 18px;
+  top: var(--nav-inset);
   left: 50%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  width: min(var(--page-width), calc(100% - (var(--page-gutter) * 2)));
+  width: min(var(--page-width), calc(100% - (var(--nav-inset) * 2)));
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -403,6 +427,16 @@ main {
   perspective: none;
 }
 
+.hero-orbit__appear,
+.hero-orbit__root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
 .hero-orbit__stage {
   display: flex;
   align-items: center;
@@ -469,6 +503,13 @@ h1 {
   text-shadow: 0 1px 14px rgb(1 1 2 / 0.28);
 }
 
+.hero-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
 .hero-cta {
   display: inline-flex;
   align-items: center;
@@ -489,6 +530,13 @@ h1 {
   box-shadow:
     0 1px 0 rgb(255 255 255 / 0.12) inset,
     0 10px 24px rgb(8 40 96 / 0.28),
+    0 28px 48px rgb(0 0 0 / 0.28);
+}
+
+.hero-cta__glass--neutral {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.12) inset,
+    0 10px 24px rgb(0 0 0 / 0.22),
     0 28px 48px rgb(0 0 0 / 0.28);
 }
 
@@ -646,6 +694,16 @@ html.customize-page-active #root {
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+.customize-page__appear,
+.customize-page__appear > * {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
 }
 
 .customize-page .customizer-layout {
@@ -1782,8 +1840,7 @@ footer {
 
 @media (max-width: 900px) {
   .site-navigation {
-    top: 14px;
-    width: min(var(--page-width), calc(100% - (var(--page-gutter) * 2)));
+    --nav-inset: 14px;
     gap: 16px;
   }
 
@@ -1908,8 +1965,7 @@ footer {
 
 @media (max-width: 620px) {
   .site-navigation {
-    top: max(12px, env(safe-area-inset-top, 0px));
-    width: min(var(--page-width), calc(100% - (var(--page-gutter) * 2)));
+    --nav-inset: max(12px, env(safe-area-inset-top, 0px), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
     align-items: center;
     gap: 12px;
   }

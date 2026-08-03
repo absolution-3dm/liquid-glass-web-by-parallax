@@ -285,7 +285,7 @@ export function HeroFloatStage() {
   const { width, height, radius, depthStep } = metrics;
 
   return (
-    <div className="hero-orbit" ref={stageRef} aria-label="Parallax Glass panel stack">
+    <div className="hero-orbit__root" ref={stageRef} aria-label="Parallax Glass panel stack">
       <div className="hero-orbit__stage">
         <div className="hero-orbit__cluster" ref={clusterRef} style={{ width, height }}>
           {Array.from({ length: HERO_CAPSULE_COUNT }, (_, index) => (

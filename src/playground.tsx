@@ -3,10 +3,15 @@
 import { useEffect, useState } from "react";
 import { LiquidGlass } from "../registry/liquid-glass/liquid-glass";
 import { IOSPointer } from "../registry/liquid-glass/compositions/ios-pointer";
-import { heroCtaMaterial, topNavigationItems } from "./playground/data";
+import {
+  heroCtaMaterial,
+  heroCustomizeMaterial,
+  topNavigationItems,
+} from "./playground/data";
 import { HeroFloatStage } from "./playground/hero-float-stage";
 import { InstallationShowcase } from "./playground/installation-showcase";
 import { MaterialAttributesCarousel } from "./playground/material-attributes-carousel";
+import { Appear, AppearItem, PageShell } from "./playground/page-motion";
 import { PrebuiltComponentsCarousel } from "./playground/prebuilt-components-carousel";
 import { Link } from "./playground/router";
 import { SiteMobileNav } from "./playground/site-mobile-nav";
@@ -53,41 +58,43 @@ export function Playground() {
   };
 
   return (
-    <>
+    <PageShell>
       <IOSPointer />
       <div className="static-backdrop" aria-hidden />
 
       <header className="site-navigation">
-        <Link to="/" className="site-brand">
-          Parallax Glass
-        </Link>
-
-        <nav className="site-nav-links" aria-label="Primary">
-          {topNavigationItems.map((item) => (
-            <a
-              key={item.value}
-              href={item.href}
-              className={
-                topNavigationValue === item.value
-                  ? "site-nav-link is-active"
-                  : "site-nav-link"
-              }
-              onClick={(event) => {
-                event.preventDefault();
-                navigateToSection(item.value);
-              }}
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
-
-        <div className="site-nav-mobile">
-          <SiteMobileNav
-            activeValue={topNavigationValue}
-            onNavigate={navigateToSection}
-          />
-        </div>
+        <Appear className="site-navigation__appear">
+          <AppearItem>
+            <Link to="/" className="site-brand">
+              Parallax Glass
+            </Link>
+          </AppearItem>
+          <AppearItem as="nav" className="site-nav-links" aria-label="Primary">
+            {topNavigationItems.map((item) => (
+              <a
+                key={item.value}
+                href={item.href}
+                className={
+                  topNavigationValue === item.value
+                    ? "site-nav-link is-active"
+                    : "site-nav-link"
+                }
+                onClick={(event) => {
+                  event.preventDefault();
+                  navigateToSection(item.value);
+                }}
+              >
+                {item.label}
+              </a>
+            ))}
+          </AppearItem>
+          <AppearItem className="site-nav-mobile">
+            <SiteMobileNav
+              activeValue={topNavigationValue}
+              onNavigate={navigateToSection}
+            />
+          </AppearItem>
+        </Appear>
       </header>
 
       <main id="top">
@@ -96,29 +103,50 @@ export function Playground() {
             <div className="hero-media__veil" />
           </div>
           <div className="hero-inner">
-            <div className="hero-copy">
-              <h1>Parallax Glass for the web.</h1>
-              <p className="hero-lede">
+            <Appear className="hero-copy">
+              <AppearItem as="h1">Parallax Glass for the web.</AppearItem>
+              <AppearItem as="p" className="hero-lede">
                 Native-feeling glass surfaces — crafted, customizable, source
                 you own.
-              </p>
-              <a
-                className="hero-cta"
-                href="#installation"
-                data-ios-pointer-target=""
-              >
-                <LiquidGlass
-                  width={120}
-                  height={44}
-                  borderRadius={22}
-                  material={heroCtaMaterial}
-                  className="hero-cta__glass"
+              </AppearItem>
+              <AppearItem className="hero-cta-group">
+                <a
+                  className="hero-cta"
+                  href="#installation"
+                  data-ios-pointer-target=""
                 >
-                  <span className="hero-cta__label">Install</span>
-                </LiquidGlass>
-              </a>
-            </div>
-            <HeroFloatStage />
+                  <LiquidGlass
+                    width={168}
+                    height={44}
+                    borderRadius={22}
+                    material={heroCtaMaterial}
+                    className="hero-cta__glass"
+                  >
+                    <span className="hero-cta__label">Get component</span>
+                  </LiquidGlass>
+                </a>
+                <Link
+                  to="/customize"
+                  className="hero-cta hero-cta--neutral"
+                  data-ios-pointer-target=""
+                >
+                  <LiquidGlass
+                    width={148}
+                    height={44}
+                    borderRadius={22}
+                    material={heroCustomizeMaterial}
+                    className="hero-cta__glass hero-cta__glass--neutral"
+                  >
+                    <span className="hero-cta__label">Customize</span>
+                  </LiquidGlass>
+                </Link>
+              </AppearItem>
+            </Appear>
+            <Appear className="hero-orbit">
+              <AppearItem className="hero-orbit__appear">
+                <HeroFloatStage />
+              </AppearItem>
+            </Appear>
           </div>
         </section>
 
@@ -131,6 +159,6 @@ export function Playground() {
           <span>shadcn Registry</span>
         </footer>
       </main>
-    </>
+    </PageShell>
   );
 }

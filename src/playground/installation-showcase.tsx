@@ -65,7 +65,7 @@ export function InstallationShowcase() {
   return (
     <section className="component-section installation-section" id="installation">
       <div className="section-heading">
-        <h2>Install</h2>
+        <h2>Installation</h2>
         <p>
           Install via the shadcn Registry. The CLI copies the source into your
           app — no private runtime package.
