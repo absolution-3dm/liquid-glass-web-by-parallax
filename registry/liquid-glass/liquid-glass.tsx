@@ -115,7 +115,7 @@ export type LiquidGlassProps = {
    * with the shared defaults. Other surfaces on the page are unaffected.
    */
   pointerHighlight?: Partial<GlassPointerHighlightParams> | false;
-  /** Force the real pointer-highlight pipeline on at a fixed position for demos and stories. */
+  /** Force the pointer-highlight pipeline on at a driven position for demos and stories. When set, live pointer events are ignored so the highlight can track a lagged virtual cursor. */
   pointerHighlightPreview?: PointerHighlightPreview;
 };
 
@@ -580,6 +580,11 @@ export const LiquidGlass = ({
     };
   }, [lens, pointerHighlightPreview, resolvedPointerHighlight]);
 
+  // Preview mode owns the highlight entirely (demos / mock cursors). Live
+  // pointer handlers would clear on real-mouse leave while a lagged virtual
+  // cursor is still over the glass.
+  const livePointerHighlight = resolvedPointerHighlight && !pointerHighlightPreview;
+
   const surface = (
     <div
       ref={containerRef}
@@ -596,43 +601,43 @@ export const LiquidGlass = ({
         .join(" ")}
       style={containerStyle}
       onPointerEnter={
-        resolvedPointerHighlight
+        livePointerHighlight
           ? (event) => {
               if (event.pointerType === "mouse") {
-                updatePointerHighlight(event, resolvedPointerHighlight.hoverStrength);
+                updatePointerHighlight(event, livePointerHighlight.hoverStrength);
               }
             }
           : undefined
       }
       onPointerMove={
-        resolvedPointerHighlight
+        livePointerHighlight
           ? (event) => {
               if (event.pointerType === "mouse") {
-                updatePointerHighlight(event, resolvedPointerHighlight.hoverStrength);
+                updatePointerHighlight(event, livePointerHighlight.hoverStrength);
               }
             }
           : undefined
       }
-      onPointerLeave={resolvedPointerHighlight ? clearPointerHighlight : undefined}
+      onPointerLeave={livePointerHighlight ? clearPointerHighlight : undefined}
       onPointerDown={
-        resolvedPointerHighlight
+        livePointerHighlight
           ? (event) => {
-              updatePointerHighlight(event, resolvedPointerHighlight.pressedStrength);
+              updatePointerHighlight(event, livePointerHighlight.pressedStrength);
               containerRef.current?.setAttribute("data-glass-pressed", "true");
             }
           : undefined
       }
       onPointerUp={
-        resolvedPointerHighlight
+        livePointerHighlight
           ? (event) => {
               if (event.pointerType === "mouse") {
-                updatePointerHighlight(event, resolvedPointerHighlight.hoverStrength);
+                updatePointerHighlight(event, livePointerHighlight.hoverStrength);
               }
               containerRef.current?.removeAttribute("data-glass-pressed");
             }
           : undefined
       }
-      onPointerCancel={resolvedPointerHighlight ? clearPointerHighlight : undefined}
+      onPointerCancel={livePointerHighlight ? clearPointerHighlight : undefined}
     >
       {lens ? (
         <svg className="glass-surface__defs" xmlns="http://www.w3.org/2000/svg" aria-hidden>
