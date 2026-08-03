@@ -6,8 +6,35 @@
 @media (pointer: fine) {
   html.ios-pointer-ready,
   html.ios-pointer-ready * {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7.5' fill='white' fill-opacity='.82' stroke='black' stroke-opacity='.18'/%3E%3C/svg%3E") 12 12, default !important;
+    cursor: none !important;
   }
+}
+
+.ios-pointer-cursor {
+  position: fixed;
+  z-index: 2147483647;
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  border: 1px solid rgb(0 0 0 / 0.18);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.82);
+  opacity: 0;
+  transform: translate3d(var(--ios-pointer-x, -24px), var(--ios-pointer-y, -24px), 0)
+    translate(-50%, -50%);
+  transition: opacity 80ms ease-out;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.ios-pointer-cursor[data-ios-pointer-visible]:not([data-ios-pointer-suppressed]) {
+  opacity: 1;
+}
+
+.ios-pointer-cursor[data-ios-pointer-suppressed] {
+  opacity: 0;
+  transition-duration: 0ms;
 }
 
 .glass-pill-surface .glass-surface__content {
