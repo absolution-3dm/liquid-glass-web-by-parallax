@@ -135,13 +135,12 @@ export function PrebuiltComponentsCarousel() {
             <article className="component-card">
               <img className="showcase-card__scene" src="/images/pexels-bento-scene.jpg" alt="" aria-hidden="true" />
               <div className="showcase-card__veil" aria-hidden="true" />
-              <span className="component-card__label">Menu</span>
+              <div className="component-card__copy">
+                <h3>Menu</h3>
+              </div>
               <div className="component-card__stage component-card__menu-states">
-                <div className="component-card__state component-card__state--expanded-menu">
-                  <span>Expanded</span>
-                  <div className="component-card__menu-preview component-card__menu-preview--expanded">
-                    <ShowcaseMorphMenu defaultOpen />
-                  </div>
+                <div className="component-card__menu-preview">
+                  <ShowcaseMorphMenu defaultOpen />
                 </div>
               </div>
             </article>
@@ -151,11 +150,12 @@ export function PrebuiltComponentsCarousel() {
             <article className="component-card">
               <img className="showcase-card__scene" src="/images/pexels-bento-scene.jpg" alt="" aria-hidden="true" />
               <div className="showcase-card__veil" aria-hidden="true" />
-              <span className="component-card__label">Segmented Control</span>
+              <div className="component-card__copy">
+                <h3>Segmented Control</h3>
+              </div>
               <div className="component-card__stage component-card__stage--center">
                 <div className="component-card__segment-states">
                   <div className="component-card__state component-card__state--segment component-card__state--resting">
-                    <span>Resting</span>
                     <GlassSegmentedControl
                       items={segmentItems}
                       value={restingSegmentValue}
@@ -170,7 +170,6 @@ export function PrebuiltComponentsCarousel() {
                     />
                   </div>
                   <div className="component-card__state component-card__state--segment">
-                    <span>Pressed</span>
                     <GlassSegmentedControl
                       items={segmentItems}
                       value={pressedSegmentValue}
@@ -194,7 +193,9 @@ export function PrebuiltComponentsCarousel() {
             <article className="component-card">
               <img className="showcase-card__scene" src="/images/pexels-bento-scene.jpg" alt="" aria-hidden="true" />
               <div className="showcase-card__veil" aria-hidden="true" />
-              <span className="component-card__label">Icon Pills</span>
+              <div className="component-card__copy">
+                <h3>Icon Pills</h3>
+              </div>
               <div className="component-card__stage component-card__stage--center component-card__icons">
                 {showcaseIconPills.map(({ icon, label }) => (
                   <button

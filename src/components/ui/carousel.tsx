@@ -119,13 +119,22 @@ function Carousel({
         (horizontal ? slide.offsetLeft : slide.offsetTop) - firstOffset,
       );
       const position = horizontal ? node.scrollLeft : node.scrollTop;
-      const target =
+      const maximum = horizontal
+        ? node.scrollWidth - node.clientWidth
+        : node.scrollHeight - node.clientHeight;
+
+      let target =
         direction > 0
-          ? offsets.find((offset) => offset > position + 2) ?? offsets[offsets.length - 1]
+          ? offsets.find((offset) => offset > position + 2) ?? maximum
           : [...offsets].reverse().find((offset) => offset < position - 2) ?? 0;
 
+      // Last slide's offset can exceed max scroll once end spacers are included.
+      if (direction > 0 && target >= offsets[offsets.length - 1] - 1) {
+        target = maximum;
+      }
+
       node.scrollTo({
-        [horizontal ? "left" : "top"]: target,
+        [horizontal ? "left" : "top"]: Math.max(0, Math.min(target, maximum)),
         behavior: "smooth",
       });
     },

@@ -800,12 +800,24 @@ h2 {
   align-items: stretch;
 }
 
+/* Scrollport padding-inline-end is not reliably part of scrollWidth with this
+   flex track — a trailing flex spacer lets the last card clear the right edge. */
+.showcase-carousel__track::after {
+  content: "";
+  flex: 0 0 max(var(--page-gutter), calc((100vw - var(--page-width)) / 2));
+}
+
 .showcase-carousel__item {
-  flex-basis: 44%;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: min(480px, calc(100vw - (var(--page-gutter) * 2) - 48px));
+  width: min(480px, calc(100vw - (var(--page-gutter) * 2) - 48px));
+  min-width: 260px;
 }
 
 .showcase-carousel__item--component {
-  flex-basis: 52%;
+  flex-basis: min(480px, calc(100vw - (var(--page-gutter) * 2) - 48px));
+  width: min(480px, calc(100vw - (var(--page-gutter) * 2) - 48px));
 }
 
 .attribute-card,
@@ -901,18 +913,21 @@ html.ios-pointer-ready .attribute-card--pointer-demo * {
 }
 
 .component-card {
-  height: 460px;
-  padding: 20px;
+  height: 380px;
+  padding: 22px;
 }
 
-.component-card__label {
-  position: absolute;
+.component-card__copy {
+  position: relative;
   z-index: 2;
-  top: 20px;
-  left: 20px;
-  color: rgb(255 255 255 / 0.66);
-  font-size: 0.75rem;
-  font-weight: 500;
+}
+
+.component-card h3 {
+  margin: 0;
+  color: #f7f8f8;
+  font-size: 1.15rem;
+  font-weight: 510;
+  letter-spacing: -0.025em;
 }
 
 .component-card__stage {
@@ -930,32 +945,13 @@ html.ios-pointer-ready .attribute-card--pointer-demo * {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 28px;
-  overflow: visible;
-}
-
-.component-card__state {
-  display: grid;
-  gap: 10px;
-  justify-items: center;
-}
-
-.component-card__state > span {
-  color: rgb(255 255 255 / 0.48);
-  font: 500 0.625rem/1 var(--font-mono);
-}
-
-.component-card__state--expanded-menu {
-  width: 248px;
+  overflow: hidden;
 }
 
 .component-card__menu-preview {
   position: relative;
-}
-
-.component-card__menu-preview--expanded {
   width: 248px;
-  height: 340px;
+  height: 280px;
 }
 
 .component-card__segment-states {
@@ -965,7 +961,6 @@ html.ios-pointer-ready .attribute-card--pointer-demo * {
 }
 
 .component-card__state--segment {
-  gap: 12px;
   padding: 8px;
 }
 
@@ -999,6 +994,25 @@ html.ios-pointer-ready .attribute-card--pointer-demo * {
 .component-card__icon {
   display: block;
   color: white;
+}
+
+/*
+  Showcase demos are visual-only inside the carousel. GlassSegmentedControl
+  (and similar) set touch-action: none + preventDefault, which swallows the
+  horizontal pan on narrow screens where the demo fills most of the card.
+*/
+.showcase-carousel--components .component-card__stage,
+.showcase-carousel--components .component-card__stage * {
+  pointer-events: none !important;
+}
+
+.showcase-carousel--components .component-card {
+  touch-action: pan-x;
+  cursor: grab;
+}
+
+.showcase-carousel--components .component-card:active {
+  cursor: grabbing;
 }
 
 .glass-segmented-surface nav {
@@ -1688,12 +1702,11 @@ footer {
     padding: 100px 0 44px;
   }
 
-  .showcase-carousel__item {
-    flex-basis: 62%;
-  }
-
+  .showcase-carousel__item,
   .showcase-carousel__item--component {
-    flex-basis: 72%;
+    flex-basis: min(400px, calc(100vw - (var(--page-gutter) * 2) - 40px));
+    width: min(400px, calc(100vw - (var(--page-gutter) * 2) - 40px));
+    min-width: 240px;
   }
 
   .customizer-layout {
@@ -1850,15 +1863,14 @@ footer {
 
   .showcase-carousel__item,
   .showcase-carousel__item--component {
-    flex-basis: 88%;
+    flex-basis: calc(100vw - (var(--page-gutter) * 2) - 28px);
+    width: calc(100vw - (var(--page-gutter) * 2) - 28px);
+    min-width: 0;
   }
 
-  .attribute-card {
-    height: 360px;
-  }
-
+  .attribute-card,
   .component-card {
-    height: 560px;
+    height: 360px;
   }
 
   .customizer-controls {
