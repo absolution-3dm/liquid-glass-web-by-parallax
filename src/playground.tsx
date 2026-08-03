@@ -116,7 +116,7 @@ export function Playground() {
                   data-ios-pointer-target=""
                 >
                   <LiquidGlass
-                    width={168}
+                    width="100%"
                     height={44}
                     borderRadius={22}
                     material={heroCtaMaterial}
@@ -131,7 +131,7 @@ export function Playground() {
                   data-ios-pointer-target=""
                 >
                   <LiquidGlass
-                    width={148}
+                    width="100%"
                     height={44}
                     borderRadius={22}
                     material={heroCustomizeMaterial}

@@ -43,6 +43,9 @@ const HERO_FLOAT_FPS = 12;
 /** Pointer pull: shorter travel with a tighter falloff around the hovered pane. */
 const HERO_PULL_DISTANCE_RATIO = 0.14;
 const HERO_PULL_SIGMA_RATIO = 0.62;
+/** Extra hit padding around the panel cluster (relative to cluster size). */
+const HERO_PULL_HIT_PAD_X = 0.35;
+const HERO_PULL_HIT_PAD_Y = 0.22;
 
 /** Panel aspect used when fitting the stack into the orbit stage. */
 const HERO_PANEL_ASPECT = 212 / 188;
@@ -238,47 +241,70 @@ export function HeroFloatStage() {
 
   useEffect(() => {
     const stage = stageRef.current;
-    const hero = stage?.closest(".hero");
-    if (!stage || !(hero instanceof HTMLElement)) return;
+    if (!stage) return;
 
-    // Cache cluster center — reading layout every pointermove while glass
+    // Cache cluster bounds — reading layout every pointermove while glass
     // backdrops are busy can return hitchy rects and amplify pull jumps.
     let clusterCenterX = 0;
-    let hasClusterCenter = false;
-    const syncClusterCenter = () => {
+    let hitLeft = 0;
+    let hitRight = 0;
+    let hitTop = 0;
+    let hitBottom = 0;
+    let hasHitBounds = false;
+
+    const syncClusterBounds = () => {
       const cluster = clusterRef.current;
       if (!cluster) return;
       const rect = cluster.getBoundingClientRect();
-      if (rect.width <= 0) return;
+      if (rect.width <= 0 || rect.height <= 0) return;
+      const padX = rect.width * HERO_PULL_HIT_PAD_X;
+      const padY = rect.height * HERO_PULL_HIT_PAD_Y;
       clusterCenterX = rect.left + rect.width / 2;
-      hasClusterCenter = true;
+      hitLeft = rect.left - padX;
+      hitRight = rect.right + padX;
+      hitTop = rect.top - padY;
+      hitBottom = rect.bottom + padY;
+      hasHitBounds = true;
     };
-    syncClusterCenter();
+    syncClusterBounds();
 
-    const onPointerMove = (event: PointerEvent) => {
-      if (reduceMotionRef.current) return;
-      if (!hasClusterCenter) syncClusterCenter();
-      if (!hasClusterCenter) return;
-      pullPointerX.set(event.clientX - clusterCenterX);
-    };
-
-    const onPointerLeave = () => {
+    const clearPull = () => {
       pullPointerX.set(10_000);
     };
 
-    window.addEventListener("scroll", syncClusterCenter, { passive: true });
-    window.addEventListener("resize", syncClusterCenter);
+    const onPointerMove = (event: PointerEvent) => {
+      if (reduceMotionRef.current) return;
+      if (!hasHitBounds) syncClusterBounds();
+      if (!hasHitBounds) return;
+
+      // Limit peel to a band around the glass stack — not the full hero column.
+      if (
+        event.clientX < hitLeft ||
+        event.clientX > hitRight ||
+        event.clientY < hitTop ||
+        event.clientY > hitBottom
+      ) {
+        clearPull();
+        return;
+      }
+
+      pullPointerX.set(event.clientX - clusterCenterX);
+    };
+
+    window.addEventListener("scroll", syncClusterBounds, { passive: true });
+    window.addEventListener("resize", syncClusterBounds);
     const resizeObserver =
-      typeof ResizeObserver !== "undefined" ? new ResizeObserver(syncClusterCenter) : null;
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(syncClusterBounds) : null;
     resizeObserver?.observe(stage);
-    hero.addEventListener("pointermove", onPointerMove);
-    hero.addEventListener("pointerleave", onPointerLeave);
+    // Listen on the orbit stage (not `.hero`) so copy/CTA areas never drive pull.
+    stage.addEventListener("pointermove", onPointerMove);
+    stage.addEventListener("pointerleave", clearPull);
     return () => {
-      window.removeEventListener("scroll", syncClusterCenter);
-      window.removeEventListener("resize", syncClusterCenter);
+      window.removeEventListener("scroll", syncClusterBounds);
+      window.removeEventListener("resize", syncClusterBounds);
       resizeObserver?.disconnect();
-      hero.removeEventListener("pointermove", onPointerMove);
-      hero.removeEventListener("pointerleave", onPointerLeave);
+      stage.removeEventListener("pointermove", onPointerMove);
+      stage.removeEventListener("pointerleave", clearPull);
     };
   }, [pullPointerX]);
 
