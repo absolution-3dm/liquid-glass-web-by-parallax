@@ -1,13 +1,13 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
-  "name": "liquid-glass",
-  "homepage": "https://example.com/liquid-glass",
+  "name": "parallax-glass",
+  "homepage": "https://example.com/parallax-glass",
   "items": [
     {
       "name": "liquid-glass",
       "type": "registry:ui",
-      "title": "LiquidGlass",
-      "description": "Source-owned Liquid Glass primitive with Chromium refraction and CSS blur fallbacks.",
+      "title": "Parallax Glass",
+      "description": "Source-owned refractive glass primitive with Chromium refraction and CSS blur fallbacks.",
       "files": [
         {
           "path": "registry/liquid-glass/liquid-glass.tsx",
@@ -64,8 +64,8 @@
     {
       "name": "liquid-glass-icon-pill",
       "type": "registry:ui",
-      "title": "LiquidGlass Icon Pill",
-      "description": "Motion-free circular LiquidGlass composition for icon actions.",
+      "title": "Parallax Glass Icon Pill",
+      "description": "Motion-free circular Parallax Glass composition for icon actions.",
       "files": [
         {
           "path": "registry/liquid-glass/liquid-glass.tsx",
@@ -132,7 +132,7 @@
     {
       "name": "liquid-glass-magnetic-pointer",
       "type": "registry:ui",
-      "title": "LiquidGlass Magnetic Pointer",
+      "title": "Parallax Glass Magnetic Pointer",
       "description": "Motion-free fine-pointer attraction, press-drag deformation, and spring return.",
       "files": [
         {
@@ -150,7 +150,7 @@
     {
       "name": "liquid-glass-navigation",
       "type": "registry:ui",
-      "title": "LiquidGlass Navigation",
+      "title": "Parallax Glass Navigation",
       "description": "Draggable segmented navigation with elastic bounds and spring snapping.",
       "dependencies": [
         "motion"
@@ -221,8 +221,8 @@
     {
       "name": "liquid-glass-capsule",
       "type": "registry:ui",
-      "title": "LiquidGlass Capsule",
-      "description": "Draggable LiquidGlass capsule with press squish and spring return utilities.",
+      "title": "Parallax Glass Capsule",
+      "description": "Draggable Parallax Glass capsule with press squish and spring return utilities.",
       "dependencies": [
         "motion"
       ],
@@ -302,8 +302,8 @@
     {
       "name": "liquid-glass-menu",
       "type": "registry:ui",
-      "title": "LiquidGlass Morph Menu",
-      "description": "Compound LiquidGlass menu with spring morphing, dynamic shell refraction, hover fill, and dismissal behavior.",
+      "title": "Parallax Glass Morph Menu",
+      "description": "Compound Parallax Glass menu with spring morphing, dynamic shell refraction, hover fill, and dismissal behavior.",
       "dependencies": [
         "motion"
       ],

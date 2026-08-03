@@ -1,4 +1,4 @@
-# LiquidGlass compositions
+# Parallax Glass compositions
 
 The registry keeps the optical primitive and animated compositions as separate
 installation boundaries.
@@ -37,4 +37,4 @@ runtime requires a new animation implementation and separate parity work.
 
 The first extraction therefore preserves the validated interaction behavior and
 uses item-level `motion` dependencies. This does not create a private runtime:
-all LiquidGlass and composition source is copied into the consumer.
+all Parallax Glass primitive and composition source is copied into the consumer.

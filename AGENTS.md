@@ -1,4 +1,4 @@
-# LiquidGlass regression guard
+# Parallax Glass regression guard
 
 This repository is the source distribution for a shadcn Registry primitive.
 Consumers install and own the copied source; do not introduce a private npm

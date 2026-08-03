@@ -1,6 +1,6 @@
-# LiquidGlass shadcn Registry
+# Parallax Glass shadcn Registry
 
-A source-owned Liquid Glass primitive extracted from the Parallax portfolio.
+A source-owned refractive glass primitive from the Parallax portfolio.
 It ships through the shadcn Registry as editable source and does not publish or
 require a project-specific npm runtime.
 
