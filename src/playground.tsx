@@ -87,12 +87,11 @@ const heroCtaMaterial = {
 /** Hero stack — near-black fill so stacked panes don't wash out milky. */
 const heroStackMaterial = {
   preset: "navigation" as const,
-  scale: 0.9,
+  scale: 0.7,
   splay: 1,
   blur: 2,
   tint: 0.15,
-
-  depth: 45,
+  depth: 30,
   fill: "#000000",
 };
 
