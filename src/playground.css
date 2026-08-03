@@ -146,16 +146,16 @@ a {
   content: "";
   position: absolute;
   z-index: -1;
-  top: -40px;
+  top: -28px;
   left: 50%;
   width: 100vw;
-  height: 136px;
+  height: 88px;
   transform: translateX(-50%);
   background: linear-gradient(
     180deg,
     rgb(0 0 0) 0%,
-    rgb(0 0 0 / 0.88) 30%,
-    rgb(0 0 0 / 0.48) 62%,
+    rgb(0 0 0 / 0.82) 36%,
+    rgb(0 0 0 / 0.36) 68%,
     transparent 100%
   );
   pointer-events: none;
