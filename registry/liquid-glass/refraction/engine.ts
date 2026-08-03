@@ -56,7 +56,7 @@ export const glassPointerHighlight = {
 } as const;
 
 export type GlassPointerHighlightParams = {
-  [K in keyof typeof glassPointerHighlight]: (typeof glassPointerHighlight)[K];
+  [K in keyof typeof glassPointerHighlight]: number;
 };
 
 export function glassPointerHighlightSnapshot(): GlassPointerHighlightParams {

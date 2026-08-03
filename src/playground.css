@@ -142,6 +142,25 @@ a {
   pointer-events: none;
 }
 
+.site-navigation::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -40px;
+  left: 50%;
+  width: 100vw;
+  height: 136px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    rgb(0 0 0) 0%,
+    rgb(0 0 0 / 0.88) 30%,
+    rgb(0 0 0 / 0.48) 62%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
 .site-navigation > * {
   pointer-events: auto;
 }
@@ -308,20 +327,20 @@ main {
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  background-color: var(--canvas);
+  background-image: url("/images/hero-bg.jpg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  /* The hero remains the clipping window while the image is anchored to the viewport. */
+  background-attachment: fixed;
 }
 
-.hero-media::before,
 .hero-media::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-}
-
-/* Full black at the top, fading cleanly into the image below the navigation. */
-.hero-media::before {
-  z-index: 2;
-  background: linear-gradient(180deg, rgb(0 0 0) 0%, transparent 42%);
 }
 
 /* Static, tiled silver-halide grain masks source compression without animation. */
@@ -330,17 +349,6 @@ main {
   background: url("/images/film-grain.svg") repeat;
   background-size: 180px 180px;
   opacity: 0.075;
-}
-
-.hero-media__image {
-  position: relative;
-  z-index: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  filter: brightness(0.96) contrast(1.02) saturate(1.05);
 }
 
 .hero-media__veil {
@@ -687,8 +695,6 @@ h2 {
 }
 
 .attribute-card {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
   padding: 22px;
 }
 
@@ -714,10 +720,10 @@ h2 {
 }
 
 .attribute-card__stage {
-  position: relative;
+  position: absolute;
   z-index: 1;
+  inset: 0;
   display: grid;
-  min-height: 0;
   place-items: center;
 }
 
@@ -725,37 +731,38 @@ h2 {
   box-shadow: 0 18px 42px rgb(0 0 0 / 0.34);
 }
 
-.attribute-card__glass .glass-surface__content {
-  padding: 0 16px;
-}
-
-.attribute-card__glass span {
-  color: rgb(255 255 255 / 0.9);
-  font-size: 0.78rem;
-  font-weight: 510;
+.attribute-card__mock-pointer {
+  position: absolute;
+  z-index: 4;
+  top: calc(50% - 34px);
+  left: calc(50% + 42px);
+  width: 22px;
+  height: 22px;
+  color: white;
+  fill: rgb(8 9 11 / 0.88);
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.55));
+  pointer-events: none;
 }
 
 .component-card {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
   height: 460px;
   padding: 20px;
 }
 
 .component-card__label {
-  position: relative;
+  position: absolute;
   z-index: 2;
+  top: 20px;
+  left: 20px;
   color: rgb(255 255 255 / 0.66);
   font-size: 0.75rem;
   font-weight: 500;
 }
 
 .component-card__stage {
-  position: relative;
+  position: absolute;
   z-index: 1;
-  flex: 1;
-  min-height: 0;
+  inset: 0;
 }
 
 .component-card__stage--center {

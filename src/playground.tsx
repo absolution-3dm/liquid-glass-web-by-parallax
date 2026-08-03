@@ -58,6 +58,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "./components/ui/tabs";
+import { MousePointer2 } from "lucide-react";
 import {
   advancedMaterialParamDefs,
   diffPartial,
@@ -83,7 +84,7 @@ const menuItems = ["Overview", "Components", "Installation", "Documentation"];
 const topNavigationItems = [
   { value: "menu", label: "Home", href: "#menu" },
   { value: "attributes", label: "Attributes", href: "#attributes" },
-  { value: "components", label: "Pre-built", href: "#components" },
+  { value: "components", label: "Components", href: "#components" },
   { value: "customize", label: "Customize", href: "#customize" },
   { value: "installation", label: "Install", href: "#installation" },
 ];
@@ -177,41 +178,58 @@ const materialAttributeCards = [
     title: "Refraction",
     description: "Bend the scene behind the surface to control the strength and physical depth of the lens.",
     material: { preset: "regular", scale: 1.65, depth: 28, blur: 0.75, tint: 0.08 },
-    borderRadius: 36,
+    borderRadius: 64,
     pointerHighlight: false,
   },
   {
     title: "Edge Highlight",
     description: "Shape the bright rim and directional sheen that make the glass edge readable.",
     material: { preset: "regular", scale: 0.7, edgeHighlight: 2, glow: 0.12, specular: 4 },
-    borderRadius: 36,
+    borderRadius: 64,
     pointerHighlight: false,
   },
   {
     title: "Chromatic Aberration",
     description: "Split color channels around refracted edges for a subtle optical spectrum.",
-    material: { preset: "regular", scale: 1.15, chroma: 0.8, splay: 0.92, blur: 0.7 },
-    borderRadius: 36,
+    material: { preset: "regular", scale: 1.5, depth: 28, chroma: 1, splay: 0.92, blur: 0, tint: 0.08 },
+    engine: { chromaRedBoost: 0.55, chromaGreenBoost: 0.25 },
+    borderRadius: 64,
     pointerHighlight: false,
   },
   {
     title: "Pointer Highlight",
     description: "Add a responsive bloom that follows the pointer and intensifies while pressing.",
     material: { preset: "control", tint: 0.32, fill: "#080808" },
-    borderRadius: 36,
-    pointerHighlight: undefined,
+    borderRadius: 64,
+    pointerHighlight: {
+      radius: 112,
+      bloomOpacity: 0.3,
+      hoverStrength: 0.78,
+      saturation: 1.34,
+      brightness: 1.16,
+    },
+    mockPointer: true,
+    pointerHighlightPreview: { x: 0.68, y: 0.25, strength: 0.78 },
   },
   {
     title: "Blur & Tint",
     description: "Separate content from a busy backdrop with adjustable softness, opacity, and color.",
-    material: { preset: "panel", blur: 5, tint: 0.7, fill: "#15233d" },
-    borderRadius: 36,
+    material: {
+      preset: "panel",
+      blur: 1.8,
+      tint: 0.3,
+      fill: "#15233d",
+      edgeHighlight: 1.5,
+      glow: 0.08,
+      specular: 4,
+    },
+    borderRadius: 64,
     pointerHighlight: false,
   },
   {
     title: "Shape & Depth",
     description: "Tune how the optical field rolls from the center into corners and rounded edges.",
-    material: { preset: "regular", scale: 1.2, depth: 36, curvature: 0.45, splay: 0.6 },
+    material: { preset: "regular", scale: 1.9, depth: 40, curvature: 0.65, splay: 0.65, blur: 0, tint: 0.08 },
     borderRadius: 64,
     pointerHighlight: false,
   },
@@ -219,8 +237,11 @@ const materialAttributeCards = [
   title: string;
   description: string;
   material: NonNullable<LiquidGlassProps["material"]>;
+  engine?: LiquidGlassProps["engine"];
   borderRadius: number;
   pointerHighlight: LiquidGlassProps["pointerHighlight"];
+  mockPointer?: boolean;
+  pointerHighlightPreview?: LiquidGlassProps["pointerHighlightPreview"];
 }>;
 
 function useClipboard(text: string) {
@@ -656,11 +677,14 @@ function MaterialAttributesCarousel() {
                     height={128}
                     borderRadius={attribute.borderRadius}
                     material={attribute.material}
+                    engine={attribute.engine}
                     pointerHighlight={attribute.pointerHighlight}
-                    className="attribute-card__glass"
-                  >
-                    <span>{attribute.title}</span>
-                  </LiquidGlass>
+                    pointerHighlightPreview={attribute.pointerHighlightPreview}
+                    className={`attribute-card__glass${attribute.mockPointer ? " attribute-card__glass--pointer-demo" : ""}`}
+                  />
+                  {attribute.mockPointer ? (
+                    <MousePointer2 className="attribute-card__mock-pointer" aria-hidden />
+                  ) : null}
                 </div>
               </article>
             </CarouselItem>
@@ -678,7 +702,7 @@ function PrebuiltComponentsCarousel() {
   return (
     <section className="component-section" id="components">
       <div className="section-heading">
-        <h2>Pre-built Components</h2>
+        <h2>Components</h2>
         <p>
           Source-owned compositions ready to install, adapt, and ship with the primitive.
         </p>
@@ -687,7 +711,7 @@ function PrebuiltComponentsCarousel() {
       <Carousel
         className="showcase-carousel showcase-carousel--components"
         opts={{ align: "start", containScroll: "trimSnaps", dragFree: true }}
-        aria-label="Pre-built liquid glass components"
+        aria-label="Liquid glass components"
       >
         <div className="showcase-carousel__controls">
           <CarouselPrevious className="showcase-carousel__button" />
@@ -1447,11 +1471,6 @@ export function Playground() {
       <main id="top">
         <section className="hero" id="menu">
           <div className="hero-media" aria-hidden="true">
-            <img
-              className="hero-media__image"
-              src="/images/hero-bg.jpg"
-              alt=""
-            />
             <div className="hero-media__veil" />
           </div>
           <div className="hero-inner">

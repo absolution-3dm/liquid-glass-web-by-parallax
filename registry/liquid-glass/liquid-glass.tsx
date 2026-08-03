@@ -61,6 +61,15 @@ type AnimatedGlassProgress = {
   on: (event: "change", callback: (value: number) => void) => () => void;
 };
 
+export type PointerHighlightPreview = {
+  /** Horizontal preview position normalized to the surface, 0–1. */
+  x: number;
+  /** Vertical preview position normalized to the surface, 0–1. */
+  y: number;
+  /** Optional fixed highlight strength; defaults to the configured hover strength. */
+  strength?: number;
+};
+
 export type LiquidGlassProps = {
   children?: ReactNode;
   /** Chips / selection chrome between refracted material and sharp content. */
@@ -106,6 +115,8 @@ export type LiquidGlassProps = {
    * with the shared defaults. Other surfaces on the page are unaffected.
    */
   pointerHighlight?: Partial<GlassPointerHighlightParams> | false;
+  /** Force the real pointer-highlight pipeline on at a fixed position for demos and stories. */
+  pointerHighlightPreview?: PointerHighlightPreview;
 };
 
 type LensState = {
@@ -154,6 +165,7 @@ export const LiquidGlass = ({
   onDisplacementMapChange,
   engine,
   pointerHighlight,
+  pointerHighlightPreview,
 }: LiquidGlassProps) => {
   const resolvedMaterial = useMemo(
     () => resolveGlassMaterial(material, materialMode),
@@ -521,13 +533,52 @@ export const LiquidGlass = ({
     const pointer = pointerHighlightRef.current;
     if (pointer.frame !== null) window.cancelAnimationFrame(pointer.frame);
     pointer.frame = null;
+    surface.removeAttribute("data-glass-pressed");
+    if (pointerHighlightPreview && resolvedPointerHighlight) {
+      const x = Math.max(0, Math.min(1, pointerHighlightPreview.x)) * surface.offsetWidth;
+      const y = Math.max(0, Math.min(1, pointerHighlightPreview.y)) * surface.offsetHeight;
+      pointer.x = pointer.targetX = x;
+      pointer.y = pointer.targetY = y;
+      pointer.active = true;
+      surface.style.setProperty("--glass-pointer-x", `${x}px`);
+      surface.style.setProperty("--glass-pointer-y", `${y}px`);
+      surface.style.setProperty(
+        "--glass-highlight-strength",
+        String(pointerHighlightPreview.strength ?? resolvedPointerHighlight.hoverStrength),
+      );
+      syncPointerMask(x, y, true);
+      return;
+    }
     pointer.x = null;
     pointer.y = null;
     pointer.active = false;
     syncPointerMask(0, 0, false);
     surface.style.setProperty("--glass-highlight-strength", "0");
-    surface.removeAttribute("data-glass-pressed");
   };
+
+  useLayoutEffect(() => {
+    if (!pointerHighlightPreview || !resolvedPointerHighlight) return;
+    const surface = containerRef.current;
+    if (!surface) return;
+    const pointer = pointerHighlightRef.current;
+    const x = Math.max(0, Math.min(1, pointerHighlightPreview.x)) * surface.offsetWidth;
+    const y = Math.max(0, Math.min(1, pointerHighlightPreview.y)) * surface.offsetHeight;
+    pointer.x = pointer.targetX = x;
+    pointer.y = pointer.targetY = y;
+    pointer.active = true;
+    surface.style.setProperty("--glass-pointer-x", `${x}px`);
+    surface.style.setProperty("--glass-pointer-y", `${y}px`);
+    surface.style.setProperty(
+      "--glass-highlight-strength",
+      String(pointerHighlightPreview.strength ?? resolvedPointerHighlight.hoverStrength),
+    );
+    syncPointerMask(x, y, true);
+
+    return () => {
+      syncPointerMask(0, 0, false);
+      surface.style.setProperty("--glass-highlight-strength", "0");
+    };
+  }, [lens, pointerHighlightPreview, resolvedPointerHighlight]);
 
   const surface = (
     <div
