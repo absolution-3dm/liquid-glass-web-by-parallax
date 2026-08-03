@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type RefObject,
 } from "react";
 import {
   motion,
@@ -26,7 +25,10 @@ import {
   Settings01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { LiquidGlass } from "../registry/liquid-glass/liquid-glass";
+import {
+  LiquidGlass,
+  type LiquidGlassProps,
+} from "../registry/liquid-glass/liquid-glass";
 import {
   resolveGlassMaterial,
   type GlassMaterialName,
@@ -42,6 +44,19 @@ import {
 import { MorphMenu } from "../registry/liquid-glass/compositions/morph-menu";
 import { GlassSlider } from "./components/glass-slider";
 import { CustomizeColorField } from "./components/customize-color-field";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "./components/ui/carousel";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "./components/ui/tabs";
 import {
   advancedMaterialParamDefs,
   diffPartial,
@@ -66,7 +81,8 @@ const menuItems = ["Overview", "Components", "Installation", "Documentation"];
 
 const topNavigationItems = [
   { value: "menu", label: "Home", href: "#menu" },
-  { value: "components", label: "Components", href: "#components" },
+  { value: "attributes", label: "Attributes", href: "#attributes" },
+  { value: "components", label: "Pre-built", href: "#components" },
   { value: "customize", label: "Customize", href: "#customize" },
   { value: "installation", label: "Install", href: "#installation" },
 ];
@@ -149,11 +165,62 @@ const registryPackages = [
   },
 ] as const;
 
-const bentoIconPills = [
+const showcaseIconPills = [
   { icon: Home01Icon, label: "Home" },
   { icon: Search01Icon, label: "Search" },
   { icon: Settings01Icon, label: "Settings" },
 ] as const;
+
+const materialAttributeCards = [
+  {
+    title: "Refraction",
+    description: "Bend the scene behind the surface to control the strength and physical depth of the lens.",
+    material: { preset: "regular", scale: 1.65, depth: 28, blur: 0.75, tint: 0.08 },
+    borderRadius: 36,
+    pointerHighlight: false,
+  },
+  {
+    title: "Edge Highlight",
+    description: "Shape the bright rim and directional sheen that make the glass edge readable.",
+    material: { preset: "regular", scale: 0.7, edgeHighlight: 2, glow: 0.12, specular: 4 },
+    borderRadius: 36,
+    pointerHighlight: false,
+  },
+  {
+    title: "Chromatic Aberration",
+    description: "Split color channels around refracted edges for a subtle optical spectrum.",
+    material: { preset: "regular", scale: 1.15, chroma: 0.8, splay: 0.92, blur: 0.7 },
+    borderRadius: 36,
+    pointerHighlight: false,
+  },
+  {
+    title: "Pointer Highlight",
+    description: "Add a responsive bloom that follows the pointer and intensifies while pressing.",
+    material: { preset: "control", tint: 0.32, fill: "#080808" },
+    borderRadius: 36,
+    pointerHighlight: undefined,
+  },
+  {
+    title: "Blur & Tint",
+    description: "Separate content from a busy backdrop with adjustable softness, opacity, and color.",
+    material: { preset: "panel", blur: 5, tint: 0.7, fill: "#15233d" },
+    borderRadius: 36,
+    pointerHighlight: false,
+  },
+  {
+    title: "Shape & Depth",
+    description: "Tune how the optical field rolls from the center into corners and rounded edges.",
+    material: { preset: "regular", scale: 1.2, depth: 36, curvature: 0.45, splay: 0.6 },
+    borderRadius: 64,
+    pointerHighlight: false,
+  },
+] satisfies ReadonlyArray<{
+  title: string;
+  description: string;
+  material: NonNullable<LiquidGlassProps["material"]>;
+  borderRadius: number;
+  pointerHighlight: LiquidGlassProps["pointerHighlight"];
+}>;
 
 function useClipboard(text: string) {
   const [copied, setCopied] = useState(false);
@@ -479,199 +546,251 @@ function HeroFloatStage() {
   );
 }
 
-/** Showcase menus start closed, then open once so the morph spring plays. */
-function useShowcaseMenuOpen(enabled: boolean, rootRef: RefObject<HTMLElement | null>) {
-  const [open, setOpen] = useState(false);
-  const playedRef = useRef(false);
-
-  useEffect(() => {
-    if (!enabled || playedRef.current) return;
-    const root = rootRef.current;
-    if (!root) return;
-
-    const play = () => {
-      if (playedRef.current) return;
-      playedRef.current = true;
-      // Wait two frames so the closed shell paints before the spring starts.
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => setOpen(true));
-      });
-    };
-
-    if (typeof IntersectionObserver === "undefined") {
-      play();
-      return;
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting && entry.intersectionRatio > 0.2)) {
-          play();
-          io.disconnect();
-        }
-      },
-      { threshold: [0, 0.2, 0.4] },
-    );
-    io.observe(root);
-    return () => io.disconnect();
-  }, [enabled, rootRef]);
-
-  return [open, setOpen] as const;
-}
-
-function BentoMorphMenu({
+function ShowcaseMorphMenu({
   defaultOpen = false,
 }: {
   defaultOpen?: boolean;
 }) {
-  const stageRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useShowcaseMenuOpen(defaultOpen, stageRef);
+  const [open, setOpen] = useState(defaultOpen);
   const { clearHoveredItem, hoveredItem, syncHoveredItem } = useMorphMenuHover();
 
   return (
-    <div ref={stageRef}>
-    <MorphMenu.Root
-      open={open}
-      onOpenChange={(next) => {
-        clearHoveredItem();
-        setOpen(next);
-      }}
-      direction="bottom"
-      anchor="start"
-      visualDuration={0.28}
-      bounce={0}
-      closeOnClickOutside={!defaultOpen}
-    >
-      <MorphMenu.Container
-        buttonSize={48}
-        menuWidth={248}
-        menuRadius={28}
-        buttonRadius={24}
-        offset={12}
-        className="bento-menu__shell"
-        backdrop={<GlassShellBackdrop borderRadius={28} material="navigation" />}
+    <div>
+      <MorphMenu.Root
+        open={open}
+        onOpenChange={(next) => {
+          clearHoveredItem();
+          setOpen(next);
+        }}
+        direction="bottom"
+        anchor="start"
+        visualDuration={0.28}
+        bounce={0}
+        closeOnClickOutside={!defaultOpen}
       >
-        <MorphMenu.Trigger
-          aria-label={open ? "Close menu" : "Open menu"}
-          className="navigation-menu__trigger"
+        <MorphMenu.Container
+          buttonSize={48}
+          menuWidth={248}
+          menuRadius={28}
+          buttonRadius={24}
+          offset={12}
+          className="component-menu__shell"
+          backdrop={<GlassShellBackdrop borderRadius={28} material="navigation" />}
         >
-          <HugeiconsIcon
-            icon={Menu01Icon}
-            altIcon={Cancel01Icon}
-            showAlt={open}
-            size={20}
-            color="currentColor"
-            strokeWidth={1.75}
-            aria-hidden
-          />
-        </MorphMenu.Trigger>
+          <MorphMenu.Trigger
+            aria-label={open ? "Close menu" : "Open menu"}
+            className="navigation-menu__trigger"
+          >
+            <HugeiconsIcon
+              icon={Menu01Icon}
+              altIcon={Cancel01Icon}
+              showAlt={open}
+              size={20}
+              color="currentColor"
+              strokeWidth={1.75}
+              aria-hidden
+            />
+          </MorphMenu.Trigger>
 
-        <MorphMenu.Content
-          className="navigation-menu__content"
-          onPointerLeave={clearHoveredItem}
-        >
-          <div className="navigation-menu__heading">
-            <span>Menu</span>
-          </div>
-          <div className="navigation-menu__items">
-            <MorphMenuHoverFill hoveredItem={hoveredItem} />
-            {menuItems.map((item) => (
-              <MorphMenu.Item
-                key={item}
-                className="navigation-menu__item"
-                onPointerEnter={syncHoveredItem}
-              >
-                <span>{item}</span>
-              </MorphMenu.Item>
-            ))}
-          </div>
-        </MorphMenu.Content>
-      </MorphMenu.Container>
-    </MorphMenu.Root>
+          <MorphMenu.Content
+            className="navigation-menu__content"
+            onPointerLeave={clearHoveredItem}
+          >
+            <div className="navigation-menu__heading">
+              <span>Menu</span>
+            </div>
+            <div className="navigation-menu__items">
+              <MorphMenuHoverFill hoveredItem={hoveredItem} />
+              {menuItems.map((item) => (
+                <MorphMenu.Item
+                  key={item}
+                  className="navigation-menu__item"
+                  onPointerEnter={syncHoveredItem}
+                >
+                  <span>{item}</span>
+                </MorphMenu.Item>
+              ))}
+            </div>
+          </MorphMenu.Content>
+        </MorphMenu.Container>
+      </MorphMenu.Root>
     </div>
   );
 }
 
-function ComponentsBento() {
+function MaterialAttributesCarousel() {
+  return (
+    <section className="component-section" id="attributes">
+      <div className="section-heading">
+        <h2>Material Attributes</h2>
+        <p>
+          Tune the optical field, surface lighting, color separation, and interaction independently.
+        </p>
+      </div>
+
+      <Carousel
+        className="showcase-carousel showcase-carousel--attributes"
+        opts={{ align: "start", containScroll: "trimSnaps", dragFree: true }}
+        aria-label="Liquid glass material attributes"
+      >
+        <div className="showcase-carousel__controls">
+          <CarouselPrevious className="showcase-carousel__button" />
+          <CarouselNext className="showcase-carousel__button" />
+        </div>
+        <CarouselContent className="showcase-carousel__track">
+          {materialAttributeCards.map((attribute) => (
+            <CarouselItem className="showcase-carousel__item" key={attribute.title}>
+              <article className="attribute-card">
+                <img
+                  className="showcase-card__scene"
+                  src="/images/pexels-bento-scene.jpg"
+                  alt=""
+                  aria-hidden="true"
+                />
+                <div className="showcase-card__veil" aria-hidden="true" />
+                <div className="attribute-card__copy">
+                  <h3>{attribute.title}</h3>
+                  <p>{attribute.description}</p>
+                </div>
+                <div className="attribute-card__stage">
+                  <LiquidGlass
+                    width="min(250px, calc(100% - 32px))"
+                    height={128}
+                    borderRadius={attribute.borderRadius}
+                    material={attribute.material}
+                    pointerHighlight={attribute.pointerHighlight}
+                    className="attribute-card__glass"
+                  >
+                    <span>{attribute.title}</span>
+                  </LiquidGlass>
+                </div>
+              </article>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
+    </section>
+  );
+}
+
+function PrebuiltComponentsCarousel() {
   const [segmentValue, setSegmentValue] = useState("motion");
 
   return (
     <section className="component-section" id="components">
       <div className="section-heading">
-        <h2>Components</h2>
+        <h2>Pre-built Components</h2>
         <p>
-          Live registry surfaces on a static scene — refraction without an
-          animating backdrop.
+          Source-owned compositions ready to install, adapt, and ship with the primitive.
         </p>
       </div>
 
-      <div className="bento">
-        <div className="bento__scene-clip" aria-hidden="true">
-          <img
-            className="bento__scene"
-            src="/images/pexels-bento-scene.jpg"
-            alt=""
-          />
+      <Carousel
+        className="showcase-carousel showcase-carousel--components"
+        opts={{ align: "start", containScroll: "trimSnaps", dragFree: true }}
+        aria-label="Pre-built liquid glass components"
+      >
+        <div className="showcase-carousel__controls">
+          <CarouselPrevious className="showcase-carousel__button" />
+          <CarouselNext className="showcase-carousel__button" />
         </div>
+        <CarouselContent className="showcase-carousel__track">
+          <CarouselItem className="showcase-carousel__item showcase-carousel__item--component">
+            <article className="component-card">
+              <img className="showcase-card__scene" src="/images/pexels-bento-scene.jpg" alt="" aria-hidden="true" />
+              <div className="showcase-card__veil" aria-hidden="true" />
+              <span className="component-card__label">Morph Menu</span>
+              <div className="component-card__stage component-card__menu-states">
+                <div className="component-card__state component-card__state--expanded-menu">
+                  <span>Expanded</span>
+                  <div className="component-card__menu-preview component-card__menu-preview--expanded">
+                    <ShowcaseMorphMenu defaultOpen />
+                  </div>
+                </div>
+                <div className="component-card__state component-card__state--collapsed-menu">
+                  <span>Collapsed</span>
+                  <div className="component-card__menu-preview component-card__menu-preview--collapsed">
+                    <ShowcaseMorphMenu />
+                  </div>
+                </div>
+              </div>
+            </article>
+          </CarouselItem>
 
-        <article className="bento__cell bento__cell--open-menu">
-          <span className="bento__label">Open menu</span>
-          <div className="bento__stage bento__stage--menu">
-            <BentoMorphMenu defaultOpen />
-          </div>
-        </article>
+          <CarouselItem className="showcase-carousel__item showcase-carousel__item--component">
+            <article className="component-card">
+              <img className="showcase-card__scene" src="/images/pexels-bento-scene.jpg" alt="" aria-hidden="true" />
+              <div className="showcase-card__veil" aria-hidden="true" />
+              <span className="component-card__label">Segmented Control</span>
+              <div className="component-card__stage component-card__stage--center">
+                <div className="component-card__segment-states">
+                  <div className="component-card__state component-card__state--segment component-card__state--resting">
+                    <span>Resting</span>
+                    <GlassSegmentedControl
+                      items={segmentItems}
+                      value={segmentValue}
+                      onValueChange={setSegmentValue}
+                      itemWidth={80}
+                      itemHeight={40}
+                      padding={4}
+                      radialExpansion={0}
+                      material="navigation"
+                      pressedMaterial="selectionPressed"
+                      itemClassName="segment-item"
+                    />
+                  </div>
+                  <div className="component-card__state component-card__state--segment">
+                    <span>Pressed</span>
+                    <GlassSegmentedControl
+                      items={segmentItems}
+                      value={segmentValue}
+                      onValueChange={setSegmentValue}
+                      itemWidth={80}
+                      itemHeight={40}
+                      padding={4}
+                      radialExpansion={8}
+                      material="navigation"
+                      pressedMaterial="selectionPressed"
+                      pressedPreview
+                      itemClassName="segment-item"
+                    />
+                  </div>
+                </div>
+              </div>
+            </article>
+          </CarouselItem>
 
-        <article className="bento__cell bento__cell--segment">
-          <span className="bento__label">Segment</span>
-          <div className="bento__stage bento__stage--center">
-            <GlassSegmentedControl
-              items={segmentItems}
-              value={segmentValue}
-              onValueChange={setSegmentValue}
-              itemWidth={100}
-              itemHeight={40}
-              padding={4}
-              radialExpansion={8}
-              material="navigation"
-              pressedMaterial="selectionPressed"
-              itemClassName="segment-item"
-            />
-          </div>
-        </article>
-
-        <article className="bento__cell bento__cell--menu">
-          <span className="bento__label">Morph menu</span>
-          <div className="bento__stage bento__stage--menu">
-            <BentoMorphMenu />
-          </div>
-        </article>
-
-        <article className="bento__cell bento__cell--icons">
-          <span className="bento__label">Icon pill</span>
-          <div className="bento__stage bento__stage--center bento-icon-row">
-            {bentoIconPills.map(({ icon, label }) => (
-              <button
-                key={label}
-                type="button"
-                className="bento-icon-button"
-                data-ios-pointer-target=""
-                aria-label={label}
-              >
-                <GlassIconPill size={48} material="navigation">
-                  <HugeiconsIcon
-                    icon={icon}
-                    size={20}
-                    color="currentColor"
-                    strokeWidth={1.75}
-                    className="bento-icon-glyph"
-                    aria-hidden
-                  />
-                </GlassIconPill>
-              </button>
-            ))}
-          </div>
-        </article>
-      </div>
+          <CarouselItem className="showcase-carousel__item showcase-carousel__item--component">
+            <article className="component-card">
+              <img className="showcase-card__scene" src="/images/pexels-bento-scene.jpg" alt="" aria-hidden="true" />
+              <div className="showcase-card__veil" aria-hidden="true" />
+              <span className="component-card__label">Icon Pills</span>
+              <div className="component-card__stage component-card__stage--center component-card__icons">
+                {showcaseIconPills.map(({ icon, label }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    className="component-card__icon-button"
+                    data-ios-pointer-target=""
+                    aria-label={label}
+                  >
+                    <GlassIconPill size={48} material="navigation">
+                      <HugeiconsIcon
+                        icon={icon}
+                        size={20}
+                        color="currentColor"
+                        strokeWidth={1.75}
+                        className="component-card__icon"
+                        aria-hidden
+                      />
+                    </GlassIconPill>
+                  </button>
+                ))}
+              </div>
+            </article>
+          </CarouselItem>
+        </CarouselContent>
+      </Carousel>
     </section>
   );
 }
@@ -984,102 +1103,117 @@ function CustomizeShowcase() {
         </div>
 
         <div className="customizer-controls">
-          <label className="customizer-select">
-            <span>Preset</span>
-            <select
-              value={preset}
-              onChange={(event) => selectPreset(event.currentTarget.value as CustomizerPreset)}
-            >
-              {customizerPresets.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Tabs className="customizer-tabs" defaultValue="controls">
+            <TabsList className="customizer-tabs__list" aria-label="Customize panel view">
+              <TabsTrigger className="customizer-tabs__trigger" value="controls">
+                Controls
+              </TabsTrigger>
+              <TabsTrigger className="customizer-tabs__trigger" value="jsx">
+                JSX
+              </TabsTrigger>
+            </TabsList>
 
-          <details className="customizer-section" open>
-            <summary className="customizer-section__summary">Material</summary>
-            <div className="customizer-sliders">
-              <GlassSlider label="Scale" value={scale} min={0} max={3} step={0.01} onChange={setScale} />
-              <GlassSlider label="Blur" value={blur} min={0} max={8} step={0.1} display={`${blur.toFixed(1)} px`} onChange={setBlur} />
-              <GlassSlider label="Tint" value={tint} min={0} max={1} step={0.01} onChange={setTint} />
-              <GlassSlider label="Chroma" value={chroma} min={0} max={1} step={0.01} onChange={setChroma} />
-              <GlassSlider label="Radius" value={borderRadius} min={12} max={90} step={1} display={`${borderRadius} px`} onChange={setBorderRadius} />
-            </div>
-          </details>
-
-          <details className="customizer-section">
-            <summary className="customizer-section__summary">Advanced Material</summary>
-            <div className="customizer-sliders">
-              {advancedMaterialParamDefs.map((param) => (
-                <GlassSlider
-                  key={param.key}
-                  label={param.label}
-                  value={advancedMaterialValues[param.key as keyof typeof advancedMaterialValues]}
-                  min={param.min}
-                  max={param.max}
-                  step={param.step}
-                  display={param.format?.(advancedMaterialValues[param.key as keyof typeof advancedMaterialValues])}
-                  onChange={(value) =>
-                    setAdvancedMaterialValue(param.key as keyof typeof advancedMaterialValues, value)
+            <TabsContent className="customizer-tabs__content" value="controls">
+              <label className="customizer-select">
+                <span>Preset</span>
+                <select
+                  value={preset}
+                  onChange={(event) =>
+                    selectPreset(event.currentTarget.value as CustomizerPreset)
                   }
-                />
-              ))}
-            </div>
-          </details>
+                >
+                  {customizerPresets.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          <details className="customizer-section">
-            <summary className="customizer-section__summary">Engine</summary>
-            <div className="customizer-sliders">
-              {engineParamDefs.map((param) => (
-                <GlassSlider
-                  key={param.key}
-                  label={param.label}
-                  value={engine[param.key as keyof EngineState]}
-                  min={param.min}
-                  max={param.max}
-                  step={param.step}
-                  display={param.format?.(engine[param.key as keyof EngineState])}
-                  onChange={(value) => setEngineValue(param.key as keyof EngineState, value)}
-                />
-              ))}
-            </div>
-          </details>
+              <details className="customizer-section" open>
+                <summary className="customizer-section__summary">Material</summary>
+                <div className="customizer-sliders">
+                  <GlassSlider label="Scale" value={scale} min={0} max={3} step={0.01} onChange={setScale} />
+                  <GlassSlider label="Blur" value={blur} min={0} max={8} step={0.1} display={`${blur.toFixed(1)} px`} onChange={setBlur} />
+                  <GlassSlider label="Tint" value={tint} min={0} max={1} step={0.01} onChange={setTint} />
+                  <GlassSlider label="Chroma" value={chroma} min={0} max={1} step={0.01} onChange={setChroma} />
+                  <GlassSlider label="Radius" value={borderRadius} min={12} max={90} step={1} display={`${borderRadius} px`} onChange={setBorderRadius} />
+                </div>
+              </details>
 
-          <details className="customizer-section">
-            <summary className="customizer-section__summary">Pointer Highlight</summary>
-            <label className="customizer-toggle">
-              <span>Enabled</span>
-              <input
-                type="checkbox"
-                checked={pointerHighlightEnabled}
-                onChange={(event) => setPointerHighlightEnabled(event.currentTarget.checked)}
-              />
-            </label>
-            <div className={`customizer-sliders${pointerHighlightEnabled ? "" : " customizer-sliders--disabled"}`}>
-              {pointerParamDefs.map((param) => (
-                <GlassSlider
-                  key={param.key}
-                  label={param.label}
-                  value={pointerHighlight[param.key as keyof PointerState]}
-                  min={param.min}
-                  max={param.max}
-                  step={param.step}
-                  display={param.format?.(pointerHighlight[param.key as keyof PointerState])}
-                  disabled={!pointerHighlightEnabled}
-                  onChange={(value) => setPointerValue(param.key as keyof PointerState, value)}
-                />
-              ))}
-            </div>
-          </details>
+              <details className="customizer-section">
+                <summary className="customizer-section__summary">Advanced Material</summary>
+                <div className="customizer-sliders">
+                  {advancedMaterialParamDefs.map((param) => (
+                    <GlassSlider
+                      key={param.key}
+                      label={param.label}
+                      value={advancedMaterialValues[param.key as keyof typeof advancedMaterialValues]}
+                      min={param.min}
+                      max={param.max}
+                      step={param.step}
+                      display={param.format?.(advancedMaterialValues[param.key as keyof typeof advancedMaterialValues])}
+                      onChange={(value) =>
+                        setAdvancedMaterialValue(param.key as keyof typeof advancedMaterialValues, value)
+                      }
+                    />
+                  ))}
+                </div>
+              </details>
 
-          <CustomizeColorField label="Fill" value={fill} onChange={setFill} />
+              <details className="customizer-section">
+                <summary className="customizer-section__summary">Engine</summary>
+                <div className="customizer-sliders">
+                  {engineParamDefs.map((param) => (
+                    <GlassSlider
+                      key={param.key}
+                      label={param.label}
+                      value={engine[param.key as keyof EngineState]}
+                      min={param.min}
+                      max={param.max}
+                      step={param.step}
+                      display={param.format?.(engine[param.key as keyof EngineState])}
+                      onChange={(value) => setEngineValue(param.key as keyof EngineState, value)}
+                    />
+                  ))}
+                </div>
+              </details>
+
+              <details className="customizer-section">
+                <summary className="customizer-section__summary">Pointer Highlight</summary>
+                <label className="customizer-toggle">
+                  <span>Enabled</span>
+                  <input
+                    type="checkbox"
+                    checked={pointerHighlightEnabled}
+                    onChange={(event) => setPointerHighlightEnabled(event.currentTarget.checked)}
+                  />
+                </label>
+                <div className={`customizer-sliders${pointerHighlightEnabled ? "" : " customizer-sliders--disabled"}`}>
+                  {pointerParamDefs.map((param) => (
+                    <GlassSlider
+                      key={param.key}
+                      label={param.label}
+                      value={pointerHighlight[param.key as keyof PointerState]}
+                      min={param.min}
+                      max={param.max}
+                      step={param.step}
+                      display={param.format?.(pointerHighlight[param.key as keyof PointerState])}
+                      disabled={!pointerHighlightEnabled}
+                      onChange={(value) => setPointerValue(param.key as keyof PointerState, value)}
+                    />
+                  ))}
+                </div>
+              </details>
+
+              <CustomizeColorField label="Fill" value={fill} onChange={setFill} />
+            </TabsContent>
+
+            <TabsContent className="customizer-tabs__content customizer-tabs__content--code" value="jsx">
+              <CodeBlock label="JSX" code={generatedExample} language="tsx" />
+            </TabsContent>
+          </Tabs>
         </div>
-      </div>
-
-      <div className="customizer-code">
-        <CodeBlock label="JSX" code={generatedExample} language="tsx" />
       </div>
     </section>
   );
@@ -1293,7 +1427,8 @@ export function Playground() {
           </div>
         </section>
 
-        <ComponentsBento />
+        <MaterialAttributesCarousel />
+        <PrebuiltComponentsCarousel />
         <CustomizeShowcase />
         <InstallationShowcase />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import * as Slider from "@radix-ui/react-slider";
+import { Slider } from "./ui/slider";
 
 export type GlassSliderProps = {
   label: string;
@@ -35,25 +35,16 @@ export function GlassSlider({
         <span className="glass-slider__value">{formattedValue}</span>
       </div>
 
-      <div className="glass-slider__shell">
-        <Slider.Root
-          className="glass-slider__root"
-          value={[value]}
-          min={min}
-          max={max}
-          step={step}
-          disabled={disabled}
-          onValueChange={(next) => onChange(next[0] ?? min)}
-          aria-label={label}
-        >
-          <Slider.Track className="glass-slider__track">
-            <Slider.Range className="glass-slider__range" />
-          </Slider.Track>
-          <Slider.Thumb className="glass-slider__thumb">
-            <span className="glass-slider__thumb-indicator" aria-hidden="true" />
-          </Slider.Thumb>
-        </Slider.Root>
-      </div>
+      <Slider
+        className="glass-slider__control"
+        value={[value]}
+        min={min}
+        max={max}
+        step={step}
+        disabled={disabled}
+        onValueChange={(next) => onChange(next[0] ?? min)}
+        aria-label={label}
+      />
     </div>
   );
 }
