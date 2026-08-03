@@ -27,6 +27,7 @@ export function CustomizePage() {
     <PageShell className="page-shell--customize">
       <IOSPointer />
       <div className="static-backdrop" aria-hidden />
+      <div className="site-chrome-tint" aria-hidden />
 
       <motion.div
         initial={reduced ? false : { opacity: 0, y: -8 }}

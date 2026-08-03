@@ -462,6 +462,64 @@ function InstallationNavigationPreview() {
   );
 }
 
+export function ComponentsShowcase() {
+  const [selectedPackage, setSelectedPackage] =
+    useState<RegistryPackageName>("liquid-glass");
+
+  const activePackage =
+    registryPackages.find((item) => item.name === selectedPackage) ??
+    registryPackages[0];
+  const preview = renderPreview(activePackage.name);
+
+  return (
+    <section className="component-section" id="components">
+      <div className="section-heading">
+        <h2>Components</h2>
+        <p>
+          Source-owned compositions ready to install, adapt, and ship with the
+          primitive.
+        </p>
+      </div>
+
+      <div className="installation-split">
+        <div
+          className="installation-nav"
+          role="listbox"
+          aria-label="Components"
+        >
+          {registryPackages.map((item) => {
+            const selected = item.name === selectedPackage;
+            return (
+              <button
+                key={item.name}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                className={`installation-nav__item${selected ? " is-selected" : ""}`}
+                onClick={() => setSelectedPackage(item.name)}
+              >
+                <span className="installation-nav__title">{item.title}</span>
+                <code className="installation-nav__id">{item.name}</code>
+              </button>
+            );
+          })}
+        </div>
+
+        <ShowcaseCarouselCard
+          key={activePackage.name}
+          title={activePackage.title}
+          background={activePackage.background}
+          stageClassName={preview.stageClassName}
+          className={`installation-preview${preview.mockPointer ? " showcase-card--pointer-demo" : ""}`}
+          data-ios-pointer-suppress={preview.mockPointer ? "" : undefined}
+        >
+          {preview.children}
+        </ShowcaseCarouselCard>
+      </div>
+    </section>
+  );
+}
+
 export function InstallationShowcase() {
   const [origin, setOrigin] = useState("http://localhost:5173");
   const [packageManager, setPackageManager] = useState<"pnpm" | "npm">("pnpm");
@@ -475,7 +533,6 @@ export function InstallationShowcase() {
   const activePackage =
     registryPackages.find((item) => item.name === selectedPackage) ??
     registryPackages[0];
-  const preview = renderPreview(activePackage.name);
 
   const installCommand =
     packageManager === "pnpm"
@@ -493,48 +550,27 @@ export function InstallationShowcase() {
       </div>
 
       <div className="installation-stack">
-        <div className="installation-split">
-          <div className="installation-packages">
-            <div className="installation-packages__heading">
-              <span>Registry items</span>
-            </div>
-            <div
-              className="attachment-group attachment-group--stack"
-              role="listbox"
-              aria-label="Registry items"
-            >
-              {registryPackages.map((item) => {
-                const selected = item.name === selectedPackage;
-                return (
-                  <button
-                    key={item.name}
-                    type="button"
-                    role="option"
-                    aria-selected={selected}
-                    className={`attachment attachment--selectable${selected ? " is-selected" : ""}`}
-                    onClick={() => setSelectedPackage(item.name)}
-                  >
-                    <div className="attachment__content">
-                      <div className="attachment__title">{item.title}</div>
-                      <div className="attachment__description">{item.description}</div>
-                      <code className="attachment__id">{item.name}</code>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <ShowcaseCarouselCard
-            key={activePackage.name}
-            title={activePackage.title}
-            background={activePackage.background}
-            stageClassName={preview.stageClassName}
-            className={`installation-preview${preview.mockPointer ? " showcase-card--pointer-demo" : ""}`}
-            data-ios-pointer-suppress={preview.mockPointer ? "" : undefined}
-          >
-            {preview.children}
-          </ShowcaseCarouselCard>
+        <div
+          className="installation-nav installation-nav--install"
+          role="listbox"
+          aria-label="Install package"
+        >
+          {registryPackages.map((item) => {
+            const selected = item.name === selectedPackage;
+            return (
+              <button
+                key={item.name}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                className={`installation-nav__item${selected ? " is-selected" : ""}`}
+                onClick={() => setSelectedPackage(item.name)}
+              >
+                <span className="installation-nav__title">{item.title}</span>
+                <code className="installation-nav__id">{item.name}</code>
+              </button>
+            );
+          })}
         </div>
 
         <CodeBlock

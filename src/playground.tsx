@@ -9,10 +9,9 @@ import {
   topNavigationItems,
 } from "./playground/data";
 import { HeroFloatStage } from "./playground/hero-float-stage";
-import { InstallationShowcase } from "./playground/installation-showcase";
+import { ComponentsShowcase, InstallationShowcase } from "./playground/installation-showcase";
 import { MaterialAttributesCarousel } from "./playground/material-attributes-carousel";
 import { Appear, AppearItem, PageShell } from "./playground/page-motion";
-import { PrebuiltComponentsCarousel } from "./playground/prebuilt-components-carousel";
 import { Link } from "./playground/router";
 import { SiteMobileNav } from "./playground/site-mobile-nav";
 
@@ -61,6 +60,7 @@ export function Playground() {
     <PageShell>
       <IOSPointer />
       <div className="static-backdrop" aria-hidden />
+      <div className="site-chrome-tint" aria-hidden />
 
       <header className="site-navigation">
         <Appear className="site-navigation__appear">
@@ -151,7 +151,7 @@ export function Playground() {
         </section>
 
         <MaterialAttributesCarousel />
-        <PrebuiltComponentsCarousel />
+        <ComponentsShowcase />
         <InstallationShowcase />
 
         <footer>

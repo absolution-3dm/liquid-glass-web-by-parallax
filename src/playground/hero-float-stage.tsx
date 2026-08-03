@@ -48,7 +48,7 @@ const HERO_PULL_HIT_PAD_X = 0.35;
 const HERO_PULL_HIT_PAD_Y = 0.22;
 
 /** Panel aspect used when fitting the stack into the orbit stage. */
-const HERO_PANEL_ASPECT = 212 / 188;
+const HERO_PANEL_ASPECT = 1;
 
 /**
  * Pick panel metrics so the axonometric stack fills most of the stage.
@@ -58,14 +58,11 @@ function resolveHeroPanelMetrics(stageWidth: number, stageHeight: number) {
   const safeW = Math.max(0, stageWidth);
   const safeH = Math.max(0, stageHeight);
   // Fill most of the stage; leave a little room for the projected Z-stack margins.
-  const widthByStage = Math.min(safeW * 0.7, safeH * 0.7 * (1 / HERO_PANEL_ASPECT));
-  const width = Math.round(
-    Math.min(360, Math.max(200, widthByStage)) / 8,
-  ) * 8;
-  const height = Math.round((width * HERO_PANEL_ASPECT) / 8) * 8;
-  const radius = Math.round(Math.min(80, Math.max(48, width * 0.255)));
-  const depthStep = Math.round(Math.min(136, Math.max(80, width * 0.42)));
-  return { width, height, radius, depthStep };
+  const sizeByStage = Math.min(safeW * 0.7, safeH * 0.7);
+  const size = Math.round(Math.min(320, Math.max(180, sizeByStage)) / 8) * 8;
+  const radius = 110;
+  const depthStep = Math.round(Math.min(136, Math.max(80, size * 0.42)));
+  return { width: size, height: size, radius, depthStep };
 }
 
 const HERO_PANEL_FALLBACK = resolveHeroPanelMetrics(560, 640);
