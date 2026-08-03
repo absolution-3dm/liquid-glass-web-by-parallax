@@ -227,6 +227,7 @@ const HERO_AXON_ROTATE_Y = -28;
 const HERO_FLOAT_AMPLITUDE_PX = 7;
 const HERO_FLOAT_PERIOD_SEC = 5.6;
 const HERO_FLOAT_PHASE_STEP = 0.9;
+const HERO_FLOAT_FPS = 30;
 
 /** Panel aspect used when fitting the stack into the orbit stage. */
 const HERO_PANEL_ASPECT = 212 / 188;
@@ -382,8 +383,12 @@ function HeroFloatStage() {
     if (reduceMotionRef.current) return;
     let frame = 0;
     const started = performance.now();
+    let lastUpdate = started;
+    const frameInterval = 1000 / HERO_FLOAT_FPS;
     const tick = (now: number) => {
-      if (!reduceMotionRef.current) {
+      const elapsed = now - lastUpdate;
+      if (!reduceMotionRef.current && elapsed >= frameInterval) {
+        lastUpdate = now - (elapsed % frameInterval);
         floatClock.set((now - started) / 1000);
       }
       frame = window.requestAnimationFrame(tick);
