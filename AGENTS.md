@@ -17,7 +17,9 @@ The axis-isolated SVG graph in
 - Load X and Y through distinct `feImage` primitives. Never derive both axes
   from one combined image and never reuse one URL for both.
 - Before displacement, force the unused channel to exactly `0.5` with
-  `feComponentTransfer`; PNG channel 128 is not exactly 0.5.
+  `feComponentTransfer`; PNG channel 128 is not exactly 0.5. Also bias-correct
+  the active channel (`slope=1`, `intercept=0.5−128/255`) so flat-field mid
+  pixels produce zero displacement under chromatic scale differentials.
 - Keep X and Y in sequential `feDisplacementMap` primitives.
 - Keep both edge-dependent orders: top/bottom uses Y→X, sides uses X→Y. Each
   chromatic channel has four displacement passes, and the edge-order alpha mask

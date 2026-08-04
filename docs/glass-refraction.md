@@ -135,14 +135,20 @@ Do not derive both axis inputs from one combined `feImage`, even with separate
 3. Encode and cache the two displacement PNGs independently with
    `generateAxisLensMaps`; also encode the non-displacement edge-order mask.
 4. Load them through two distinct `feImage` primitives.
-5. Produce `xDisplacementMap` by preserving R and forcing G to exactly `0.5`.
-6. Produce `yDisplacementMap` by forcing R to exactly `0.5` and preserving G.
+5. Produce `xDisplacementMap` by bias-correcting R (PNG mid `128/255` → exact
+   `0.5`) and forcing G to exactly `0.5`.
+6. Produce `yDisplacementMap` by forcing R to exactly `0.5` and bias-correcting
+   G the same way.
 7. Build a top/bottom branch with full-scale Y-only then X-only passes.
 8. Build a left/right branch with full-scale X-only then Y-only passes.
 9. Mask the branches by edge orientation and add their complementary results.
 
-The exact `0.5` value is produced with `feComponentTransfer`. Do not substitute
+The exact `0.5` mid is produced with `feComponentTransfer`. Do not substitute
 an 8-bit neutral PNG channel: `128 / 255` is close to, but not exactly, `0.5`.
+Unused axes use `slope="0" intercept="0.5"`. Active axes use
+`slope="1" intercept={0.5 − 128/255}` so a flat encoded mid produces zero
+displacement — otherwise chromatic scale differentials turn that residual into
+flat-field color fringing.
 
 The X texture intentionally retains B so the specular filter can reuse it.
 Sharing the CPU calculation is safe. Sharing the encoded displacement texture

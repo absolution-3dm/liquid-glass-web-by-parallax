@@ -17,6 +17,7 @@ import {
   backdropFilterPadding,
   buildLensMapParams,
   chromaticChannelScales,
+  DISPLACEMENT_PNG_MID_BIAS,
   evenMapSize,
   glassEngine,
   glassPointerHighlight,
@@ -1293,6 +1294,9 @@ export function GlassShellBackdrop({
                   in="rawXDisplacementMap"
                   result="xDisplacementMap"
                 >
+                  {/* Active R: cancel PNG 128≠0.5 mid bias so flat field stays
+                      undisplaced; unused G forced to exact 0.5. */}
+                  <feFuncR type="linear" slope="1" intercept={DISPLACEMENT_PNG_MID_BIAS} />
                   <feFuncG type="linear" slope="0" intercept="0.5" />
                 </feComponentTransfer>
                 <feImage
@@ -1309,6 +1313,7 @@ export function GlassShellBackdrop({
                   result="yDisplacementMap"
                 >
                   <feFuncR type="linear" slope="0" intercept="0.5" />
+                  <feFuncG type="linear" slope="1" intercept={DISPLACEMENT_PNG_MID_BIAS} />
                 </feComponentTransfer>
                 <feImage
                   ref={edgeOrderMapRef}

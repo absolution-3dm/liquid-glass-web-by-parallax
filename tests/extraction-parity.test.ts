@@ -26,6 +26,7 @@ describe("LiquidGlass extraction contract", () => {
     expect(source).toContain('result="rawXDisplacementMap"');
     expect(source).toContain('result="rawYDisplacementMap"');
     expect(source).toContain('intercept="0.5"');
+    expect(source).toContain("DISPLACEMENT_PNG_MID_BIAS");
     expect(source).toContain('result="dispTopBottomY"');
     expect(source).toContain('in="dispTopBottomY"');
     expect(source).toContain('result="dispSidesX"');

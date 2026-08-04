@@ -26,6 +26,7 @@ import {
   buildLensMapParams,
   chromaticChannelScales,
   cssBackdropBlurPx,
+  DISPLACEMENT_PNG_MID_BIAS,
   glassPointerHighlight,
   glassPointerHighlightMaskUrl,
   glassSurfaceCssVars,
@@ -729,6 +730,9 @@ export const LiquidGlass = ({
                 result="rawXDisplacementMap"
               />
               <feComponentTransfer in="rawXDisplacementMap" result="xDisplacementMap">
+                {/* Active R: cancel PNG 128≠0.5 mid bias so flat field stays
+                    undisplaced; unused G forced to exact 0.5. */}
+                <feFuncR type="linear" slope="1" intercept={DISPLACEMENT_PNG_MID_BIAS} />
                 <feFuncG type="linear" slope="0" intercept="0.5" />
               </feComponentTransfer>
               <feImage
@@ -742,6 +746,7 @@ export const LiquidGlass = ({
               />
               <feComponentTransfer in="rawYDisplacementMap" result="yDisplacementMap">
                 <feFuncR type="linear" slope="0" intercept="0.5" />
+                <feFuncG type="linear" slope="1" intercept={DISPLACEMENT_PNG_MID_BIAS} />
               </feComponentTransfer>
               <feImage
                 href={lens.edgeOrderMapUrl}

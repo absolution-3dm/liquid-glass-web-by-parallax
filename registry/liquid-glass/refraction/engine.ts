@@ -49,6 +49,16 @@ export type GlassEngineParams = {
 };
 
 /**
+ * Encoded displacement mid is PNG byte 128 (`128/255`), but `feDisplacementMap`
+ * treats the mid as exactly `0.5`. The residual `128/255 − 0.5 = 1/510` is a
+ * uniform sub-pixel shift when all channels share one scale; with chromatic
+ * scale differentials it becomes flat-field color fringing. Cancel it on the
+ * *active* axis with `feFunc* type="linear" slope="1" intercept={this}`.
+ * Unused axes are still forced with `slope="0" intercept="0.5"`.
+ */
+export const DISPLACEMENT_PNG_MID_BIAS = 0.5 - 128 / 255;
+
+/**
  * Shared liquid-glass engine constants (Aave technique).
  * Material tuning lives in `materials.json`.
  * Consumers may provide per-instance overrides through the primitive's
