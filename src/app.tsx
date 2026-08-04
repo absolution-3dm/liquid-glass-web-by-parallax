@@ -1,5 +1,6 @@
 "use client";
 
+import { Analytics } from "@vercel/analytics/react";
 import { AnimatePresence } from "motion/react";
 import { Playground } from "./playground";
 import { CustomizePage } from "./playground/customize-page";
@@ -23,6 +24,7 @@ export function App() {
   return (
     <Router>
       <AppRoutes />
+      <Analytics />
     </Router>
   );
 }

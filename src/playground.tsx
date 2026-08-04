@@ -113,7 +113,6 @@ export function Playground() {
                 <a
                   className="hero-cta"
                   href="#installation"
-                  data-ios-pointer-target=""
                 >
                   <LiquidGlass
                     width="100%"
@@ -127,15 +126,14 @@ export function Playground() {
                 </a>
                 <Link
                   to="/customize"
-                  className="hero-cta hero-cta--neutral"
-                  data-ios-pointer-target=""
+                  className="hero-cta"
                 >
                   <LiquidGlass
                     width="100%"
                     height={44}
                     borderRadius={22}
                     material={heroCustomizeMaterial}
-                    className="hero-cta__glass hero-cta__glass--neutral"
+                    className="hero-cta__glass"
                   >
                     <span className="hero-cta__label">Customize</span>
                   </LiquidGlass>

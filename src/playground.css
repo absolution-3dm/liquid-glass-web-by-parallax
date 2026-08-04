@@ -540,13 +540,6 @@ h1 {
   border-radius: 9999px;
   box-shadow:
     0 1px 0 rgb(255 255 255 / 0.12) inset,
-    0 10px 24px rgb(8 40 96 / 0.28),
-    0 28px 48px rgb(0 0 0 / 0.28);
-}
-
-.hero-cta__glass--neutral {
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.12) inset,
     0 10px 24px rgb(0 0 0 / 0.22),
     0 28px 48px rgb(0 0 0 / 0.28);
 }
