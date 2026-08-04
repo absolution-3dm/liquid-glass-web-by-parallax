@@ -54,7 +54,6 @@ const materialAttributeCards: ReadonlyArray<MaterialAttributeCardConfig> = [
     title: "Chromatic Aberration",
     background: `${CAROUSEL_BG}/02-chroma.png`,
     material: { preset: "regular", scale: 2.1, depth: 40, chroma: 1, splay: 0.92, blur: 3, tint: 0.08 },
-    engine: { chromaRedBoost: 0.55, chromaGreenBoost: 0.25 },
     borderRadius: 64,
     pointerHighlight: false,
   },

@@ -544,6 +544,14 @@ h1 {
     0 28px 48px rgb(0 0 0 / 0.28);
 }
 
+/* Match fill #0b2f6b; opacity bumped so blue reads as heavy as the neutral CTA. */
+.hero-cta__glass--blue {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.12) inset,
+    0 10px 24px rgb(11 47 107 / 0.42),
+    0 28px 48px rgb(6 22 52 / 0.34);
+}
+
 .hero-cta__glass .glass-surface__content {
   justify-content: center;
   padding: 0 14px;
@@ -555,6 +563,10 @@ h1 {
   font-weight: 510;
   letter-spacing: -0.01em;
   white-space: nowrap;
+}
+
+.hero-cta__label--blue {
+  color: #c8daf5;
 }
 
 .component-section {
@@ -1104,6 +1116,29 @@ html.customize-page-active #root {
   content: none;
 }
 
+.customizer-preview__hint {
+  position: absolute;
+  z-index: 2;
+  right: 20px;
+  bottom: 18px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 999px;
+  color: rgb(255 255 255 / 0.72);
+  background: rgb(8 8 10 / 0.48);
+  backdrop-filter: blur(10px);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.customizer-preview__hint--hidden {
+  opacity: 0;
+}
+
 .customizer-preview__glass-wrap {
   position: absolute;
   z-index: 1;
@@ -1113,8 +1148,8 @@ html.customize-page-active #root {
   /* Fallback centering until measured left/top take over. */
   margin-top: -90px;
   margin-left: calc(min(340px, 100% - 32px) / -2);
-  cursor: pointer;
-  touch-action: manipulation;
+  cursor: grab;
+  touch-action: none;
   user-select: none;
   -webkit-user-drag: none;
   box-shadow:
@@ -1125,6 +1160,14 @@ html.customize-page-active #root {
 .customizer-preview__glass-wrap[data-positioned="true"] {
   margin-top: 0;
   margin-left: 0;
+}
+
+.customizer-preview__glass-wrap--dragging {
+  cursor: grabbing;
+}
+
+.customizer-preview__glass-wrap--static {
+  cursor: default;
 }
 
 .customizer-preview__glass {

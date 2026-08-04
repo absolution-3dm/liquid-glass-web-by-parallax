@@ -119,9 +119,11 @@ export function Playground() {
                     height={44}
                     borderRadius={22}
                     material={heroCtaMaterial}
-                    className="hero-cta__glass"
+                    className="hero-cta__glass hero-cta__glass--blue"
                   >
-                    <span className="hero-cta__label">Get component</span>
+                    <span className="hero-cta__label hero-cta__label--blue">
+                      Get component
+                    </span>
                   </LiquidGlass>
                 </a>
                 <Link
