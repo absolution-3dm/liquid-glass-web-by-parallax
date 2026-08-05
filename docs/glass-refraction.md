@@ -3,15 +3,15 @@
 ## Status
 
 This is a user-validated rendering workaround for two Chromium GPU-pipeline
-regressions. The extracted primitive keeps the canonical graph in:
+regressions. The primitive keeps the canonical graph in:
 
 - `registry/liquid-glass/liquid-glass.tsx`
 - `registry/liquid-glass/refraction/lens-map.ts`
 
 The final independent-axis-texture fix was visually confirmed on the affected
-current Chrome build on 2026-07-22. D2 did not reproduce the newer regression.
-This first extraction preserves that graph and its default material/engine
-parameters; it does not attempt a visual retune.
+current Chrome build on 2026-07-22. A second test configuration did not
+reproduce the newer regression. The current implementation preserves that graph
+and its default material/engine parameters; it does not attempt a visual retune.
 
 ## Safari/WebKit boundary and rejected fallbacks
 
@@ -230,7 +230,7 @@ Four controlled experiments produced no visual change and were reverted:
 The fix was to bake independent X-only and Y-only bitmaps from one CPU map
 calculation and feed them through distinct `feImage` nodes into the confirmed
 axis-isolated passes. This removed the left-up/right-down artifact without
-changing `navigation.scale = 3`.
+changing the current `navigation.scale = 1.465` material preset.
 
 The exact internal Chromium fault is not proven, but the controlled result
 isolates it to sharing the combined R/G encoded texture or its filter-graph

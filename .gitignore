@@ -3,3 +3,7 @@ dist/
 *.tsbuildinfo
 .DS_Store
 .vercel
+.env*
+!.env.example
+coverage/
+*.log

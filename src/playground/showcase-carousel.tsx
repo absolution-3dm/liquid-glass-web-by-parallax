@@ -11,7 +11,8 @@ import {
 import { cn } from "../lib/utils";
 
 /** Default scene used behind showcase slides. */
-export const SHOWCASE_CAROUSEL_BACKGROUND = "/images/pexels-bento-scene.jpg";
+export const SHOWCASE_CAROUSEL_BACKGROUND =
+  "/images/Carousel Background/04-refraction.png";
 
 type ShowcaseCarouselProps = {
   "aria-label": string;

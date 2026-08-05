@@ -25,9 +25,9 @@ The axis-isolated SVG graph in
   chromatic channel has four displacement passes, and the edge-order alpha mask
   combines the finished branches arithmetically.
 
-The source extraction snapshot uses `navigation.scale = 1.465` and
-`navigation.blur = 1.5`. Earlier source documentation and a stale assertion
-said `scale = 3`; commit `f5e7ba1` intentionally retuned the live material.
+The current material snapshot uses `navigation.scale = 1.465` and
+`navigation.blur = 1.5`. Earlier documentation and a stale assertion said
+`scale = 3`; commit `f5e7ba1` intentionally retuned the live material.
 Do not change current presets or engine JSON as a workaround for a filter-graph
 regression.
 

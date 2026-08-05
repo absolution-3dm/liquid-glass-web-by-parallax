@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "parallax-glass",
-  "homepage": "https://example.com/parallax-glass",
+  "homepage": "https://parallax-glass.vercel.app/",
   "items": [
     {
       "name": "liquid-glass",

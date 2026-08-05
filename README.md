@@ -259,3 +259,7 @@ registry.json            Registry item definitions
 `registry/liquid-glass/` must remain portable copied source. Do not add a
 private npm runtime, a Next.js route dependency, or project-specific import
 aliases inside that directory.
+
+## License
+
+Parallax Glass is available under the [MIT License](LICENSE).
