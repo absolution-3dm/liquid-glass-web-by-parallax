@@ -10,6 +10,8 @@ pointer lighting, material presets, and responsive lens-map generation. Chromium
 gets the full SVG displacement effect; Safari and Firefox receive a deliberate
 CSS blur, tint, and highlight fallback.
 
+**[Live demo and material customizer](https://parallax-glass.vercel.app/)**
+
 ## Features
 
 - Live, aspect-correct backdrop refraction in Chromium
@@ -26,23 +28,21 @@ CSS blur, tint, and highlight fallback.
 Every registry item is self-contained. Install only the primitive, or install a
 composition and let the shadcn CLI copy its required files and dependencies.
 
-When this repository is running locally:
+Run the following command from the root of a shadcn-enabled project:
 
 ```bash
-pnpm install
-pnpm registry:build
-pnpm dev
+pnpm dlx shadcn@latest add https://parallax-glass.vercel.app/r/liquid-glass.json
 ```
 
-Then, from the shadcn-enabled application that will consume the component:
+With npm, use:
 
 ```bash
-pnpm dlx shadcn@latest add http://localhost:5173/r/liquid-glass.json
+npx shadcn@latest add https://parallax-glass.vercel.app/r/liquid-glass.json
 ```
 
-For a deployed registry, replace `http://localhost:5173` with the registry's
-origin. Generated registry items are written to `public/r/` by
-`pnpm registry:build`.
+This is the shadcn Registry CLI installation path. It downloads the registry
+item from the deployed Vercel site, resolves its declared dependencies, and
+copies the editable source into your application.
 
 ## Basic usage
 
@@ -185,7 +185,7 @@ the same module as `LiquidGlass`.
 Install a composition by changing the registry filename, for example:
 
 ```bash
-pnpm dlx shadcn@latest add http://localhost:5173/r/liquid-glass-navigation.json
+pnpm dlx shadcn@latest add https://parallax-glass.vercel.app/r/liquid-glass-navigation.json
 ```
 
 Motion is scoped to the items that use it. Installing the core primitive, icon
