@@ -28,6 +28,7 @@ import {
   useMorphMenuHover,
 } from "../../registry/liquid-glass/compositions/morph-menu-hover";
 import { MorphMenu } from "../../registry/liquid-glass/compositions/morph-menu";
+import { preloadVercelImage } from "../lib/vercel-image";
 import { CodeBlock } from "./code-block";
 import { ShowcaseCarouselCard } from "./showcase-carousel";
 
@@ -466,6 +467,12 @@ export function ComponentsShowcase() {
   const [selectedPackage, setSelectedPackage] =
     useState<RegistryPackageName>("liquid-glass");
 
+  useEffect(() => {
+    for (const item of registryPackages) {
+      preloadVercelImage(item.background);
+    }
+  }, []);
+
   const activePackage =
     registryPackages.find((item) => item.name === selectedPackage) ??
     registryPackages[0];
@@ -506,10 +513,11 @@ export function ComponentsShowcase() {
         </div>
 
         <ShowcaseCarouselCard
-          key={activePackage.name}
           title={activePackage.title}
           background={activePackage.background}
+          stageKey={activePackage.name}
           stageClassName={preview.stageClassName}
+          loading="eager"
           className={`installation-preview${preview.mockPointer ? " showcase-card--pointer-demo" : ""}`}
           data-ios-pointer-suppress={preview.mockPointer ? "" : undefined}
         >

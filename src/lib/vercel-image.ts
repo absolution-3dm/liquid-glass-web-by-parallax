@@ -28,3 +28,16 @@ export function vercelImageSrcSet(
     .map((width) => `${vercelImageUrl(src, width, quality)} ${width}w`)
     .join(", ");
 }
+
+/** Warm the browser / CDN cache for a scene used by display-size `srcset`. */
+export function preloadVercelImage(
+  src: string,
+  width = 960,
+  sizes = "(max-width: 640px) 90vw, 480px",
+) {
+  const img = new Image();
+  const srcSet = vercelImageSrcSet(src);
+  img.sizes = sizes;
+  if (srcSet) img.srcset = srcSet;
+  img.src = vercelImageUrl(src, width);
+}

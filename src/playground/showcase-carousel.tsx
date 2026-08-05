@@ -1,6 +1,11 @@
 "use client";
 
-import type { ComponentProps, ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
 import {
   Carousel,
   CarouselContent,
@@ -10,6 +15,52 @@ import {
 } from "../components/ui/carousel";
 import { cn } from "../lib/utils";
 import { vercelImageSrcSet, vercelImageUrl } from "../lib/vercel-image";
+
+const SHOWCASE_SCENE_SIZES = "(max-width: 640px) 90vw, 480px";
+
+/** Keep the previous frame painted until the next scene is decoded. */
+function ShowcaseScene({
+  src,
+  loading = "lazy",
+}: {
+  src: string;
+  loading?: "lazy" | "eager";
+}) {
+  const [shown, setShown] = useState(src);
+
+  useEffect(() => {
+    if (src === shown) return;
+
+    let cancelled = false;
+    const probe = new Image();
+    const srcSet = vercelImageSrcSet(src);
+    probe.sizes = SHOWCASE_SCENE_SIZES;
+    if (srcSet) probe.srcset = srcSet;
+    const reveal = () => {
+      if (!cancelled) setShown(src);
+    };
+    probe.onload = reveal;
+    probe.onerror = reveal;
+    probe.src = vercelImageUrl(src, 960);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [src, shown]);
+
+  return (
+    <img
+      className="showcase-card__scene"
+      src={vercelImageUrl(shown, 960)}
+      srcSet={vercelImageSrcSet(shown)}
+      sizes={SHOWCASE_SCENE_SIZES}
+      alt=""
+      aria-hidden="true"
+      loading={loading}
+      decoding="async"
+    />
+  );
+}
 
 /** Default scene used behind showcase slides. */
 export const SHOWCASE_CAROUSEL_BACKGROUND =
@@ -80,6 +131,9 @@ type ShowcaseCarouselCardProps = {
   children: ReactNode;
   className?: string;
   stageClassName?: string;
+  /** Remount only the stage (demos), not the scene image. */
+  stageKey?: string | number;
+  loading?: "lazy" | "eager";
 } & Omit<ComponentProps<"article">, "title" | "children">;
 
 export function ShowcaseCarouselCard({
@@ -88,21 +142,14 @@ export function ShowcaseCarouselCard({
   children,
   className,
   stageClassName,
+  stageKey,
+  loading = "lazy",
   ...props
 }: ShowcaseCarouselCardProps) {
   return (
     <article className={cn("showcase-card", className)} {...props}>
       {typeof background === "string" ? (
-        <img
-          className="showcase-card__scene"
-          src={vercelImageUrl(background, 960)}
-          srcSet={vercelImageSrcSet(background)}
-          sizes="(max-width: 640px) 90vw, 480px"
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          decoding="async"
-        />
+        <ShowcaseScene src={background} loading={loading} />
       ) : (
         background
       )}
@@ -110,7 +157,12 @@ export function ShowcaseCarouselCard({
       <div className="showcase-card__copy">
         <h3>{title}</h3>
       </div>
-      <div className={cn("showcase-card__stage", stageClassName)}>{children}</div>
+      <div
+        key={stageKey}
+        className={cn("showcase-card__stage", stageClassName)}
+      >
+        {children}
+      </div>
     </article>
   );
 }
