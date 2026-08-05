@@ -14,6 +14,9 @@ import { MaterialAttributesCarousel } from "./playground/material-attributes-car
 import { Appear, AppearItem, PageShell } from "./playground/page-motion";
 import { Link } from "./playground/router";
 import { SiteMobileNav } from "./playground/site-mobile-nav";
+import { vercelImageSrcSet, vercelImageUrl } from "./lib/vercel-image";
+
+const HERO_SCENE = "/images/Carousel Background/02-chroma.png";
 
 export function Playground() {
   const [topNavigationValue, setTopNavigationValue] = useState("menu");
@@ -100,6 +103,16 @@ export function Playground() {
       <main id="top">
         <section className="hero" id="menu">
           <div className="hero-media" aria-hidden="true">
+            <img
+              className="hero-media__scene"
+              src={vercelImageUrl(HERO_SCENE, 1280)}
+              srcSet={vercelImageSrcSet(HERO_SCENE)}
+              sizes="(max-width: 640px) 120vw, min(78vw, 1280px)"
+              alt=""
+              decoding="async"
+              fetchPriority="high"
+            />
+            <div className="hero-media__scene-fade" />
             <div className="hero-media__veil" />
           </div>
           <div className="hero-inner">

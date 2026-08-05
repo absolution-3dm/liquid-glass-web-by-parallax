@@ -1,3 +1,10 @@
 {
-  "rewrites": [{ "source": "/customize", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/customize", "destination": "/index.html" }],
+  "images": {
+    "sizes": [480, 640, 960, 1280],
+    "formats": ["image/avif", "image/webp"],
+    "qualities": [75],
+    "localPatterns": [{ "pathname": "^/images/.*$", "search": "" }],
+    "minimumCacheTTL": 2678400
+  }
 }

@@ -371,27 +371,73 @@ main {
      re-evaluate every glass backdrop-filter as content moves over it. */
 }
 
-.hero-media::before {
-  content: "";
+.hero-media__scene,
+.hero-media__scene-fade {
   position: absolute;
   z-index: 0;
-  inset: 0;
-  /* Blur is pre-baked into the asset — avoids live filter:blur on a
-     full-viewport / high-DPI layer behind the glass stack. */
-  background-image: url("/images/hero-bg.jpg");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
+  /* Cover ~60%+ of the hero around the glass — large enough to read as
+     atmosphere, not a small inset plate. */
+  top: 50%;
+  right: max(-6%, calc((100% - min(var(--page-width), 100% - (var(--page-gutter) * 2))) / 2 - 22%));
+  width: min(78vw, 1280px);
+  height: min(92vh, 1040px);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.hero-media__scene {
+  object-fit: cover;
+  object-position: 58% 46%;
+  /* Match the previous background-size: 135% zoom on the atmosphere plate. */
+  transform: translateY(-50%) scale(1.35);
+  transform-origin: 58% 46%;
+  /* Broad faint field (~60%), then a long soft melt to empty. */
+  -webkit-mask-image: radial-gradient(
+    farthest-side at 62% 48%,
+    #000 0%,
+    #000 38%,
+    rgb(0 0 0 / 0.72) 55%,
+    rgb(0 0 0 / 0.38) 70%,
+    rgb(0 0 0 / 0.14) 84%,
+    transparent 100%
+  );
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-image: radial-gradient(
+    farthest-side at 62% 48%,
+    #000 0%,
+    #000 38%,
+    rgb(0 0 0 / 0.72) 55%,
+    rgb(0 0 0 / 0.38) 70%,
+    rgb(0 0 0 / 0.14) 84%,
+    transparent 100%
+  );
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
+
+.hero-media__scene-fade {
+  z-index: 1;
+  /* Keep mid-field readable as faint pattern; only the outer rim goes black. */
+  background: radial-gradient(
+    farthest-side at 62% 48%,
+    transparent 0%,
+    transparent 36%,
+    rgb(1 1 2 / 0.1) 55%,
+    rgb(1 1 2 / 0.35) 72%,
+    rgb(1 1 2 / 0.72) 88%,
+    var(--canvas) 100%
+  );
 }
 
 .hero-media__veil {
   position: absolute;
-  z-index: 1;
+  z-index: 2;
   inset: 0;
-  /* Readability wash + bottom fade into the page canvas. */
+  /* Keep copy readable on the left; bottom fades into the page canvas. */
   background:
-    linear-gradient(105deg, rgb(1 1 2 / 0.38) 0%, rgb(1 1 2 / 0.12) 48%, transparent 78%),
-    linear-gradient(180deg, rgb(1 1 2 / 0.2) 0%, transparent 28%, transparent 58%, rgb(1 1 2 / 0.72) 86%, var(--canvas) 100%);
+    linear-gradient(105deg, rgb(1 1 2 / 0.55) 0%, rgb(1 1 2 / 0.18) 42%, transparent 72%),
+    linear-gradient(180deg, rgb(1 1 2 / 0.18) 0%, transparent 28%, transparent 58%, rgb(1 1 2 / 0.72) 86%, var(--canvas) 100%);
 }
 
 .hero-inner {
@@ -1957,6 +2003,22 @@ footer {
     width: min(var(--page-width), calc(100% - (var(--page-gutter) * 2)));
     height: 100%;
     padding: 88px 0 max(28px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .hero-media__scene,
+  .hero-media__scene-fade {
+    /* Center with the stacked glass on narrow layouts. */
+    top: 38%;
+    right: auto;
+    left: 50%;
+    width: min(120vw, 720px);
+    height: min(70vh, 640px);
+    transform: translate(-50%, -50%);
+  }
+
+  .hero-media__scene {
+    transform: translate(-50%, -50%) scale(1.35);
+    transform-origin: 58% 46%;
   }
 
   .hero-media__veil {

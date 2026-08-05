@@ -9,6 +9,7 @@ import {
   CarouselPrevious,
 } from "../components/ui/carousel";
 import { cn } from "../lib/utils";
+import { vercelImageSrcSet, vercelImageUrl } from "../lib/vercel-image";
 
 /** Default scene used behind showcase slides. */
 export const SHOWCASE_CAROUSEL_BACKGROUND =
@@ -94,9 +95,13 @@ export function ShowcaseCarouselCard({
       {typeof background === "string" ? (
         <img
           className="showcase-card__scene"
-          src={background}
+          src={vercelImageUrl(background, 960)}
+          srcSet={vercelImageSrcSet(background)}
+          sizes="(max-width: 640px) 90vw, 480px"
           alt=""
           aria-hidden="true"
+          loading="lazy"
+          decoding="async"
         />
       ) : (
         background

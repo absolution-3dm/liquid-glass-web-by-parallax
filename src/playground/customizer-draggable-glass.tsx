@@ -7,6 +7,7 @@ import type {
   GlassEngineParams,
   GlassPointerHighlightParams,
 } from "../../registry/liquid-glass/refraction/engine";
+import { vercelImageSrcSet, vercelImageUrl } from "../lib/vercel-image";
 
 type CustomizerDraggableGlassProps = {
   borderRadius: number;
@@ -204,10 +205,13 @@ export function CustomizerDraggableGlass({
     <div className="customizer-preview" ref={previewRef}>
       <img
         className="customizer-preview__scene"
-        src={PREVIEW_SCENE}
+        src={vercelImageUrl(PREVIEW_SCENE, 1280)}
+        srcSet={vercelImageSrcSet(PREVIEW_SCENE)}
+        sizes="(max-width: 900px) 100vw, 60vw"
         alt=""
         aria-hidden="true"
         draggable={false}
+        decoding="async"
       />
       <div
         ref={glassRef}
