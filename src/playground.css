@@ -388,6 +388,10 @@ main {
 .hero-media__scene {
   object-fit: cover;
   object-position: 58% 46%;
+  /* The source plate has a true-black matte, while the site canvas is a
+     slightly lifted near-black. Screen blending makes black a no-op so the
+     radial mask cannot leave a dark hairline where it meets the canvas. */
+  mix-blend-mode: screen;
   /* Match the previous background-size: 135% zoom on the atmosphere plate. */
   transform: translateY(-50%) scale(1.35);
   transform-origin: 58% 46%;

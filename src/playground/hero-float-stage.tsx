@@ -26,7 +26,8 @@ const heroStackMaterial = {
 const heroStackEngine = {
   backdropSaturateSvg: 1.1,
   backdropSaturateCssBlur: 1.08,
-  
+  // Give the oversized hero panes a broader, more legible specular rim.
+  edgeWidth: 5,
 };
 
 /** Staggered hero capsule stack — front-left to back-right. */

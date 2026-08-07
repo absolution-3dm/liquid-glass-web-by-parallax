@@ -12,10 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import {
-  CHROMIUM_BACKDROP_REFERENCE_DPR,
-  chromiumBackdropScaleCorrection,
   glassBrowserSupport,
-  observeDevicePixelRatio,
   supportsBackdropSvgFilter,
 } from "./browser-support";
 import {
@@ -197,9 +194,6 @@ export const LiquidGlass = ({
   const baseId = useId().replace(/:/g, "-");
   const [lens, setLens] = useState<LensState | null>(null);
   const [backdropSvg, setBackdropSvg] = useState(false);
-  // Match the approved Retina render during SSR/first paint. The observer
-  // corrects this after mount and whenever the window crosses displays.
-  const [backdropDpr, setBackdropDpr] = useState(CHROMIUM_BACKDROP_REFERENCE_DPR);
   // Optimistic true avoids a first-paint frost flash for above-the-fold glass;
   // layout effect + IntersectionObserver immediately corrects off-screen ones.
   const [inView, setInView] = useState(true);
@@ -330,9 +324,7 @@ export const LiquidGlass = ({
 
     const strength = Math.max(0, scale);
     // Backdrop filter uses userSpaceOnUse — scale is real CSS pixels.
-    const backdropPx =
-      refractionBackdropScale(strength, w, h) *
-      chromiumBackdropScaleCorrection(backdropDpr);
+    const backdropPx = refractionBackdropScale(strength, w, h);
     const blurPx = Math.max(0, blur);
     const backdropScales = chromaticChannelScales(backdropPx, chroma, resolvedEngine);
 
@@ -373,11 +365,6 @@ export const LiquidGlass = ({
     setBackdropSvg(supportsBackdropSvgFilter());
   }, []);
 
-  useEffect(() => {
-    if (!backdropSvg) return;
-    return observeDevicePixelRatio(setBackdropDpr);
-  }, [backdropSvg]);
-
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -417,7 +404,6 @@ export const LiquidGlass = ({
     tint,
     fill,
     backdrop,
-    backdropDpr,
     resolvedEngine,
   ]);
 

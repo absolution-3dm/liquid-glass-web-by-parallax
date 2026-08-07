@@ -14,11 +14,6 @@ import {
   writeSpecularOverlay,
 } from "../refraction/lens-map";
 import {
-  CHROMIUM_BACKDROP_REFERENCE_DPR,
-  chromiumBackdropScaleCorrection,
-  observeDevicePixelRatio,
-} from "../browser-support";
-import {
   backdropFilterPadding,
   buildLensMapParams,
   chromaticChannelScales,
@@ -296,7 +291,6 @@ export function GlassShellBackdrop({
 
   const [useSvg, setUseSvg] = useState(false);
   const [active, setActive] = useState(false);
-  const [backdropDpr, setBackdropDpr] = useState(CHROMIUM_BACKDROP_REFERENCE_DPR);
   useSvgRef.current = useSvg;
 
   const getShell = () => {
@@ -555,13 +549,10 @@ export function GlassShellBackdrop({
       m.tint,
       qualityFloor,
       lod && !cssBlurMorph ? MORPH_MAP_QUALITY_CAP : "",
-      useSvgRef.current ? backdropDpr : "",
     ].join(":");
 
     const strength = Math.max(0, m.scale);
-    const backdropPx =
-      refractionBackdropScale(strength, liveW, liveH) *
-      (useSvgRef.current ? chromiumBackdropScaleCorrection(backdropDpr) : 1);
+    const backdropPx = refractionBackdropScale(strength, liveW, liveH);
     const backdropScales = chromaticChannelScales(backdropPx, m.chroma);
     const liveRadius = Math.min(radiusIn, liveW / 2, liveH / 2);
 
@@ -616,7 +607,7 @@ export function GlassShellBackdrop({
         },
       },
       engine,
-      lod ? 1 : useSvgRef.current ? Math.min(backdropDpr, 3) : mapBakeDpr(),
+      lod ? 1 : mapBakeDpr(),
       lod ? MORPH_MAP_QUALITY_CAP : SETTLED_MAP_QUALITY_CAP,
       // Both shell paths size themselves through the explicit long-edge caps
       // above, so they opt out of the engine's shared area budget: the morph
@@ -872,9 +863,7 @@ export function GlassShellBackdrop({
     const liveW = Math.max(1, width);
     const liveH = Math.max(1, height);
     const m = materialRef.current;
-    const backdropPx =
-      refractionBackdropScale(Math.max(0, m.scale), liveW, liveH) *
-      (useSvgRef.current ? chromiumBackdropScaleCorrection(backdropDpr) : 1);
+    const backdropPx = refractionBackdropScale(Math.max(0, m.scale), liveW, liveH);
     const backdropScales = chromaticChannelScales(backdropPx, m.chroma);
     return {
       ...lens,
@@ -1060,11 +1049,6 @@ export function GlassShellBackdrop({
     setUseSvg(supportsBackdropSvgFilter());
   }, []);
 
-  useEffect(() => {
-    if (!useSvg) return;
-    return observeDevicePixelRatio(setBackdropDpr);
-  }, [useSvg]);
-
   useLayoutEffect(() => {
     const parent = getShell();
     if (!parent) return;
@@ -1125,7 +1109,6 @@ export function GlassShellBackdrop({
     fill,
     morphing,
     useSvg,
-    backdropDpr,
   ]);
 
   useLayoutEffect(() => {
@@ -1219,9 +1202,7 @@ export function GlassShellBackdrop({
   const seedH = 48;
   const seedBlur = Math.max(0, blur ?? 0);
   const seedPad = backdropFilterPadding(seedBlur);
-  const seedPx =
-    refractionBackdropScale(Math.max(0, scale), seedW, seedH) *
-    (useSvg ? chromiumBackdropScaleCorrection(backdropDpr) : 1);
+  const seedPx = refractionBackdropScale(Math.max(0, scale), seedW, seedH);
   const seedScales = chromaticChannelScales(seedPx, chroma);
   const specularK = specularCompositeCoefficients(Math.max(0, specular));
   // Mount lens-filter SVG even on the CSS-blur path (Safari) so Chromium-style
